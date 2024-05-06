@@ -40,7 +40,7 @@ app.use(express.json());
 
 //Allow CORS
 app.use(cors({
-    origin: ['http://localhost:3000'], //allowed URLs
+    origin: ['https://icspaces.onrender.com'], //allowed URLs
     methods: ['GET', 'POST', 'OPTIONS'], //allowed HTTP methods
     credentials: true, //allow cookies
     // allowedHeaders: ['Access-Control-Allow-Origin','Access-Control-Allow-Methods','Origin','Accept','Content-Type','X-Requested-With','Cookie']

@@ -22,7 +22,7 @@ const accessTokenCookieOptions = {
   };
 
 const generateURL = async (req,res,next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000')
+    res.header('Access-Control-Allow-Origin', 'https://icspaces.onrender.com')
     res.header('Referrer-Policy', 'no-referrer-when-downgrade')
 
     const redirectUrl = process.env.GOOGLE_AUTH_REDIRECT
@@ -127,7 +127,7 @@ const callbackHandler = async (req,res,next) => {
             // res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
             // then make the client redirect to the home page xd
-            res.redirect(process.env.AUTH_SUCCESS_REDIRECT || 'http://localhost:3000/homepage')
+            res.redirect(process.env.AUTH_SUCCESS_REDIRECT || 'https://icspaces.onrender.com/homepage')
         }
         
     }
@@ -135,7 +135,7 @@ const callbackHandler = async (req,res,next) => {
         let errmsg = `Error with Google Sign in: ${err.message}`
         console.log(errmsg)
         // res.send(errmsg)
-        res.redirect(process.env.AUTH_FAILURE_REDIRECT || `http://localhost:3000/login-fail?error=${errmsg}`)
+        res.redirect(process.env.AUTH_FAILURE_REDIRECT || `https://icspaces.onrender.com/login-fail?error=${errmsg}`)
         // res.redirect(process.env.AUTH_SUCESS_FAILURE)
     } finally {
         if (conn) conn.end();

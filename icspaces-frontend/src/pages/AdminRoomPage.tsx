@@ -99,7 +99,7 @@ const AdminRoomPage = () => {
         }}}
         variant="contained"
         onClick={() =>
-          (window.location.href = "http://localhost:3000/viewroomspage")
+          (window.location.href = "https://icspaces.onrender.com/viewroomspage")
         }
       >
         Back to ICS Rooms

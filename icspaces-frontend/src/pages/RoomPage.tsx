@@ -163,7 +163,7 @@ const RoomPage = () => {
         sx={{ position: "absolute", top: 80, left: 20 }}
         variant="contained"
         onClick={() =>
-          (window.location.href = "http://localhost:3000/viewroomspage")
+          (window.location.href = "https://icspaces.onrender.com/viewroomspage")
         }
       >
         Back to ICS Rooms
