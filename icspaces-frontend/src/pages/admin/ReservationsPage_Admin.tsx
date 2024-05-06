@@ -57,7 +57,7 @@ const [originalData, setOriginalData] = useState<Reservation[]>([]);
 
 
   useEffect(() => {
-  fetch('http://localhost:3001/get-all-reservation', {
+  fetch('https://icspaces-backend.onrender.com/get-all-reservation', {
     method: 'POST', // or 'PUT'
     headers: {
       'Content-Type': 'application/json',

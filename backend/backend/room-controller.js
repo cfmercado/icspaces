@@ -1,6 +1,6 @@
 import pool from './db.js';
 
-// Form: http://localhost:3001/search?type={TYPE}&room_id={ROOM_ID}
+// Form: https://icspaces-backend.onrender.com/search?type={TYPE}&room_id={ROOM_ID}
 const searchHandler = async (req, res) => {
     const { type } = req.body;
     try {

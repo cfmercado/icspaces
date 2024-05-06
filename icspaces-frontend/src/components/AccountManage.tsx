@@ -28,7 +28,7 @@ const statusMapping: Record<number, string> = {
 const AccountManage = () => {
 
   useEffect(() => {
-    fetch('http://localhost:3001/get-all-users', {
+    fetch('https://icspaces-backend.onrender.com/get-all-users', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

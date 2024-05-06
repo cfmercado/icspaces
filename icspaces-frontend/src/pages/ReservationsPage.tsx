@@ -66,7 +66,7 @@ const ReservationsPage = () => {
   const [roomName, setRoomName] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:3001/get-all-reservations-by-user", {
+    fetch("https://icspaces-backend.onrender.com/get-all-reservations-by-user", {
       method: "POST", // or 'PUT'
       headers: {
         "Content-Type": "application/json",

@@ -11,7 +11,7 @@ const RoomNameCell: React.FC<RoomNameCellProps> = ({ roomId }) => {
   useEffect(() => {
     const fetchRoomName = async () => {
       try {
-        const response = await fetch("http://localhost:3001/get-room-name", {
+        const response = await fetch("https://icspaces-backend.onrender.com/get-room-name", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

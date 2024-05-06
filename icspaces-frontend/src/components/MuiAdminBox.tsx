@@ -27,7 +27,7 @@ const MuiAdminBox = () => {
     useEffect(() => {
 
         const fetchTotalRequestCount = async () => {
-            const url = 'http://localhost:3001/get-total-request';
+            const url = 'https://icspaces-backend.onrender.com/get-total-request';
             const options = {
                 method: 'POST',
                 headers: {
@@ -47,7 +47,7 @@ const MuiAdminBox = () => {
         };
 
         const fetchPendingRequestCount = async () => {
-            const url = 'http://localhost:3001/get-pending-request';
+            const url = 'https://icspaces-backend.onrender.com/get-pending-request';
             const options = {
                 method: 'POST',
                 headers: {
@@ -67,7 +67,7 @@ const MuiAdminBox = () => {
         };
 
         const fetchPaidAmount = async () => {
-            const url = 'http://localhost:3001/get-paid';
+            const url = 'https://icspaces-backend.onrender.com/get-paid';
             const options = {
                 method: 'POST',
                 headers: {
@@ -87,7 +87,7 @@ const MuiAdminBox = () => {
         };
 
         const fetchPendingAmount = async () => {
-            const url = 'http://localhost:3001/get-pending';
+            const url = 'https://icspaces-backend.onrender.com/get-pending';
             const options = {
                 method: 'POST',
                 headers: {
@@ -107,7 +107,7 @@ const MuiAdminBox = () => {
         };
 
         const fetchTotalAccountsCount = async () => {
-            const url = 'http://localhost:3001/get-total-accounts';
+            const url = 'https://icspaces-backend.onrender.com/get-total-accounts';
             const options = {
                 method: 'POST',
                 headers: {
@@ -127,7 +127,7 @@ const MuiAdminBox = () => {
         };
 
         const fetchNewAccountsCount = async () => {
-            const url = 'http://localhost:3001/get-new-accounts';
+            const url = 'https://icspaces-backend.onrender.com/get-new-accounts';
             const options = {
                 method: 'POST',
                 headers: {

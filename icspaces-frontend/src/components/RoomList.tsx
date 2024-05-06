@@ -139,7 +139,7 @@ const RoomList: React.FC = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/get-all-rooms', {
+    fetch('https://icspaces-backend.onrender.com/get-all-rooms', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

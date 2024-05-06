@@ -43,7 +43,7 @@ import {
     function FetchUserDetails(email:string){
 
       useEffect(() => {
-        fetch('http://localhost:3001/get-user-information', {
+        fetch('https://icspaces-backend.onrender.com/get-user-information', {
           method: 'POST', // or 'PUT'
           headers: {
             'Content-Type': 'application/json',

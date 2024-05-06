@@ -32,7 +32,7 @@ const SchedulesPage_Admin = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch("http://localhost:3001/get-all-rooms", {
+        const response = await fetch("https://icspaces-backend.onrender.com/get-all-rooms", {
           method: "POST",
         });
         const data = await response.json();
@@ -57,7 +57,7 @@ const SchedulesPage_Admin = () => {
       if (selectedRoom != null) {
         try {
           const response = await fetch(
-            "http://localhost:3001/get-all-reservations-by-room",
+            "https://icspaces-backend.onrender.com/get-all-reservations-by-room",
             {
               method: "POST",
               headers: {

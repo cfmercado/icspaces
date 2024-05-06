@@ -111,7 +111,7 @@ const RoomPage = () => {
   const [room, setRoom] = useState<RoomInfo | null>();
 
   useEffect(() => {
-    fetch('http://localhost:3001/get-room-info', {
+    fetch('https://icspaces-backend.onrender.com/get-room-info', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

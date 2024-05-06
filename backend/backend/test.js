@@ -1,5 +1,5 @@
 let query = "/get-all-reservations-by-user"
-let url = `http://localhost:3001/${query}`
+let url = `http://localhost:https://icspaces-backend.onrender.com/${query}`
 
 let options = {
     method: 'POST',

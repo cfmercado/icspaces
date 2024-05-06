@@ -108,7 +108,7 @@ const RoomFilters = () => {
   });
 
   useEffect(() => {
-    fetch('http://localhost:3001/get-all-room-filters', {
+    fetch('https://icspaces-backend.onrender.com/get-all-room-filters', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
