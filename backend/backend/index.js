@@ -33,7 +33,7 @@ app.use(express.json());
 //Allow CORS
 app.use(cors({
     origin: ['https://icspaces.onrender.com'], //allowed URLs
-    // methods: ['GET', 'POST', 'OPTIONS'], //allowed HTTP methods
+    methods: ['GET', 'POST', 'OPTIONS'], //allowed HTTP methods
     credentials: true, //allow cookies
     // allowedHeaders: ['Access-Control-Allow-Origin','Access-Control-Allow-Methods','Origin','Accept','Content-Type','X-Requested-With','Cookie']
 }));
@@ -47,8 +47,8 @@ app.use(
         saveUninitialized: false,
 		cookie: {
 			secure: true,
-			httpOnly: true,
-            sameSite: "None",
+			httpOnly: false,
+            sameSite: 'none',
 			maxAge: Number(process.env.ACCESS_TOKEN_TTL)
 		}
     })

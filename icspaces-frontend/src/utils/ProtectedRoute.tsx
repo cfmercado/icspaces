@@ -7,8 +7,6 @@ interface ProtectedRouteProps {
   component: React.ComponentType;
 }
 
-axios.defaults.withCredentials = true;
-
 const ProtectedRoute = ({
   component: ProtectedComponent,
 }: ProtectedRouteProps) => {
@@ -18,7 +16,9 @@ const ProtectedRoute = ({
   useEffect(() => {
     const checkIfLoggedIn = async () => {
       try {
-        const response = await axios.get("https://icspaces-backend.onrender.com/is-logged-in");
+        const response = await axios.get("https://icspaces-backend.onrender.com/is-logged-in", {
+          withCredentials: true,
+        });
         console.log(response.data); // Add this line
         if (response.data.isLoggedIn) {
           // Change this line
