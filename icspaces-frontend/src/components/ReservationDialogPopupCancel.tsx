@@ -45,7 +45,7 @@ const ReservationDialogCancelApproved: React.FC<ReservationDialogProps> = ({
   const handleApprovedCancellation = () => {
 
     // perform action here
-    fetch('https://icspaces-backend.onrender.com/set-as-cancelled', {
+    fetch('https://api.icspaces.online//set-as-cancelled', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

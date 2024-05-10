@@ -37,7 +37,7 @@ import {
 
     function FetchStudentDetails(email:string){
       useEffect(() => {
-          fetch('https://icspaces-backend.onrender.com/get-student-details', {
+          fetch('https://api.icspaces.online//get-student-details', {
               method: 'POST', // or 'PUT'
               headers: {
               'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ import {
 
     function FetchFacultyDetails(email:string){
       useEffect(() => {
-        fetch('https://icspaces-backend.onrender.com/get-faculty-details', {
+        fetch('https://api.icspaces.online//get-faculty-details', {
             method: 'POST', // or 'PUT'
             headers: {
             'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ import {
     function ConfirmEdit(usertype:string){
 
       if(itemsCount==='Student'){
-        fetch('https://icspaces-backend.onrender.com/update-student-details', {
+        fetch('https://api.icspaces.online//update-student-details', {
           method: 'POST', // or 'PUT'
           headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ import {
       }
       else if(usertype=='Student' && itemsCount=='Faculty'){//student to Faculty
         console.log('Student to Faculty');
-        fetch('https://icspaces-backend.onrender.com/change-user-type', {
+        fetch('https://api.icspaces.online//change-user-type', {
           method: 'POST', // or 'PUT'
           headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ import {
       }
       else if(itemsCount=='Faculty' && usertype=='Faculty'){
         
-        fetch('https://icspaces-backend.onrender.com/update-faculty-details', {
+        fetch('https://api.icspaces.online//update-faculty-details', {
           method: 'POST', // or 'PUT'
           headers: {
           'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ import {
       }
       else if(itemsCount=='Admin' && usertype=='Faculty'){//Faculty to Admin
         console.log(userMail);
-        fetch('https://icspaces-backend.onrender.com/set-faculty-to-admin', {
+        fetch('https://api.icspaces.online//set-faculty-to-admin', {
           method: 'POST', // or 'PUT'
           headers: {
           'Content-Type': 'application/json',

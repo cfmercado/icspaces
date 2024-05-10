@@ -24,7 +24,7 @@ const UserInfo: React.FC = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get("https://icspaces-backend.onrender.com/get-profile", {
+        const response = await axios.get("https://api.icspaces.online//get-profile", {
           withCredentials: true,
         });
 
@@ -52,7 +52,7 @@ const UserInfo: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("https://icspaces-backend.onrender.com/logout", {
+      const response = await fetch("https://api.icspaces.online//logout", {
         credentials: "include",
         method: "GET",
       });

@@ -77,7 +77,7 @@ const ReservationsPage = () => {
       try {
         console.log("Fetching profile...");
         const profileResponse = await fetch(
-          "https://icspaces-backend.onrender.com/get-profile",
+          "https://api.icspaces.online//get-profile",
           {
             method: "GET",
             headers: {
@@ -100,7 +100,7 @@ const ReservationsPage = () => {
 
           console.log("Fetching reservations...");
           const reservationsResponse = await fetch(
-            "https://icspaces-backend.onrender.com/get-all-reservations-by-user",
+            "https://api.icspaces.online//get-all-reservations-by-user",
             {
               method: "POST",
               headers: {
@@ -284,7 +284,7 @@ const ReservationsPage = () => {
     console.log(row);
 
     // Fetch values first
-    fetch("https://icspaces-backend.onrender.com/get-all-reservations-with-dummy-data", {
+    fetch("https://api.icspaces.online//get-all-reservations-with-dummy-data", {
       method: "POST", // or 'PUT'
       headers: {
         "Content-Type": "application/json",
@@ -297,7 +297,7 @@ const ReservationsPage = () => {
         console.log(data1);
 
         // Fetch name values
-        fetch("https://icspaces-backend.onrender.com/get-user-information", {
+        fetch("https://api.icspaces.online//get-user-information", {
           method: "POST", // or 'PUT'
           headers: {
             "Content-Type": "application/json",
@@ -310,7 +310,7 @@ const ReservationsPage = () => {
             console.log(nameData);
 
             // Fetch other values
-            fetch("https://icspaces-backend.onrender.com/get-reservation", {
+            fetch("https://api.icspaces.online//get-reservation", {
               method: "POST", // or 'PUT'
               headers: {
                 "Content-Type": "application/json",

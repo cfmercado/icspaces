@@ -118,7 +118,7 @@ const RoomPage = () => {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch("https://icspaces-backend.onrender.com/get-available-room-time", {
+        const response = await fetch("https://api.icspaces.online//get-available-room-time", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -138,7 +138,7 @@ const RoomPage = () => {
   }, []);
 
   useEffect(() => {
-    fetch('https://icspaces-backend.onrender.com/get-room-info', {
+    fetch('https://api.icspaces.online//get-room-info', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ const RoomPage = () => {
         sx={{ position: "absolute", top: 80, left: 20 }}
         variant="contained"
         onClick={() =>
-          (window.location.href = "https://icspaces.onrender.com/viewroomspage")
+          (window.location.href = "https://app.icspaces.online//viewroomspage")
         }
       >
         Back to ICS Rooms

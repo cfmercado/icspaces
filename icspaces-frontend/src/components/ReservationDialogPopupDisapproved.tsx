@@ -45,7 +45,7 @@ import {
     const handleDisapprove = () => {  
 
       // set as disapproved
-      fetch('https://icspaces-backend.onrender.com/set-as-disapproved', {
+      fetch('https://api.icspaces.online//set-as-disapproved', {
         method: 'POST', // or 'PUT'
         headers: {
           'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ import {
       .then(data => {
         
         // add comment
-        fetch('https://icspaces-backend.onrender.com/add-comment', {
+        fetch('https://api.icspaces.online//add-comment', {
           method: 'POST', // or 'PUT'
           headers: {
             'Content-Type': 'application/json',

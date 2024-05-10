@@ -26,7 +26,7 @@ const RoomReservationForm = () => {
             setsumCost(cost1);
         }
         const fetchRoomInfo = async () => {
-            fetch('https://icspaces-backend.onrender.com/get-room-info', {
+            fetch('https://api.icspaces.online//get-room-info', {
         method: 'POST', // or 'PUT'
         headers: {
         'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ const RoomReservationForm = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await axios.get("https://icspaces-backend.onrender.com/get-profile", {
+            const response = await axios.get("https://api.icspaces.online//get-profile", {
                 withCredentials: true,
             });
 
@@ -82,7 +82,7 @@ const RoomReservationForm = () => {
 
         if(receivedValues.start_dateTime===undefined ||receivedValues.start_dateTime===""  ){
             alert("Select Time First");
-            window.location.href = "https://icspaces.onrender.com/roompage/"+room_id
+            window.location.href = "https://app.icspaces.online//roompage/"+room_id
         }
 
 
@@ -136,7 +136,7 @@ const RoomReservationForm = () => {
         e.preventDefault();
         console.log("Submitting")
         console.log({name,email,contact,eventName,eventDetails})
-        fetch('https://icspaces-backend.onrender.com/add-reservation', {
+        fetch('https://api.icspaces.online//add-reservation', {
             method: 'POST', // or 'PUT'
             headers: {
             'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ const RoomReservationForm = () => {
         .then(response => response.json())
         .then(data => {
             console.log(data)
-            window.location.href = "https://icspaces.onrender.com/homepage"
+            window.location.href = "https://app.icspaces.online//homepage"
         })
         .catch(err => {
             console.log(err)

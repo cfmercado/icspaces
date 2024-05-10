@@ -168,7 +168,7 @@ const EditRoomInfoPage_Admin = () => {
   
     try {
       // Send an HTTP request to the backend
-      const response = await fetch("https://icspaces-backend.onrender.com/edit-room-information", {
+      const response = await fetch("https://api.icspaces.online//edit-room-information", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -189,7 +189,7 @@ const EditRoomInfoPage_Admin = () => {
       };
       console.log('Utility Details:', utilityDetails);
       // Send an HTTP request to update utilities
-      const utilityResponse = await fetch("https://icspaces-backend.onrender.com/set-utilities", {
+      const utilityResponse = await fetch("https://api.icspaces.online//set-utilities", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -220,7 +220,7 @@ const EditRoomInfoPage_Admin = () => {
 // using fetch API
 const getRoomInformation = async () => {
   try {
-    const response = await fetch('https://icspaces-backend.onrender.com/get-room-info', {
+    const response = await fetch('https://api.icspaces.online//get-room-info', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', // Specify content type as JSON

@@ -45,7 +45,7 @@ const ReservationDialogPopupApproved: React.FC<ReservationDialogProps> = ({
   const handleApprove = () => {
 
     // set as approved
-    fetch('https://icspaces-backend.onrender.com/set-as-approved', {
+    fetch('https://api.icspaces.online//set-as-approved', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ const ReservationDialogPopupApproved: React.FC<ReservationDialogProps> = ({
     .then(data => {
       
       // add comment
-      fetch('https://icspaces-backend.onrender.com/add-comment', {
+      fetch('https://api.icspaces.online//add-comment', {
         method: 'POST', // or 'PUT'
         headers: {
           'Content-Type': 'application/json',

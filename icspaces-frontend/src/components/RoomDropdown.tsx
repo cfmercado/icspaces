@@ -24,7 +24,7 @@ const RoomDropdown: React.FC<RoomDropdownProps> = ({ sx, onRoomChange }) => {
   const [selectedRoom, setSelectedRoom] = useState<number | ''>('');
 
   useEffect(() => {
-    fetch('https://icspaces-backend.onrender.com/get-all-rooms', {
+    fetch('https://api.icspaces.online//get-all-rooms', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

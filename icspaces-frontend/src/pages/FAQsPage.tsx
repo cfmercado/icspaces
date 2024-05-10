@@ -22,7 +22,7 @@ const FAQs: React.FC = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get("https://icspaces-backend.onrender.com/get-profile", {
+        const response = await axios.get("https://api.icspaces.online//get-profile", {
           withCredentials: true,
         });
 

@@ -33,7 +33,7 @@ const statusMapping: Record<number, string> = {
 const AccountManage = () => {
   const [selectedUser, setSelectedUser] = useState<Users | null>(null);
   useEffect(() => {
-    fetch('https://icspaces-backend.onrender.com/get-all-users', {
+    fetch('https://api.icspaces.online//get-all-users', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ const AccountManage = () => {
 
   function FetchStudentDetails(email:string){
 
-        fetch('https://icspaces-backend.onrender.com/get-student-details', {
+        fetch('https://api.icspaces.online//get-student-details', {
             method: 'POST', // or 'PUT'
             headers: {
             'Content-Type': 'application/json',

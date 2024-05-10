@@ -58,7 +58,7 @@ const ReservationsPage = () => {
   //     try {
   //       console.log("Fetching profile...");
   //       const profileResponse = await fetch(
-  //         "https://icspaces-backend.onrender.com/get-profile",
+  //         "https://api.icspaces.online//get-profile",
   //         {
   //           method: "GET",
   //           headers: {
@@ -81,7 +81,7 @@ const ReservationsPage = () => {
 
   //         console.log("Fetching reservations...");
   //         const reservationsResponse = await fetch(
-  //           "https://icspaces-backend.onrender.com/get-all-reservations-by-user",
+  //           "https://api.icspaces.online//get-all-reservations-by-user",
   //           {
   //             method: "POST",
   //             headers: {
@@ -116,7 +116,7 @@ const ReservationsPage = () => {
   //   fetchReservations();
   // }, []);
   // useEffect(() => {
-  //   fetch('https://icspaces-backend.onrender.com/get-all-reservation', {
+  //   fetch('https://api.icspaces.online//get-all-reservation', {
   //     method: 'POST', // or 'PUT'
   //     headers: {
   //       'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ const ReservationsPage = () => {
   
   setSearchTerm(search);
   if (search !== "") {
-    fetch('https://icspaces-backend.onrender.com/get-reservation', {
+    fetch('https://api.icspaces.online//get-reservation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
