@@ -108,7 +108,7 @@ const NavBar = () => {
 
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const response = await fetch("https://api.icspaces.online/check-login", {
+      const response = await fetch("https://api.icspaces.online/is-logged-in", {
         credentials: "include",
       });
       const data = await response.json();

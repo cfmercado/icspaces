@@ -69,7 +69,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch("http://localhost:3001/get-profile", {
+        const response = await fetch("https://api.icspaces.online/get-profile", {
           credentials: "include",
         });
         if (!response.ok) {
