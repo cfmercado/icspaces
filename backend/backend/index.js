@@ -47,8 +47,8 @@ app.use(
         saveUninitialized: false,
 		cookie: {
 			secure: true,
-			httpOnly: false,
-            sameSite: 'none',
+			httpOnly: true,
+            same_site: 'none',
 			maxAge: Number(process.env.ACCESS_TOKEN_TTL)
 		}
     })
