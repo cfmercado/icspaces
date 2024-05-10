@@ -5,5 +5,5 @@ CREATE TABLE director(
     CONSTRAINT director_email_fk FOREIGN KEY(email) REFERENCES user(email)
     );
 
---dummy
+-- dummy
 INSERT INTO director(email) VALUES('maandoc@up.edu.ph');

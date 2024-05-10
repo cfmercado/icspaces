@@ -8,6 +8,6 @@ CREATE TABLE guest(
     email VARCHAR(50) NOT NULL
 );
 
---dummy
+-- dummy
 INSERT INTO guest(transaction_id, fname, lname, email) VALUES('e5hkadfhjk', 'Juan', 'Dela Cruz', 'abc@yahoo.com');
 INSERT INTO guest(transaction_id, fname, lname, email) VALUES('efdsa68713', 'Maria', 'Clara', 'dcg@yahoo.com');

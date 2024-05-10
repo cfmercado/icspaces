@@ -7,7 +7,7 @@ CREATE TABLE faculty_member(
     CONSTRAINT faculty_member_email_fk FOREIGN KEY(email) REFERENCES user(email)
 );
 
---dummy
+-- dummy
 INSERT INTO faculty_member(email, college, department) VALUES('ddoffemaria@up.edu.ph' , 'College of Arts and Sciences', 'Institute of Computer Science');
 INSERT INTO faculty_member(email, college, department) VALUES('dabutardo@up.edu.ph' , 'College of Arts and Sciences', 'Institute of Computer Science');
 INSERT INTO faculty_member(email, college, department) VALUES('hyang@up.edu.ph', 'College of Human Ecology', 'Department of Human and Family Development Studies');

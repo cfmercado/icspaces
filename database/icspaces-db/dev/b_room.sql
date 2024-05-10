@@ -28,7 +28,7 @@ CREATE TABLE room_file(
     CONSTRAINT room_file_room_id_fk FOREIGN KEY(room_id) REFERENCES room(room_id) ON DELETE CASCADE
 );
 
---dummy
+-- dummy
 INSERT INTO room(room_name, room_capacity, fee, room_type, floor_number) VALUES('ICS Lecture Hall', 100, 5000.00, 'Lecture Hall', 0);
 INSERT INTO room(room_name, room_capacity, fee, room_type, floor_number) VALUES('ICS Conference Room', 50, 3000.00, 'Conference Room', 0);
 INSERT INTO room(room_name, room_capacity, fee, room_type, floor_number) VALUES('ICS Computer Lab', 30, 2000.00, 'Computer Lab', 0);

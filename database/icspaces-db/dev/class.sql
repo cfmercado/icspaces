@@ -22,7 +22,7 @@ CREATE TABLE class_day(
     CONSTRAINT class_id_fk FOREIGN KEY(class_id) REFERENCES class(class_id)
 );
 
---dummy
+-- dummy
 INSERT INTO class(class_id, class_name, class_type, lecturer, class_section, start_date, end_date, time_start, time_end, room_id) VALUES(1, 'ICS 123', 'Lecture', 'Dr. Juan dela Cruz', 'A', '2020-12-01', '2020-12-31', '08:00:00', '10:00:00', 1);
 INSERT INTO class(class_id, class_name, class_type, lecturer, class_section, start_date, end_date, time_start, time_end, room_id) VALUES(2, 'ICS 124', 'Lecture', 'Dr. Maria Clara', 'B', '2020-12-01', '2020-12-31', '08:00:00', '10:00:00', 2);
 INSERT INTO class_day(class_id, class_day) VALUES(1, 1);

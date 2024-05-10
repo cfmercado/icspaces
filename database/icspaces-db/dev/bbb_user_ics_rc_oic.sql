@@ -5,5 +5,5 @@ CREATE TABLE ics_rc_oic(
     CONSTRAINT ics_rc_oic_email_fk FOREIGN KEY(email) REFERENCES user(email)
 );
 
---dummy
+-- dummy
 INSERT INTO ics_rc_oic(email) VALUES('jjkuya@up.edu.ph');
