@@ -58,7 +58,7 @@ const ReservationsPage = () => {
   //     try {
   //       console.log("Fetching profile...");
   //       const profileResponse = await fetch(
-  //         "https://api.icspaces.online//get-profile",
+  //         "https://api.icspaces.online/get-profile",
   //         {
   //           method: "GET",
   //           headers: {

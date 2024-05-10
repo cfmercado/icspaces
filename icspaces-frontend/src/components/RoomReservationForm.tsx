@@ -58,7 +58,7 @@ const RoomReservationForm = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await axios.get("https://api.icspaces.online//get-profile", {
+            const response = await axios.get("https://api.icspaces.online/get-profile", {
                 withCredentials: true,
             });
 

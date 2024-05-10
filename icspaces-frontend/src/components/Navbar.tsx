@@ -83,7 +83,7 @@ const NavBar = () => {
     // Fetch the profile data when the component mounts
     const fetchProfileData = async () => {
       try {
-        const response = await fetch("https://api.icspaces.online//get-profile", {
+        const response = await fetch("https://api.icspaces.online/get-profile", {
           credentials: "include", // Include credentials in the request
         });
         if (!response.ok) {
