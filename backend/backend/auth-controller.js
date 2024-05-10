@@ -136,6 +136,7 @@ const callbackHandler = async (req,res,next) => {
 }
 
 const getProfileData = async (req, res) => {
+    console.log(req.session.email)
     if (req.session.email){
         res.send({ 
             success: true, 
