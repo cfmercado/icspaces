@@ -35,7 +35,7 @@ app.use(cors({
     origin: ['https://app.icspaces.online/'], //allowed URLs
     methods: ['GET', 'POST', 'OPTIONS'], //allowed HTTP methods
     credentials: true, //allow cookies
-    // allowedHeaders: ['Access-Control-Allow-Origin','Access-Control-Allow-Methods','Origin','Accept','Content-Type','X-Requested-With','Cookie']
+    allowedHeaders: ['Access-Control-Allow-Origin','Access-Control-Allow-Methods','Origin','Accept','Content-Type','X-Requested-With','Cookie']
 }));
 
 //express-session 
