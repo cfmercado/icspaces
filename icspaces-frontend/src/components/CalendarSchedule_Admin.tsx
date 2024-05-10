@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { parseISO } from "date-fns";
-import { format } from "date-fns";
+import { Dialog, DialogTitle, DialogContent, Typography } from "@mui/material";
 
 interface Reservation {
   activity_name: string;
   start_datetime: string;
   end_datetime: string;
+}
+
+interface Event {
+  title: string;
+  start: Date;
+  end: Date;
 }
 
 interface CalendarSchedule_AdminProps {
@@ -19,6 +25,8 @@ const CalendarSchedule_Admin: React.FC<CalendarSchedule_AdminProps> = ({
   reservations,
 }) => {
   const localizer = momentLocalizer(moment);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [open, setOpen] = useState(false);
 
   const events = reservations.map((reservation) => {
     const start = parseISO(reservation.start_datetime);
@@ -43,6 +51,15 @@ const CalendarSchedule_Admin: React.FC<CalendarSchedule_AdminProps> = ({
     };
   });
 
+  const handleSelectEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   console.log("events", events);
 
   return (
@@ -55,7 +72,24 @@ const CalendarSchedule_Admin: React.FC<CalendarSchedule_AdminProps> = ({
         style={{ height: 500, margin: "50px" }}
         min={new Date(0, 0, 0, 7, 0)} // 7:00 AM
         max={new Date(0, 0, 0, 22, 0)} // 9:00 PM
+        onSelectEvent={handleSelectEvent}
       />
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Event Details</DialogTitle>
+        <DialogContent>
+          {selectedEvent && (
+            <>
+              <Typography variant="h6">{selectedEvent.title}</Typography>
+              <Typography variant="body1">
+                Start: {selectedEvent.start.toString()}
+              </Typography>
+              <Typography variant="body1">
+                End: {selectedEvent.end.toString()}
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,12 +1,71 @@
-import { Card, CardContent, Typography, Avatar, Box } from "@mui/material";
-import tempAvatar from "../assets/ICS_Logo.png";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Card, Avatar, CardContent, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const UserInfo = () => {
-  const user = {
-    name: "John Doe",
-    userType: "Student",
-    email: "johndoe@example.com",
-    avatar: tempAvatar,
+const userTypeMapping: { [key: number]: string } = {
+  0: "Student",
+  1: "Faculty",
+  2: "Officer In Charge",
+  3: "Director",
+};
+
+interface User {
+  email: string;
+  displayname: string;
+  profilepic: string;
+  usertype: string; // Changed this to string
+}
+
+const UserInfo: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get("https://icspaces-backend.onrender.com/get-profile", {
+          withCredentials: true,
+        });
+
+        if (response.data.success) {
+          const user = response.data.data;
+          // Map the usertype number to its corresponding string
+          user.usertype = userTypeMapping[user.usertype];
+          setUser(user);
+        } else {
+          throw new Error(response.data.errmsg);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        navigate("/login");
+      }
+    };
+
+    fetchUser();
+  }, [navigate]);
+  if (!user) {
+    return null; // or return a loading spinner, or some placeholder content
+  }
+
+  // console.log(user); // Add this line
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("https://icspaces-backend.onrender.com/logout", {
+        credentials: "include",
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+      // If the response is ok, assume the logout was successful
+      setUser(null);
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -22,8 +81,8 @@ const UserInfo = () => {
       }}
     >
       <Avatar
-        src={user.avatar}
-        alt={user.name}
+        src={user.profilepic}
+        alt={user.displayname}
         sx={{
           mr: { xs: 0, sm: 0, md: 0 },
           mb: { xs: 2, sm: 2, md: 2 },
@@ -36,26 +95,31 @@ const UserInfo = () => {
           variant="h4"
           sx={{ textAlign: { xs: "center", sm: "center", md: "center" } }}
         >
-          {user.name}
+          {user.displayname}
         </Typography>
         <Typography
-          variant="subtitle2"
-          sx={{
-            textAlign: { xs: "center", sm: "center", md: "center" },
-            color: "grey",
-          }}
+          variant="subtitle1"
+          sx={{ textAlign: { xs: "center", sm: "center", md: "center" } }}
         >
-          {user.userType}
+          {user.usertype}
         </Typography>
         <Typography
-          variant="subtitle2"
-          sx={{
-            textAlign: { xs: "center", sm: "center", md: "center" },
-            color: "grey",
-          }}
+          variant="subtitle1"
+          sx={{ textAlign: { xs: "center", sm: "center", md: "center" } }}
         >
           {user.email}
         </Typography>
+        <Button
+          variant="contained"
+          onClick={handleLogout}
+          style={{
+            backgroundColor: "#e42c2c",
+            color: "white",
+            marginTop: "30px",
+          }}
+        >
+          Logout
+        </Button>
       </CardContent>
     </Card>
   );

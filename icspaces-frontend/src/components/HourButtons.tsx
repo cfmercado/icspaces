@@ -1,12 +1,55 @@
 import { Box, Typography, Stack, Button, useMediaQuery, useTheme, Switch, Divider, ButtonGroup } from "@mui/material";
 import { useState } from "react";
-
+import { useParams } from 'react-router-dom';
 import {Link } from "react-router-dom";
 
-const HourButtons = () => {
+interface HourButtonsProps {
+    availableTimes?: any;
+  }
+const HourButtons : React.FC<HourButtonsProps> = ({
+    availableTimes,
+  }) => {
+    const { room_id } = useParams<{ room_id: string }>();
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const [isSwitchOn, setIsSwitchOn] = useState(false);
+    const [selectedTime, setSelectedTime] = useState(['']);
+    const [activeButton, setActiveButton] = useState(null);
+    const [activeButton2, setActiveButton2] = useState(null);
+    const [data1, setData1] = useState('');
+    const [data2, setData2] = useState('');   
+    const valuesToSend = {
+        start_dateTime: data1,
+        end_dateTime: data2,
+        room_id: room_id,
+        date: "Thurs Dec 03 2020"
+    }
+
+    const handleClicked = (text:string) => {
+        const newSelectedTime = [...selectedTime];
+        if (newSelectedTime.includes(text)) {
+            const removeIndex = newSelectedTime.indexOf(text);
+            newSelectedTime.splice(removeIndex, 1);
+        } else{
+            newSelectedTime.push(text);
+        }
+        newSelectedTime.sort();
+        setSelectedTime(newSelectedTime);
+        setData1(newSelectedTime[1]);
+        const timeParts = newSelectedTime[newSelectedTime.length -1].split(':');
+        let hours = parseInt(timeParts[0], 10);
+        hours = (hours + 1)
+        const newTimeString = `${hours.toString().padStart(2, '0')}:00:00`;
+        setData2(newTimeString);
+    }
+
+    const handleClick = (index:any) => {
+        setActiveButton(index);
+      };
+      const handleClick2 = (index:any) => {
+        setActiveButton2(index);
+      };
+
 
     const handleSwitchChange = () => {
         setIsSwitchOn(!isSwitchOn);
@@ -21,7 +64,7 @@ const HourButtons = () => {
         fontSize: isSmallScreen ? "8px" : "13px",
         '&:hover': {
             backgroundColor: 'lightgrey',
-          }
+          },
     };
 
     const buttonStyle2 = {
@@ -36,7 +79,34 @@ const HourButtons = () => {
         padding: '0',
         '&:hover': {
             backgroundColor: 'lightgrey',
-          }
+          },
+    };
+
+    const buttonStyle3 = {
+        textTransform: "none",
+        backgroundColor: '#183048',
+        height: isSmallScreen ? "0.875rem" : "23px",
+        width: '100%',
+        color: '#828282', 
+        borderRadius: '20px',
+        fontSize: isSmallScreen ? "8px" : "13px",
+        '&:hover': {
+            backgroundColor: 'lightgrey',
+          },
+    };
+    const buttonStyle4 = {
+        textTransform: "none",
+        // backgroundColor: isClicked ? '#183048' : '#white',
+        backgroundColor: '#183048',
+        height: isSmallScreen ? "0.5rem" : "23px",
+        width: isSmallScreen ? "0.5rem" :'100%',
+        color: '#828282', 
+        borderRadius: '10px',
+        fontSize: isSmallScreen ? "3px" : "10px",   
+        padding: '0',
+        '&:hover': {
+            backgroundColor: 'lightgrey',
+          },
     };
 
     const boxStyle = {
@@ -54,62 +124,42 @@ const HourButtons = () => {
         color: '#2D5378',
         fontSize: isSmallScreen ? "6px" : "14px",
     }
+    
+      
+    const amButtons = availableTimes?.slice(7,12)
+    const pmButtons = availableTimes?.slice(12,21)
+    const selectedButtons1 = ["7-8 AM", "8-9 AM", "9-10 AM", "10-11 AM", "11-12 PM", "12-1 PM"]
+    const selectedButtons2 = ["1-2 PM", "2-3 PM", "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM", "8-9 PM", "9-10 PM", ]
+        
     const renderButtons = () => {
         if (isSwitchOn) {
           // Render set of buttons when the switch is on
           return (
             <>
-            <Button variant="outlined" sx={buttonStyle}>
-                12:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                1:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                2:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                3:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                4:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                5:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                6:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                7:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                8:00 PM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                9:00 PM
-            </Button>
+             {pmButtons?.map((PMbuttonText:string, index:number) => (
+                <Button key={index} variant="outlined" onClick={() => {
+                    handleClicked(PMbuttonText)
+                    handleClick2(index)
+                }} sx={buttonStyle}>
+                    {PMbuttonText}
+                </Button>
+             ))}
             </>
           );
         } else {
           // Render set of buttons when the switch is off
           return (
             <>
-            <Button variant="outlined" sx={buttonStyle}>
-            7:00 AM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                8:00 AM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                9:00 AM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                10:00 AM
-            </Button>
-            <Button variant="outlined" sx={buttonStyle}>
-                11:00 AM
-            </Button>
+            {amButtons?.map((AMbuttonText:string, index:number) => (
+                <Button key={index} variant="outlined" onClick={() => {
+                    handleClicked(AMbuttonText) 
+                    handleClick(index)
+                }} 
+                sx={activeButton === index ? buttonStyle3 : buttonStyle}>
+
+                    {AMbuttonText}
+                </Button>
+             ))}
             </>
           );
         }
@@ -131,25 +181,19 @@ const HourButtons = () => {
                    <b>Selected Time</b>    
                 </Typography>
                 <ButtonGroup disableElevation variant="outlined" size="medium" fullWidth> 
-                    
-                    <Button sx={buttonStyle2}>7-8 AM</Button>
-                    <Button sx={buttonStyle2}>8-9 AM</Button>
-                    <Button sx={buttonStyle2}>9-10 AM</Button>
-                    <Button sx={buttonStyle2}>10-11 AM</Button>
-                    <Button sx={buttonStyle2}>11-12 PM</Button>
-                    <Button sx={buttonStyle2}>12-1 PM</Button>
-                    <Button sx={buttonStyle2}>1-2 PM</Button>
+                    {selectedButtons1.map((buttonText, index) => (
+                        <Button key={index} variant="outlined" sx={activeButton === index ? buttonStyle4 : buttonStyle2}>
+                        {buttonText}
+                        </Button>
+                    ))}
                 </ButtonGroup>
                 </Stack>
                 <ButtonGroup disableElevation variant="outlined" size="large" > 
-                    <Button sx={buttonStyle2}>2-3 PM</Button>
-                    <Button sx={buttonStyle2}>3-4 PM</Button>
-                    <Button sx={buttonStyle2}>4-5 PM</Button>
-                    <Button sx={buttonStyle2}>5-6 PM</Button>
-                    <Button sx={buttonStyle2}>6-7 PM</Button>
-                    <Button sx={buttonStyle2}>7-8 PM</Button>
-                    <Button sx={buttonStyle2}>8-9 PM</Button>
-                    <Button sx={buttonStyle2}>9-10 PM</Button>
+                   {selectedButtons2.map((buttonText, index) => (
+                        <Button key={index} variant="outlined" sx={activeButton2 === index ? buttonStyle4 : buttonStyle2}>
+                        {buttonText}
+                        </Button>
+                    ))}
                 </ButtonGroup>
                 <Divider variant="middle"/>
             </Stack>
@@ -179,8 +223,9 @@ const HourButtons = () => {
                     </Stack>
                 </Stack>
             </Stack>
-            <Link to="/reservationspage">
-                <Button variant="contained" sx={{
+            <Link to="/roomreservation" state={valuesToSend}>
+                <Button variant="contained" 
+                sx={{
                     textTransform: "none",
                     backgroundColor: '#FFB532',
                     height: isSmallScreen ? "0.875rem" : "23px",
@@ -188,6 +233,7 @@ const HourButtons = () => {
                     color: 'black', 
                     borderRadius: '20px',
                     fontSize: isSmallScreen ? "8px" : "13px",
+                    
                     '&:hover': {
                         backgroundColor: '#FFC532',
                     }

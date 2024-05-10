@@ -3,7 +3,7 @@ import cors from "cors"
 import dotenv from 'dotenv'
 dotenv.config()
 import session from 'express-session'
-// import cookieSession from 'cookie-session';
+import { SMTPServer } from 'smtp-server';
 
 import MySQLStoreInit from 'express-mysql-session';
 const MySQLStore = MySQLStoreInit(session);
@@ -20,14 +20,6 @@ const options = {
 	password: process.env.MYSQL_ROOT_PASSWORD,
 	database: process.env.MYSQL_DATABASE,
 	createDatabaseTable: true,
-	// schema: {
-	// 	tableName: 'custom_sessions_table_name',
-	// 	columnNames: {
-	// 		session_id: 'custom_session_id_column_name',
-	// 		expires: 'custom_expires_column_name',
-	// 		data: 'custom_data_column_name'
-	// 	}
-	// }
 };
 
 const sessionStore = new MySQLStore(options);
@@ -46,13 +38,6 @@ app.use(cors({
     // allowedHeaders: ['Access-Control-Allow-Origin','Access-Control-Allow-Methods','Origin','Accept','Content-Type','X-Requested-With','Cookie']
 }));
 
-//edited to use cookie-session
-// app.use(cookieSession({
-//     name: 'session',
-//     keys: ['ICSpaces-auth-temporary'],
-//     maxAge: 24 * 60 * 60 * 1000,
-// }))
-
 //express-session 
 app.use(
     session({
@@ -62,11 +47,48 @@ app.use(
         saveUninitialized: false,
 		cookie: {
 			secure: false,
-			// httpOnly: true,
+			httpOnly: true,
 			maxAge: Number(process.env.ACCESS_TOKEN_TTL)
 		}
     })
 )
+
+//SMTP Server
+// const smtpserver = new SMTPServer({
+//     // SMTP server options
+//     secure: false,
+//     disabledCommands: ['STARTTLS'], // Disable STARTTLS for simplicity
+//     logger: true,
+//     onData(stream, session, callback) {
+//         // process and save incoming email
+//         let emailData = '';
+
+//         // Read email content from the stream
+//         stream.on('data', (chunk) => {
+//             emailData += chunk.toString();
+//         });
+
+//         // When the email data has been fully received
+//         stream.on('end', async () => {
+//             const parsedEmail = await simpleParser(emailData);
+
+//             // Log the parsed email
+//             console.log('Received email:');
+//             console.log('From:', parsedEmail.from.text);
+//             console.log('To:', parsedEmail.to.text);
+//             console.log('Subject:', parsedEmail.subject);
+//             console.log('Text Body:', parsedEmail.text);
+//             console.log('HTML Body:', parsedEmail.html);
+
+//             // Callback to indicate that processing is complete
+//             callback();
+//         });
+//     }
+// });
+
+// smtpserver.listen(process.env.SMTP_PORT, process.env.BACKEND_URL, () => {
+//     console.log('SMTP server listening on port 25');
+// });
 
 // Setup routes
 setUpRoutes(app);

@@ -36,6 +36,7 @@ const DropDown_Admin: React.FC<DropDown_AdminProps> = ({
         onChange={(event) => handleSelectChange(event.target.value as number)}
         input={<OutlinedInput label={label} />}
       >
+        <MenuItem value={-1}>Get All Room Reservations</MenuItem>
         {rooms.map((room, index) => (
           <MenuItem key={index} value={room.id}>
             {room.name}

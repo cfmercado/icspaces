@@ -56,16 +56,29 @@ const SchedulesPage_Admin = () => {
 
       if (selectedRoom != null) {
         try {
-          const response = await fetch(
-            "https://icspaces-backend.onrender.com/get-all-reservations-by-room",
-            {
+          let url = "";
+          let options = {};
+
+          if (selectedRoom === -1) {
+            url = "https://icspaces-backend.onrender.com/get-all-reservation";
+            options = {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            };
+          } else {
+            url = "https://icspaces-backend.onrender.com/get-all-reservations-by-room";
+            options = {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({ room_id: selectedRoom }),
-            }
-          );
+            };
+          }
+
+          const response = await fetch(url, options);
           const data = await response.json();
           console.log("This is it", data); // Print the data
 
@@ -87,7 +100,7 @@ const SchedulesPage_Admin = () => {
 
   return (
     <Box style={{ overflow: "auto", height: "calc(100vh - 2vh)" }}>
-      <Grid container justifyContent="center" spacing={2} mt={7}>
+      <Grid container justifyContent="center" spacing={2} mt={7} mb={5}>
         <Grid item md={11} mb={3} mt={2}>
           <Box display="flex" alignItems="flex-start">
             <BackButton />
@@ -113,7 +126,7 @@ const SchedulesPage_Admin = () => {
             <PrintSched_Admin />
           </Box>
         </Grid>
-        <Grid item xs={12} mb={2} mt={-2}>
+        <Grid item xs={12} mt={-2}>
           <CalendarSchedule_Admin reservations={reservationData} />
         </Grid>
       </Grid>

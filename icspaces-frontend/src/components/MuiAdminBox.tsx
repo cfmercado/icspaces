@@ -2,18 +2,25 @@ import { Box, Grid, Divider, Stack, Typography } from '@mui/material';
 import SquareIcon from '@mui/icons-material/Square';
 import React, { useEffect, useState } from 'react';
 
-let options = {
-    method: 'POST',
-    headers: {
-        "Content-Type": "application/json"
-    },
-    //enter fields here
-    body: JSON.stringify({ })
-};
+
 
 const MuiAdminBox = () => {
 
+    const [currentDate, setCurrentDate] = useState(new Date());
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentDate(new Date());
+        }, 1000); // Update every second
+        return () => clearInterval(interval);
+    }, []);
+
+    const formattedDate = currentDate.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
 
     const [totalRequestCount, setTotalRequestCount] = useState(0);
     const [pendingRequestCount, setPendingRequestCount] = useState(0);
@@ -39,8 +46,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                console.log(data);
-                setPendingRequestCount(data.totalRequestCount);
+                console.log("The total request count is",data["count"]);
+                setTotalRequestCount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -59,8 +66,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                console.log(data);
-                setPaidAmount(data.pendingRequestCount);
+                // console.log(data);
+                setPaidAmount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -79,8 +86,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                console.log(data);
-                setTotalRequestCount(data.pendingRequestCount);
+                // console.log(data);
+                setPendingRequestCount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -99,8 +106,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                console.log(data);
-                setPendingAmount(data.pendingAmount);
+                // console.log(data);
+                setPendingAmount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -119,8 +126,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                console.log(data);
-                setTotalAccountsCount(data.totalAccountsCount);
+                // console.log(data);
+                setTotalAccountsCount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -139,8 +146,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                console.log(data);
-                setNewAccountsCount(data.newAccountsCount);
+                // console.log(data);
+                setNewAccountsCount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -194,8 +201,8 @@ const MuiAdminBox = () => {
                     <Stack direction='column' spacing={1}>
                         <Typography variant='h3' sx={{ fontSize: { xs: 30, sm: 40 }, color: "#FFB532" }}>Hello, Admin!</Typography>
                         <Stack>
-                        <Typography variant="body1">Today is Tuesday, March 04, 2024.</Typography>
-                        <Typography variant="body1">You have 3 upcoming events.</Typography>
+                        <Typography variant="body1">Today is {formattedDate}</Typography>
+                        {/* <Typography variant="body1">You have 3 upcoming events.</Typography> */}
                         </Stack>
                     </Stack>
                 </Box>
@@ -216,7 +223,7 @@ const MuiAdminBox = () => {
                         />
                         <Typography variant="body1">Request</Typography>
 
-                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-8px' }}>
+                        {/* <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-8px' }}>
                             <Stack sx={{ marginLeft: '-40px' }}>
                                 <Typography variant="h4">{totalRequestCount}</Typography>
                                 <Typography variant="body2">Total Request</Typography>
@@ -228,6 +235,20 @@ const MuiAdminBox = () => {
                                 <Typography variant="h4">{pendingRequestCount}</Typography> 
                                 <Typography variant="body2">Pending Request</Typography>
                             </Stack> 
+                        </Stack> */}
+
+                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-20px' }} spacing={2}>
+                            <div>
+                                <Typography variant="h4">{totalRequestCount}</Typography>
+                                <Typography variant="body2">Total Request</Typography>
+                            </div> 
+                            <div>
+                                <Divider orientation="vertical" textAlign='center' flexItem sx={{ width: 1.5, height: 80, backgroundColor: '#183048' }} />
+                            </div>
+                            <div> 
+                                <Typography variant="h4">{pendingRequestCount}</Typography> 
+                                <Typography variant="body2">Pending Request</Typography>
+                            </div> 
                         </Stack>
 
                     </NotifBox>
@@ -246,7 +267,7 @@ const MuiAdminBox = () => {
                         />
                         <Typography variant="body1">Accounts</Typography>
 
-                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-8px' }}>
+                        {/* <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-8px' }}>
                             <Stack sx={{ marginLeft: '-50px' }}>
                                 <Typography variant="h4">{totalAccountsCount}</Typography> 
                                 <Typography variant="body2">Total Accounts</Typography>
@@ -258,6 +279,20 @@ const MuiAdminBox = () => {
                                 <Typography variant="h4">{newAccountsCount}</Typography> 
                                 <Typography variant="body2">New Accounts</Typography>
                             </Stack> 
+                        </Stack> */}
+
+                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: ['-50px', '-35px', '-20px'] }} spacing={2}>
+                            <div>
+                                <Typography variant="h4">{totalAccountsCount}</Typography> 
+                                <Typography variant="body2">Total Accounts</Typography>
+                            </div> 
+                            <div>
+                                <Divider orientation="vertical" textAlign='center' flexItem sx={{ width: 1.5, height: 80, backgroundColor: '#183048' }} />
+                            </div>
+                            <div> 
+                            <Typography variant="h4">{newAccountsCount}</Typography> 
+                                <Typography variant="body2">New Accounts</Typography>
+                            </div> 
                         </Stack>
 
                     </NotifBox>
@@ -276,7 +311,7 @@ const MuiAdminBox = () => {
                         />
                         <Typography variant="body1">Balances</Typography>
 
-                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-8px' }}>
+                        {/* <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '-8px' }}>
                             <Stack sx={{ marginLeft: '10px' }}>
                                 <Typography variant="h4">{paidAmount}</Typography> 
                                 <Typography variant="body2"> Paid </Typography>
@@ -288,6 +323,20 @@ const MuiAdminBox = () => {
                                 <Typography variant="h4">{pendingAmount}</Typography> 
                                 <Typography variant="body2"> Pending </Typography>
                             </Stack> 
+                        </Stack> */}
+
+                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '30px' }} spacing={3}>
+                            <div>
+                                <Typography variant="h4">{paidAmount}</Typography> 
+                                <Typography variant="body2"> Paid </Typography>
+                            </div> 
+                            <div>
+                                <Divider orientation="vertical" textAlign='center' flexItem sx={{ width: 1.5, height: 80, backgroundColor: '#183048' }} />
+                            </div>
+                            <div> 
+                                <Typography variant="h4">{pendingAmount}</Typography> 
+                                <Typography variant="body2"> Pending </Typography>
+                            </div> 
                         </Stack>
 
                     </NotifBox>

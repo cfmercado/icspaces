@@ -5,7 +5,7 @@ CREATE TABLE user(
     fname VARCHAR(50) NOT NULL,
     lname VARCHAR(50) NOT NULL,
     usertype INT NOT NULL, -- 0 for student, 1 for faculty, 2 for oic, 3 for director
-    profilePicUrl VARCHAR(255) DEFAULT NULL,
+    profilePicUrl VARCHAR(1275) DEFAULT NULL,
     isFirstTimeLogin BOOLEAN DEFAULT TRUE
 );
 

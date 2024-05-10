@@ -61,7 +61,7 @@ const styles = {
 const RoomPage = () => {
 
   const { room_id } = useParams<{ room_id: string }>();
-
+  const  dummyDate = "Thurs Dec 03 2020";
   // State to keep track of the current image index
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -79,9 +79,9 @@ const RoomPage = () => {
 
   const statusMapping: Record<string, string> = { 
     '0': 'Ground',
-    '1': 'First',
-    '2': 'Second',
-    '3': 'N/A'
+    '1': 'Second',
+    '2': 'Third',
+    '3': 'Fourth'
     // add other status codes as needed
   };
 
@@ -108,7 +108,34 @@ const RoomPage = () => {
     utility: Utility[];
   }
 
+  interface ReservationsInfo {
+    availableTimes: any;
+  }
+
   const [room, setRoom] = useState<RoomInfo | null>();
+  const [reservations, setReservations] = useState<ReservationsInfo | null>();
+  
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch("https://icspaces-backend.onrender.com/get-available-room-time", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ room_id: room_id,
+            date: dummyDate
+           }),
+        });
+        const data = await response.json();
+        setReservations(data);
+        console.log(reservations);
+      } catch (error) {
+        console.error("Failed to fetch reservations:", error);
+      }
+    };
+    fetchReservations();
+  }, []);
 
   useEffect(() => {
     fetch('https://icspaces-backend.onrender.com/get-room-info', {
@@ -133,6 +160,7 @@ const RoomPage = () => {
         justifyContent: 'flex-start', // Aligns content to the top
         alignItems: 'center', // Centers content horizontally
         height: '100vh', // Maintains full viewport height
+        width: '184vh',
         overflowY: 'auto', // Allows scrolling
         position: 'relative', // Allows positioning of children
     }}>
@@ -156,7 +184,7 @@ const RoomPage = () => {
           height: 700,
         }}
       >
-        <HourButtons />
+        <HourButtons availableTimes = {reservations?.availableTimes}/>
       </Box>
       <Button
         startIcon={<ArrowBackIcon />}

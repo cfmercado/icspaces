@@ -90,7 +90,7 @@ const SignInBox = () => {
           <span style={{ padding: "20px 20px" }}>
             {" "}
             {/* Added padding around the text */}
-            Don't have an account? <b>Sign in as Guest</b>
+            Are you a guest? <b>Reserve a room</b>
           </span>
         </Button>
       </Stack>

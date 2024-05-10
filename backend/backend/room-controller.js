@@ -1,5 +1,7 @@
 import pool from './db.js';
 
+
+
 // Form: https://icspaces-backend.onrender.com/search?type={TYPE}&room_id={ROOM_ID}
 const searchHandler = async (req, res) => {
     const { type } = req.body;
@@ -36,7 +38,7 @@ const searchRoomById = async (req, res) => {
         const rows = await conn.query(query, values);
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to search room by id", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -58,7 +60,9 @@ const searchRoomByName = async (req, res) => {
         console.log(rows);
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to search room by room name", success: false });
+    } finally {
+        if (conn) conn.release();
     }
 }
 
@@ -76,8 +80,10 @@ const searchRoomByType = async (req, res) => {
 
         res.send(rows);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to search room by room type", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 const searchRoomByCapacity = async (req, res) =>{
@@ -91,8 +97,10 @@ const searchRoomByCapacity = async (req, res) =>{
         const rows = await conn.query(query, values);
         res.send(rows);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to search room by room capacity", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 
@@ -107,8 +115,10 @@ const searchRoomByCapacityRange = async (req, res) =>{
         const rows = await conn.query(query, values);
         res.send(rows);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to search room by capacity range", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 const searchRoomByFloor = async (req, res) =>{
@@ -122,15 +132,17 @@ const searchRoomByFloor = async (req, res) =>{
         const rows = await conn.query(query, values);
         res.send(rows);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to search room by floor", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 const getRoomInfo = async (req,res) => {
     let conn;
     try {
         conn = await pool.getConnection()
-        const { room_id } = req.body
+        const room_id= parseInt(req.body.room_id)
         var roomquery = `SELECT * FROM room WHERE room_id = ?`
         var roomvalues = [room_id]
         var roomrows = await conn.query(roomquery, roomvalues)
@@ -144,8 +156,10 @@ const getRoomInfo = async (req,res) => {
         }
         res.send(result)
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to get room info by room ID", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 
@@ -165,8 +179,10 @@ const getAllRoomsAndUtilities = async (req, res) => {
 
         res.send(roomsWithUtilities);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to get rooms and utilities", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 const getAllRooms = async (req, res) => {
@@ -177,8 +193,10 @@ const getAllRooms = async (req, res) => {
         const rows = await conn.query(query);
         res.send(rows);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to get all rooms", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 
@@ -194,8 +212,10 @@ const insertRoom = async (req, res) => {
         var result = await conn.query(query, values);
         res.send(result);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to insert room", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 const setRoomClassSchedule = async (req, res) => {
@@ -241,7 +261,7 @@ const setEditedRoom = async (req, res) => {
         await conn.query(query, values);
         res.send({ message: "Successfully edited room details." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to set edited information of a room", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -271,7 +291,7 @@ const addUtility = async (req, res) => {
             res.send({ message: "Successfully added utility." });
         }
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to add utility", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -299,7 +319,29 @@ const deleteUtility = async (req, res) => {
         await conn.query(query, values);
         res.send({ message: "Successfully deleted utility." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to delete utility", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+
+const getAllRoomFilters = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const roomTypesResult = await conn.query("SELECT DISTINCT room_type FROM room");
+        const floorsResult = await conn.query("SELECT DISTINCT floor_number FROM room");
+        const capacitiesResult = await conn.query("SELECT DISTINCT room_capacity FROM room");
+
+        // Extract just the values into arrays
+        const roomTypes = roomTypesResult.map(row => row.room_type);
+        const floors = floorsResult.map(row => row.floor_number);
+        const capacities = capacitiesResult.map(row => row.room_capacity);
+        
+        res.send({ roomTypes, floors, capacities });
+    } catch (err) {
+        res.send({errmsg: "Failed to get all room filters", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -336,7 +378,12 @@ const processUtilities = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { room_id, utilities } = req.body
+        const { room_id, utilities, room_capacity, fee, room_type, floor_number, additional_fee_per_hour } = req.body
+
+        // Update room details
+        const updateRoomQuery = `UPDATE room SET room_capacity = ?, fee = ?, room_type = ?, floor_number = ?, additional_fee_per_hour = ? WHERE room_id = ?`;
+        const updateRoomValues = [room_capacity, fee, room_type, floor_number, additional_fee_per_hour, room_id];
+        await conn.query(updateRoomQuery, updateRoomValues);
 
         // Get existing utilities from the database
         const existingUtilitiesQuery = `SELECT * FROM utility WHERE room_id = ?`;
@@ -372,9 +419,62 @@ const processUtilities = async (req, res) => {
             }
         }
 
-        res.send({ message: "Successfully processed utilities." });
+        res.send({ message: "Successfully processed utilities and updated room details." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to process utilities and update room details", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+const addNewRoom = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, utilities } = req.body
+
+        // Check if the room already exists in the database
+        const existingRoomQuery = `SELECT * FROM room WHERE room_name = ?`;
+        const existingRoom = await conn.query(existingRoomQuery, [room_name]);
+
+        if (existingRoom.length > 0) {
+            // If the room exists, send an error response
+            res.send({errmsg: "Room already exists", success: false });
+            return;
+        } else {
+            // Insert the new room into the room table
+            const insertRoomQuery = `INSERT INTO room(room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour) VALUES(?,?,?,?,?,?)`;
+            const insertRoomValues = [room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour];
+            await conn.query(insertRoomQuery, insertRoomValues);
+
+            // Get the ID of the inserted room
+            const result = await conn.query('SELECT LAST_INSERT_ID() as room_id');
+            const room_id = result[0].room_id;
+            // console.log('Room ID:', room_id);
+
+            for (let i = 0; i < utilities.length; i++) {
+                const { item_name, item_qty, fee } = utilities[i];
+            
+                // Check if the utility already exists in the room
+                const existingUtilityQuery = `SELECT * FROM utility WHERE room_id = ? AND item_name = ?`;
+                const existingUtility = await conn.query(existingUtilityQuery, [room_id, item_name]);
+            
+                if (existingUtility.length > 0) {
+                    // If the utility exists, skip to the next utility
+                    continue;
+                } else {
+                    // Add the utility if it does not exist
+                    const insertQuery = `INSERT INTO utility(room_id, item_name, item_qty, fee) VALUES(?,?,?,?)`;
+                    const insertValues = [room_id, item_name, item_qty, fee];
+                    await conn.query(insertQuery, insertValues);
+                }
+            }
+        }
+
+        res.send({ message: "Successfully added room and processed utilities."});
+
+    } catch (err) {
+        res.send({errmsg: "Failed to add room and process utilities", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -383,5 +483,5 @@ const processUtilities = async (req, res) => {
 
 
 
-export { searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, processUtilities }
+export { searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom }
 

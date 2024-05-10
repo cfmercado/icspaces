@@ -1,6 +1,9 @@
 import { useState, useEffect} from "react";
 import {
-  Stack,Typography, Button, Box, Grid, FormControl,InputLabel,TextField,ButtonGroup,Theme, MenuItem, Select
+  Stack,Typography, Button, Box, Grid, FormControl,InputLabel,TextField,ButtonGroup,Theme, MenuItem, Select,Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent
 } from "@mui/material";
 import AccountCard from "./AccountCard";
 
@@ -15,18 +18,20 @@ import { Users } from "./types";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import SearchIcon from "@mui/icons-material/Search";
 import { SelectChangeEvent } from "@mui/material/Select";
-
+import CloseIcon from '@mui/icons-material/Close';
+import userEvent from "@testing-library/user-event";
+import { createImportSpecifier } from "typescript";
 const statusMapping: Record<number, string> = { 
   0: 'Student',
   1: 'Faculty',
-  2: 'OIC',
+  2: 'Admin',
   3: 'Director',
 
   // add other status codes as needed
 };
 
 const AccountManage = () => {
-
+  const [selectedUser, setSelectedUser] = useState<Users | null>(null);
   useEffect(() => {
     fetch('https://icspaces-backend.onrender.com/get-all-users', {
       method: 'POST', // or 'PUT'
@@ -40,9 +45,33 @@ const AccountManage = () => {
      
       setDataTable(data);
       setOriginalData(data);
-      console.log(data);
+      console.log("Data is fetched");
     });
-  }, []);
+  }, [selectedUser]);
+
+  function FetchStudentDetails(email:string){
+
+        fetch('https://icspaces-backend.onrender.com/get-student-details', {
+            method: 'POST', // or 'PUT'
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({email}), // Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+            setstudentNumber(data.student_number);
+            setOrg(data.org);
+            setCourse(data.course);
+            setCollege(data.college);
+            setDepartment(data.department);
+            setuserMail(data.email);
+            console.log('meow');
+        });
+   
+  };
+
+
 
 
   const [reservationView, setReservationView] = useState('All');
@@ -51,11 +80,43 @@ const AccountManage = () => {
   const [accountNum,setAccountNum] = useState(dataTable.length);
   const [originalData, setOriginalData] = useState<Users[]>([]);
   const [sortOrder, setSortOrder] = useState("Latest");
-  const [selectedReservation, setSelectedReservation] = useState<Users | null>(null);
   const [open, setOpen] = useState(false);
   const isSmallScreen = useMediaQuery((theme: Theme) =>
     theme.breakpoints.down("md")
   );
+
+  //for the account dialog
+  const [fname, setFname]=useState('');
+  const [lname, setLname]=useState('');
+  const [college,setCollege]=useState('');
+  const [department,setDepartment]=useState('');  
+  const [studentNumber,setstudentNumber]=useState('');  
+  const [course,setCourse]=useState('');  
+  const [org,setOrg]=useState(''); 
+  const [userMail,setuserMail]=useState('');
+
+  const handleUserMailChange = (event: { target: { value: string; }; }) => {
+    setuserMail(event.target.value);
+  };
+  const handleCollegeChange = (event: { target: { value: string; }; }) => {
+    setCollege(event.target.value);
+  };
+  const handleDepartmentChange = (event: { target: { value: string; }; }) => {
+    setDepartment(event.target.value);
+  };
+  const handleStudentNumberChange = (event: { target: { value: string; }; }) => {
+    setstudentNumber(event.target.value);
+  };
+  const handleOrgChange = (event: { target: { value: string; }; }) => {
+    setOrg(event.target.value);
+  };
+  const handleCourseChange = (event: { target: { value: string; }; }) => {
+    setCourse(event.target.value);
+  };
+
+  const handleFnameChange = (event: { target: { value: string; }; }) => {
+    setFname(event.target.value);
+  };
 
   const handleViewChange = (event: { target: { value: any; }; }) => {
     const view = event.target.value;
@@ -80,7 +141,7 @@ const AccountManage = () => {
   };
 
   const handleOpen = (reservation: Users) => { //p[]
-    setSelectedReservation(reservation);
+    setSelectedUser(reservation);
     setOpen(true);
   };
 
@@ -111,6 +172,7 @@ const AccountManage = () => {
       direction={isSmallScreen ? "column" : "row"}
       spacing={2}
       width='100%'
+      justifyContent='space-between'
     >
       <Grid item xs={12} sm={6} md={5}  style={{display:"flex",justifyContent:"flex-start"}}>
         <TextField
@@ -122,28 +184,9 @@ const AccountManage = () => {
           fullWidth
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={5} mt={2} >
-        <ButtonGroup  size='medium'color="primary" aria-label="outlined primary button group" sx={{alignContent:'left'}} >
-          <Button
-            variant={sortOrder === "Latest" ? "contained" : "outlined"}
-          >
-            Latest
-          </Button>
-          <Button
-            variant={sortOrder === "Oldest" ? "contained" : "outlined"}
-          >
-            Oldest
-          </Button>
-          <Button   
-            variant={sortOrder === "Reset" ? "contained" : "outlined" }
-          >
-            Reset
-          </Button>
-        </ButtonGroup>
 
-      </Grid>
       {/* Account Filters End */}
-      
+
       <Grid item xs={12} sm={6} md={2} container direction='column' style={{display:"flex",justifyContent:"flex-start"}}>
         <FormControl variant="outlined" >
           <InputLabel id="filter-label">Filter</InputLabel>
@@ -154,7 +197,7 @@ const AccountManage = () => {
             <MenuItem value="All">All</MenuItem>
             <MenuItem value="Student">Student</MenuItem>
             <MenuItem value="Faculty">Faculty</MenuItem>
-            <MenuItem value="OIC">OIC</MenuItem>
+            <MenuItem value="Admin">Admin</MenuItem>
             <MenuItem value="Director">Director</MenuItem>
           </Select>
         </FormControl>
@@ -192,19 +235,51 @@ const AccountManage = () => {
               onClick={() => handleOpen(reservation)}
             />
           ))}
-
-        {selectedReservation && (
+        {/* Dialog */}
+        {selectedUser && 
           <AccountDialog
           open={open}
-          onClose={() => setSelectedReservation(null)}
-          user={selectedReservation}
+          onClose={() => setSelectedUser(null)}
+          user={selectedUser}
           />
-        )}
+        }
 
+        {/* {selectedUser && (
+          <>
+          {selectedUser.usertype===0 && FetchStudentDetails(selectedUser.email)}
+          <Dialog open={open} onClose={()=>setSelectedUser(null)} >
+            <DialogTitle>
+              <Stack direction='row' justifyContent='space-between' >
+                <Typography variant='h6'>Account Info</Typography>
+                <Button sx={{justifyContent:'flex', backgroundColor:'gray'}}>
+                  <CloseIcon></CloseIcon>
+                </Button>
+              </Stack>
+            </DialogTitle>
+            <DialogContent>
 
-
-
-
+            <Grid container>
+                <Grid item>
+                    <Stack direction='row' spacing={2} padding={1} sx={{ display: "flex", alignItems: "center", justifyContent:"space-evenly"}}>
+                        <Avatar sx={{ width: 50, height: 50 }}>VH</Avatar>
+                        <Typography variant='h6'>{selectedUser.lname},&nbsp;{selectedUser.fname}</Typography>
+                    </Stack>
+                </Grid>
+            </Grid>
+            <Button onClick={()=>setSelectedUser(null)} color="primary">
+            Close
+            </Button>
+            </DialogContent>
+            <FormControl variant="outlined" size='small'>
+              <Stack spacing={2} mt={1}>
+                  <TextField onChange={handleFnameChange} value={fname}></TextField>
+                
+              </Stack>
+              </FormControl>
+          </Dialog>
+          </>
+        )} */}
+   
 
       </Stack>
     </Stack>

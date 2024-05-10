@@ -15,23 +15,65 @@ const getAllReservationsByUser = async (req, res) => {
         console.log(rows)
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all reservations by User ID", success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
 
-// get reservation information of a specific reservation using reservation_id
-// input: "reservation_id"
 const getReservation = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
         const { reservation_id } = req.body;
-        const query = "SELECT * FROM reservation WHERE reservation_id = ?";
+        const query = `
+            SELECT 
+                reservation.*, 
+                IFNULL(comment.comment_text, '') AS comment_text,
+                room.fee,
+                IFNULL(pending.date_created, '') AS pending_date,
+                IFNULL(booked.date_created, '') AS booked_date,
+                IFNULL(paid.date_created, '') AS paid_date,
+                IFNULL(disapproved.date_created, '') AS disapproved_date,
+                IFNULL(cancelled.date_created, '') AS cancelled_date
+            FROM reservation 
+            LEFT JOIN comment ON reservation.reservation_id = comment.reservation_id 
+            INNER JOIN room ON reservation.room_id = room.room_id
+            LEFT JOIN reservation_notification AS pending ON reservation.reservation_id = pending.reservation_id AND pending.status_code = 0
+            LEFT JOIN reservation_notification AS booked ON reservation.reservation_id = booked.reservation_id AND booked.status_code = 1
+            LEFT JOIN reservation_notification AS paid ON reservation.reservation_id = paid.reservation_id AND paid.status_code = 2
+            LEFT JOIN reservation_notification AS disapproved ON reservation.reservation_id = disapproved.reservation_id AND disapproved.status_code = 3
+            LEFT JOIN reservation_notification AS cancelled ON reservation.reservation_id = cancelled.reservation_id AND cancelled.status_code = 4
+            WHERE reservation.reservation_id = ?
+        `;
         const values = [reservation_id];
         const rows = await conn.query(query, values);
-        res.send(rows[0]);
+
+        const util_query = `SELECT r.reservation_id, ru.utility_id, ru.reserved_quantity, ru.running_total
+        FROM reservation r 
+        JOIN reservation_utility ru 
+        ON r.reservation_id = ru.reservation_id
+        WHERE r.reservation_id = ?`;
+
+        const util_rows = await conn.query(util_query, values);
+
+        if (rows[0]) {
+            // Format the dates
+            ['pending_date', 'booked_date', 'paid_date', 'disapproved_date', 'cancelled_date'].forEach(dateField => {
+                if (rows[0][dateField]) {
+                    rows[0][dateField] = new Date(rows[0][dateField]).toISOString();
+                }
+            });
+            res.send({reservations: rows[0], utilities: util_rows});
+        } else {
+            res.status(404).send({errmsg: "Reservation not found", success: false});
+        }
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all reservations by reservation ID",success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
 
@@ -45,7 +87,10 @@ const getAllReservationsbyRoom = async (req, res) => {
         const rows = await conn.query(query, values);
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all reservations by Room ID",success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
 
@@ -59,10 +104,85 @@ const getReservationByName =  async (req, res) => {
         const query = "SELECT * FROM reservation WHERE user_id = ? AND activity_name = ?";
         const values = [user_id, event_name];
         const rows = await conn.query(query, values);
-        res.send(rows);
+
+        
+        const util_query = `SELECT r.reservation_id, ru.utility_id, ru.reserved_quantity, ru.running_total
+        FROM reservation r 
+        JOIN reservation_utility ru 
+        ON r.reservation_id = ru.reservation_id
+        WHERE r.user_id = ? AND r.activity_name = ?`;
+
+        const util_rows = await conn.query(util_query, values);
+
+
+        res.send({reservations: rows, utilities: util_rows});
     } catch (err){
-        throw err;
+        res.send({errmsg: "Failed to get all reservations by User ID and Activity Name", success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
+}
+
+// get reservation with dummy data:
+const getAllReservationsWithDummyData = async (req, res)  => {
+    const dummyData = [
+        {
+            reservation_id: 1,
+            activity_name: 'Activity 1',
+            room_id: 1,
+            user_id: 'user1@up.edu.ph',
+            date_created: new Date(),
+            start_datetime: new Date(),
+            end_datetime: new Date(),
+            discount: 10.00,
+            additional_fee: 50.00,
+            total_amount_due: 5060.00,
+            status_code: 0,
+            comments: [
+                {
+                    comment_id: 1,
+                    user_id: 'user1@up.edu.ph',
+                    comment_text: 'This is a comment for Activity 1.',
+                    date_created: new Date()
+                }
+            ],
+            verified_date: new Date(),
+            payment_date: new Date(),
+            verification_date: new Date(),
+            disapproved_date: new Date(),
+            approved_date: new Date()
+        },
+        {
+            reservation_id: 2,
+            activity_name: 'Activity 2',
+            room_id: 2,
+            user_id: 'user2@up.edu.ph',
+            date_created: new Date(),
+            start_datetime: new Date(),
+            end_datetime: new Date(),
+            discount: 0.00,
+            additional_fee: 0.00,
+            total_amount_due: 5000.00,
+            status_code: 0,
+            comments: [
+                {
+                    comment_id: 2,
+                    user_id: 'user2@up.edu.ph',
+                    comment_text: 'This is a comment for Activity 2.',
+                    date_created: new Date()
+                }
+            ],
+            verified_date: new Date(),
+            payment_date: new Date(),
+            verification_date: new Date(),
+            disapproved_date: new Date(),
+            approved_date: new Date()
+        },
+        // Add more dummy reservations as needed
+    ];
+
+    res.send(dummyData);
 }
 
 // get reservations of user using user_id and status_code
@@ -75,9 +195,22 @@ const getReservationByStatus = async (req, res)  => {
         const query = "SELECT * FROM reservation WHERE user_id = ? AND status_code = ?";
         const values = [user_id, status_code];
         const rows = await conn.query(query, values);
-        res.send(rows);
+
+        const util_query = `SELECT r.reservation_id, ru.utility_id, ru.reserved_quantity, ru.running_total
+        FROM reservation r 
+        JOIN reservation_utility ru 
+        ON r.reservation_id = ru.reservation_id
+        WHERE r.user_id = ? AND r.status_code = ?`;
+
+        const util_rows = await conn.query(util_query, values);
+
+
+        res.send({reservations: rows, utilities: util_rows});
     } catch (err){
-        throw err;
+        res.send({errmsg: "Failed to get all reservations by user_id and status", success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
 
@@ -90,9 +223,23 @@ const getReservationSortedOldest = async (req, res)  => {
         const query = "SELECT * FROM reservation WHERE user_id = ? ORDER BY date_created ASC"
         const values = [user_id]
         const rows = await conn.query(query, values)
-        res.send(rows)
+
+        const util_query = `SELECT r.reservation_id, ru.utility_id, ru.reserved_quantity, ru.running_total
+        FROM reservation r 
+        JOIN reservation_utility ru 
+        ON r.reservation_id = ru.reservation_id
+        WHERE r.user_id = ? 
+        ORDER BY r.date_created ASC`;
+
+        const util_rows = await conn.query(util_query, values);
+
+
+        res.send({reservations: rows, utilities: util_rows});
     } catch (err){
-        throw err;
+        res.send({errmsg: "Failed to get all reservations", success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
 //get all reservations sorted by lastest
@@ -104,33 +251,98 @@ const getReservationSortedNewest = async (req, res)  => {
         const query = "SELECT * FROM reservation WHERE user_id = ? ORDER BY date_created DESC"
         const values = [user_id]
         const rows = await conn.query(query, values)
-        res.send(rows)
+
+        const util_query = `SELECT r.reservation_id, ru.utility_id, ru.reserved_quantity, ru.running_total
+        FROM reservation r 
+        JOIN reservation_utility ru 
+        ON r.reservation_id = ru.reservation_id
+        WHERE r.user_id = ? 
+        ORDER BY r.date_created DESC`;
+
+        const util_rows = await conn.query(util_query, values);
+
+
+        res.send({reservations: rows, utilities: util_rows});
     } catch (err){
-        throw err;
+        console.log(err)
+        res.send({errmsg: "Failed to get all reservations", success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
+
 // insert reservation
 const addReservation = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { activity_name, room_id, user_id, discount, additional_fee, total_amount_due, status_code } = req.body
+        const { activity_name, activity_desc, room_id, user_id, date_created, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code, utilities } = req.body
         
         var query = `INSERT INTO reservation(
-            activity_name, 
+            activity_name,
+            activity_desc, 
             room_id, 
             user_id, 
+            date_created,
+            start_datetime,
+            end_datetime,
             discount,
             additional_fee,
             total_amount_due,
             status_code
-        ) VALUES(?,?,?,?,?,?,?)`;
-        const values = [activity_name, room_id, user_id, discount, additional_fee, total_amount_due, status_code];
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?)`;
+        const values = [activity_name, activity_desc, room_id, user_id, date_created, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code];
         
-        await conn.query(query, values);
+        // Execute query
+        const result = await conn.query(query, values);
+
+        //insert utilities if there is any
+        if (utilities.length !== 0) {
+            for (const utility of utilities) {
+                const { utility_id, reserved_quantity, running_total } = utility;
+                const utilityInsertQuery = `INSERT INTO reservation_utility(reservation_id, utility_id, reserved_quantity, running_total) VALUES(?,?,?,?)`;
+                const utilityInsertValues = [result.insertId, utility_id, reserved_quantity, running_total];
+                await conn.query(utilityInsertQuery, utilityInsertValues);
+            }
+        }
+
+        // Insert into reservation_notification table and get the reservation_id from previous query
+        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,?,?)`;
+        const notifValues = [result.insertId, user_id, status_code, date_created];
+        await conn.query(notifQuery, notifValues);
+
         res.send({ message: "Successfully added reservation." });
     } catch (err) {
-        throw err;
+        console.error(err);
+        res.send({errmsg: "Failed to add reservation", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+//allow edit of reservation as an admin
+const editReservation = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { reservation_id, activity_name, room_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due } = req.body
+        
+        var query = `UPDATE reservation SET
+            activity_name = ?, 
+            room_id = ?, 
+            start_datetime = ?,
+            end_datetime = ?,
+            discount = ?,
+            additional_fee = ?,
+            total_amount_due =?
+            WHERE reservation_id = ?`;
+        const values = [activity_name, room_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, reservation_id];
+        
+        await conn.query(query, values);
+        res.send({ success: true, message: "Successfully edited reservation." });
+    } catch (err) {
+        res.send({errmsg: "Failed to edited reservation", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -142,13 +354,20 @@ const addComment = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { reservation_id, user_id, comment_text } = req.body
+        const { reservation_id, user_id, comment_text, status_code } = req.body
         var query = `INSERT INTO comment(reservation_id, user_id, comment_text) VALUES(?,?,?)`
         const values = [reservation_id, user_id, comment_text]
         await conn.query(query, values);
+
+        // Insert into reservation_notification table
+        var notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,?)`
+        const notifValues = [reservation_id, user_id, status_code]
+        await conn.query(notifQuery, notifValues);
+
         res.send({ message: "Successfully added comment." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to add comment", success: false });
+        
     } finally {
         if (conn) conn.release();
     }
@@ -160,13 +379,22 @@ const setAsApproved = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { reservation_id } = req.body
+        const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 1 WHERE reservation_id = ?";
         const values = [reservation_id];
+
+        //execute query
         await conn.query(query, values);
+
+        // Insert into reservation_notification table
+        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,1)`;
+        const notifValues = [reservation_id, user_id];
+        await conn.query(notifQuery, notifValues);
+
         res.send({ message: "Successfully edited status to approved." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to set reservation as approved", success: false });
+        
     } finally {
         if (conn) conn.release();
     }
@@ -178,13 +406,19 @@ const setAsPaid = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { reservation_id } = req.body
+        const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 2 WHERE reservation_id = ?";
         const values = [reservation_id];
         await conn.query(query, values);
+
+        const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES (?, ?, 2)";
+        const insertValues = [reservation_id, user_id];
+        await conn.query(insertNotificationQuery, insertValues);
+
         res.send({ message: "Successfully edited status to paid." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to set reservation as paid", success: false });
+        
     } finally {
         if (conn) conn.release();
     }
@@ -196,13 +430,19 @@ const setAsDisapproved = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { reservation_id } = req.body
+        const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 3 WHERE reservation_id = ?";
         const values = [reservation_id];
         await conn.query(query, values);
+
+        const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES (?, ?, 3)";
+        const insertValues = [reservation_id, user_id];
+        await conn.query(insertNotificationQuery, insertValues);
+
         res.send({ message: "Successfully edited status to disapproved." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to set reservation as disapproved", success: false });
+        
     } finally {
         if (conn) conn.release();
     }
@@ -214,13 +454,22 @@ const setAsCancelled = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { reservation_id } = req.body
+        const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 4 WHERE reservation_id = ?";
         const values = [reservation_id];
+
+        //execute query
         await conn.query(query, values);
+
+        // Insert into reservation_notification table
+        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,4)`;
+        const notifValues = [reservation_id, user_id];
+        await conn.query(notifQuery, notifValues);
+
         res.send({ message: "Successfully edited status to cancelled." });
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to set reservation as cancelled", success: false });
+        
     } finally {
         if (conn) conn.release();
     }
@@ -246,15 +495,30 @@ const getReservationByRoom = async (req, res) => {
                     AND end_datetime <= ?;`;
         const values = [room_id, start_datetime, end_datetime];
         
-        var result = await conn.query(query, values);
-        res.send(result);
+        var rows = await conn.query(query, values);
+
+        const util_query = `SELECT r.reservation_id, ru.utility_id, ru.reserved_quantity, ru.running_total
+        FROM reservation r 
+        JOIN reservation_utility ru 
+        ON r.reservation_id = ru.reservation_id
+        WHERE room_id = ?
+        AND start_datetime >= ?
+        AND end_datetime <= ?`;
+
+        const util_rows = await conn.query(util_query, values);
+
+
+        res.send({reservations: rows, utilities: util_rows});
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get resevations by room", success: false });
+        
+    } finally {
+        if (conn) conn.release();
     }
 }
 
 
-    const getTotalRequest = async (req, res) => {
+const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
@@ -266,7 +530,10 @@ const getReservationByRoom = async (req, res) => {
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
-            throw err;
+            res.send({errmsg: "Failed to get total number of requests", success: false });
+            
+        } finally {
+            if (conn) conn.release();
         }
     }
     
@@ -282,7 +549,10 @@ const getReservationByRoom = async (req, res) => {
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
-            throw err;
+            res.send({errmsg: "Failed to get total number of pending requests",success: false });
+            
+        } finally {
+            if (conn) conn.release();
         }
     }
     
@@ -298,7 +568,10 @@ const getReservationByRoom = async (req, res) => {
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
-            throw err;
+            res.send({errmsg: "Failed to get total number of accounts", success: false });
+            
+        } finally {
+            if (conn) conn.release();
         }
     }
     
@@ -314,7 +587,10 @@ const getReservationByRoom = async (req, res) => {
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
-            throw err;
+            res.send({errmsg: "Failed to get total number of new accounts", success: false });
+            
+        } finally {
+            if (conn) conn.release();
         }
     }
     
@@ -331,7 +607,10 @@ const getReservationByRoom = async (req, res) => {
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
-            throw err;
+            res.send({errmsg: "Failed to get sum of payments", success: false });
+            
+        } finally {
+            if (conn) conn.release();
         }
     }
     
@@ -349,7 +628,10 @@ const getReservationByRoom = async (req, res) => {
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
-            throw err;
+            res.send({errmsg: "Failed to get sum of pending payments", success: false });
+            
+        } finally {
+            if (conn) conn.release();
         }
     }
 
@@ -366,7 +648,8 @@ const getTotalRoomReservations = async (req, res) => {
         rows[0].totalReservations = Number(rows[0].totalReservations);
         res.send(rows[0]);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get sum of all room reservations", success: false });
+        
     } finally {
         if (conn) conn.release();
     }
@@ -381,23 +664,137 @@ const getTotalRoomReservations = async (req, res) => {
         const rows = await conn.query(query);
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all reservations", success: false });
+        
     } finally {
         if (conn) conn.end();
     }
 }
     
+const getAvailableRoomTime = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { room_id, date } = req.body;
+        const selectedDate = new Date(date);
 
+        const reservationQuery = `SELECT start_datetime, end_datetime FROM reservation WHERE room_id = ? AND DATE(start_datetime) = ?`;
+        const classQuery = `SELECT time_start, time_end FROM class INNER JOIN class_day ON class.class_id = class_day.class_id WHERE room_id = ? AND ? BETWEEN DATE(start_date) AND DATE(end_date) AND class_day = ?`;
 
+        const reservationValues = [room_id, selectedDate.toISOString().split('T')[0]]; // Extract the date part of the selected date
+        const classDay = selectedDate.getUTCDay() === 0 ? 7 : selectedDate.getUTCDay(); // Adjusted to match the database's day of the week representation
+        const classValues = [room_id, selectedDate, classDay];
 
+        const reservationTimes = await conn.query(reservationQuery, reservationValues);
+        const classTimes = await conn.query(classQuery, classValues);
 
+        const occupiedTimes = [];
+
+        // Add reservation times to occupiedTimes
+        reservationTimes.forEach(reservationTime => {
+            let startHour = new Date(reservationTime.start_datetime).getHours();
+            let endHour = new Date(reservationTime.end_datetime).getHours();
+            for (let i = startHour+1; i < endHour; i++) {
+                occupiedTimes.push(i);
+            }
+        });
+
+        // Add class times to occupiedTimes
+        classTimes.forEach(classTime => {
+            let startHour = parseInt(classTime.time_start.split(':')[0]);
+            let endHour = parseInt(classTime.time_end.split(':')[0]);
+            for (let i = startHour+1; i < endHour; i++) {
+                occupiedTimes.push(i);
+            }
+        });
+
+        // Generate all possible hourly times for the selected date
+        const allTimes = Array.from({length: 24}, (_, i) => i);
+
+        // Subtract occupiedTimes from allTimes to get availableTimes
+        const availableTimes = allTimes.filter(time => !occupiedTimes.includes(time));
+
+        // Format availableTimes to include the time in 'hh:mm:ss' format
+        const availableTimesFormatted = availableTimes.map(time => {
+            let hours = time.toString().padStart(2, '0');
+            return `${hours}:00:00`;
+        });
+
+        res.send({ availableTimes: availableTimesFormatted });
+    } catch (err) {
+        res.send({errmsg: "Failed to get available room times", success: false });
+        
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+const getAdminCommentByID = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { reservation_id } = req.body
+        const query = "SELECT * from comment WHERE reservation_id = ?";
+        const values = [reservation_id];
+        const rows = await conn.query(query, values);
+        res.send(rows);
+    } catch (err) {
+        res.send({errmsg: "Failed to get admin comment by reservation ID", success: false });
+        
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+// getUpdateDate is not possible to track unless new table
+
+const getReservationIdByEventName = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection()
+        const { activity_name } = req.body
+        const query = "SELECT reservation_id from reservation WHERE activity_name = ?"
+        const name = `%${activity_name}%`
+        const values = [name]
+        const rows = await conn.query(query, values)
+
+        res.send(rows);
+    } catch (err) {
+        res.send({errmsg: "Failed to get reservation id by activity name", success: false });
+        
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+const getReservationTimeline = async(req,res) => {
+    let conn;
+    try{
+        conn = await pool.getConnection()
+        const { reservation_id } = req.body
+
+        const rows = await conn.query("SELECT * FROM reservation_notification WHERE reservation_id = ? ORDER BY date DESC", [reservation_id]);
+        if(rows.length === 0){
+            res.send({success:false, msg: "Reservation not found"})
+        }else{
+            res.send({success:true, data: rows})
+        }
+        
+    }catch{
+        res.send({success:false, msg: "Failed to get Resevation"})
+    }finally {
+        if (conn) conn.release()
+    }
+}
 
 export { 
+    getReservationIdByEventName, getAdminCommentByID,
     getTotalRequest, getPendingRequest, getTotalAccounts, getNewAccounts, 
     getPending, getPaid, getAllReservationsByUser, getReservation, getReservationByName, 
     getReservationByStatus, getReservationByRoom, addReservation, setAsApproved, setAsCancelled, 
     setAsDisapproved, setAsPaid, addComment, getAllReservations, getTotalRoomReservations,
-    getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom
+    getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom, getAvailableRoomTime,
+    getAllReservationsWithDummyData, getReservationTimeline, editReservation
 }
 
 

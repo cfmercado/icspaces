@@ -1,19 +1,31 @@
-import { generateURL, checkIfLoggedIn, setSession, getSession, callbackHandler, logout, setUserInfoFirstLogin } from "./auth-controller.js"
+import { generateURL, checkIfLoggedIn, callbackHandler, getProfileData, logout, setUserInfoFirstLogin } from "./auth-controller.js"
 
-import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getRoomName, processUtilities } from "./room-controller.js"
-import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail } from "./user-controller.js"
-import { getNewAccounts, getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getReservationByRoom, getAllReservationsByUser, getReservation, getReservationByName, getReservationByStatus, addReservation, setAsApproved, setAsCancelled,  setAsDisapproved, 
-    setAsPaid, addComment, getAllReservations, getTotalRoomReservations, getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom } from "./reservation-controller.js"
 
+import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom } from "./room-controller.js"
+import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin } from "./user-controller.js"
+import { 
+    getReservationIdByEventName, getAdminCommentByID,getNewAccounts, getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getReservationByRoom, 
+    getAllReservationsByUser, getReservation, getReservationByName, getReservationByStatus, addReservation, setAsApproved, setAsCancelled,  setAsDisapproved, 
+    setAsPaid, addComment, getAllReservations, getTotalRoomReservations, getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom, getAvailableRoomTime,
+    getAllReservationsWithDummyData,
+    getReservationTimeline, editReservation
+} from "./reservation-controller.js"
+import {addGuestReservation,trackGuestReservation} from "./guest-controller.js"
+import { sendEmail } from "./utils/email-sender.js"
 
 
 const setUpRoutes = (app) => {
     // app.<METHOD>("/<ROUTE>", <FUNCTION>)
     app.get('/', (req, res) => { res.send("API Home") });
+
+    //auth
     app.post('/auth/google', generateURL)
     app.get('/auth/google/callback', callbackHandler)
-    app.post('/logout', logout)
-
+    app.get('/get-profile', getProfileData)
+    app.get('/logout', logout)
+    app.get('/is-logged-in', checkIfLoggedIn)
+    app.post('/set-uinfo-firstlogin', setUserInfoFirstLogin)
+    
     //users
     app.post('/get-all-users', getAllUsers)
     app.post('/get-all-students', getAllStudents)
@@ -24,6 +36,9 @@ const setUpRoutes = (app) => {
     app.post('/get-user-from-reservation', getUserfromReservation)
     app.post('/get-user-information', getUserInformation)
     app.post('/get-email-of-user', getEmail)
+    app.post('/get-student-details', getStudentDetails)
+    app.post('/get-faculty-details', getFacultyDetails)
+    app.post('/set-faculty-to-admin',setFacultyToAdmin)
 
     //rooms
     app.post('/get-room-info', getRoomInfo)
@@ -35,8 +50,10 @@ const setUpRoutes = (app) => {
     app.post('/add-utility', addUtility)
     app.post('/delete-utility', deleteUtility)
     app.post('/get-room', searchRoomById)
+    app.post('/get-all-room-filters',getAllRoomFilters)
     app.post('/get-room-name', getRoomName)
     app.post('/set-utilities', processUtilities)
+    app.post('/add-new-room', addNewRoom)
 
     //reservations
     app.post('/get-all-reservations-by-user', getAllReservationsByUser)
@@ -55,7 +72,12 @@ const setUpRoutes = (app) => {
     app.post('/get-all-reservations-sort-oldest', getReservationSortedOldest)
     app.post('/get-all-reservations-sort-latest', getReservationSortedNewest)
     app.post('/get-all-reservations-by-room', getAllReservationsbyRoom)
-
+    app.post('/get-available-room-time', getAvailableRoomTime)
+    app.post('/get-reservation-id-by-name', getReservationIdByEventName)
+    app.post('/get-admin-comment-by-id', getAdminCommentByID)
+    app.post('/get-all-reservations-with-dummy-data', getAllReservationsWithDummyData)
+    app.post('/get-reservation-timeline', getReservationTimeline)
+    app.post('/edit-reservation', editReservation)
 
     // getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getNewAccounts
     app.post('/get-total-request', getTotalRequest)
@@ -65,19 +87,13 @@ const setUpRoutes = (app) => {
     app.post('/get-paid', getPaid)
     app.post('/get-new-accounts', getNewAccounts)
 
+    //guests
+    app.post('/track-guest-reservation', trackGuestReservation)
+    app.post('/add-guest-reservation', addGuestReservation)
+
+    //email testing
+    app.post('/send-email', sendEmail)
     
-    //auth
-    // checks if the user session is saved after authentication
-    // checks if req.session.user exists
-    app.get('/is-logged-in', checkIfLoggedIn);
-
-    //test to check is session data is set and retrieved
-    //route to set session data
-    app.get('/set-session', setSession);
-
-    //route to get session data
-    app.get('/get-session', getSession);
-    app.post('/set-uinfo-firstlogin', setUserInfoFirstLogin)
 }
 
 export default setUpRoutes;

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -8,20 +9,27 @@ import {
   Stack,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import roomImage from "../assets/room_images/ICS.jpg";
 import {
   Table,
   TableBody,
   TableCell,
   TableContainer,
+  TableHead,
   TableRow,
   Paper,
 } from "@mui/material";
-import {Link } from "react-router-dom";
-
-import roomImages from "../assets/room_images/RoomImages";
+import {
+  BorderBottom,
+  PaddingOutlined,
+  PaddingRounded,
+} from "@mui/icons-material";
+import roomImages from "../../assets/room_images/RoomImages";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import RoomPhotos from "../components/RoomPhotos";
+import Calendar from "../../components/Calendar";
+import HourButtons from "../../components/HourButtons";
+
 
 const cell = {
   color: "white",
@@ -51,7 +59,10 @@ const styles = {
   },
 };
 
-const AdminRoomPage = () => {
+const RoomPage = () => {
+
+  const { room_id } = useParams<{ room_id: string }>();
+
   // State to keep track of the current image index
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -67,6 +78,54 @@ const AdminRoomPage = () => {
     );
   };
 
+  const statusMapping: Record<string, string> = { 
+    '0': 'Ground',
+    '1': 'First',
+    '2': 'Second',
+    '3': 'N/A'
+    // add other status codes as needed
+  };
+
+  interface Room {
+    additional_fee_per_hour: string;
+    fee: string;
+    floor_number: number;
+    room_capacity: number;
+    room_id: number;
+    room_name: string;
+    room_type: string;
+  }
+  
+  interface Utility {
+    fee: string;
+  item_name: string;
+  item_qty: number;
+  room_id: number;
+    // add properties here based on the structure of utility objects
+  }
+  
+  interface RoomInfo {
+    room: Room;
+    utility: Utility[];
+  }
+
+  const [room, setRoom] = useState<RoomInfo | null>();
+
+  useEffect(() => {
+    fetch('https://icspaces-backend.onrender.com/get-room-info', {
+      method: 'POST', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({room_id: room_id}), // Uncomment this line if you need to send data in the request body
+    })
+    .then(response => response.json())
+    .then(data => {
+      setRoom(data);
+      console.log(data);
+    });
+  }, []);
+
   return (
     <Box       
       sx={{
@@ -78,28 +137,32 @@ const AdminRoomPage = () => {
         overflowY: 'auto', // Allows scrolling
         position: 'relative', // Allows positioning of children
     }}>
-        
       <Box
         sx={{
           position: "absolute",
           top: 560, // Adjust these values as needed
           left: 230,
-          width: '66%', // Specify width and height if necessary
+          width: 300, // Specify width and height if necessary
           height: 300,
         }}
       >
-        
-        <RoomPhotos />
       </Box>
-    
+      <Box
+        sx={{
+          position: "absolute",
+          top: 560, // Adjust these values as needed
+          left: 620,
+          width: 1700, // Specify width and height if necessary
+          height: 700,
+        }}
+      >
+      </Box>
       <Button
         startIcon={<ArrowBackIcon />}
-        sx={{ position: "absolute", top: 80, left: 20, backgroundColor: "#CFCFCF", color:'black',  '&:hover': {
-          backgroundColor: 'lightgrey',
-        }}}
+        sx={{ position: "absolute", top: 80, left: 20 }}
         variant="contained"
         onClick={() =>
-          (window.location.href = "https://icspaces.onrender.com/viewroomspage")
+          (window.location.href = "https://icspaces.onrender.com/viewrooms_guest")
         }
       >
         Back to ICS Rooms
@@ -153,7 +216,7 @@ const AdminRoomPage = () => {
               textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
             }}
           >
-            ICS Mega Hall
+            {room?.room.room_name}
           </Typography>
           <Stack spacing={1} mt={2}>
             <TableContainer component={Paper} sx={{ border: "none", mb: 16 }}>
@@ -161,15 +224,15 @@ const AdminRoomPage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Room type:</TableCell>
-                    <TableCell style={styles.cell}>Lecture Hall</TableCell>
+                    <TableCell style={styles.cell}>{room?.room.room_type}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Location:</TableCell>
-                    <TableCell style={styles.cell}>2nd Floor, Wing C</TableCell>
+                    <TableCell style={styles.cell}>{statusMapping[room?.room.floor_number ?? 3]}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Capacity:</TableCell>
-                    <TableCell style={styles.cell}>120 pax</TableCell>
+                    <TableCell style={styles.cell}>{room?.room.room_capacity}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -183,22 +246,20 @@ const AdminRoomPage = () => {
               <span style={{ color: "white" }}>Available equipment:</span>
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {["Projector and Screen", "Sound System", "Armchairs"].map(
-                (equipment) => (
-                  <li key={equipment}>
-                    <Typography
-                      style={{
-                        color: "white",
-                        fontWeight: "bold",
-                        fontSize: "0.8rem",
-                      }}
-                      align="left"
-                    >
-                      {equipment}
-                    </Typography>
-                  </li>
-                )
-              )}
+              {room?.utility?.map((utilityItem) => (
+                <li key={utilityItem.item_name}>
+                  <Typography
+                    style={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "0.8rem",
+                    }}
+                    align="left"
+                  >
+                    {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
+                  </Typography>
+                </li>
+              ))}
             </ul>
             <Typography
               color="text.secondary"
@@ -209,36 +270,21 @@ const AdminRoomPage = () => {
               <span style={{ color: "white" }}>Hourly Fee:</span>
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {["P 650 / hour", "P 100 / hour overtime"].map((fee) => (
-                <li key={fee}>
-                  <Typography
-                    style={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                    }}
-                    align="left"
-                  >
-                    {fee}
-                  </Typography>
-                </li>
-              ))}
-            </ul>
-            <Link to="/reservationspage">
-              <Button variant="contained" style={{alignSelf:'center'}} sx={{
-                      textTransform: "none",
-                      backgroundColor: '#FFB532',
-                      height: "23px",
-                      width: '40%',
-                      color: 'black', 
-                      borderRadius: '20px',
-                      fontSize: "13px",
-                      '&:hover': {
-                          backgroundColor: '#FFC532',
-                      }
-                  }}> Edit </Button>
-            </Link>
-            
+              {[`P ${parseInt(room?.room.fee ?? '')} / hour`, `P ${parseInt(room?.room.additional_fee_per_hour ?? '')} / hour overtime`].map((fee) => (
+              <li key={fee}>
+                <Typography
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: "0.8rem",
+                  }}
+                  align="left"
+                >
+                  {fee}
+                </Typography>
+              </li>
+            ))}
+          </ul>
           </Stack>
         </CardContent>
       </Card>
@@ -246,4 +292,4 @@ const AdminRoomPage = () => {
   );
 };
 
-export default AdminRoomPage;
+export default RoomPage;

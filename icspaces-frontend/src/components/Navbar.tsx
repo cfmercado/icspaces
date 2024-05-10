@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -8,16 +8,24 @@ import {
   IconButton,
   Stack,
   Drawer,
+  Avatar,
 } from "@mui/material";
-import uplb_logo from "../assets/uplb_logo.png";
 import icspaces_logo from "../assets/ICSpaces_logo.png";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Link as RouterLink } from "react-router-dom";
 
+interface ProfileData {
+  firstName: string;
+  profilepic: string;
+  // Add other properties as needed
+}
+
 const NavBar = () => {
   const [anchorNav, setAnchorNav] = useState<null | HTMLElement>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const location = useLocation();
 
   const openMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorNav(event.currentTarget);
@@ -45,12 +53,13 @@ const NavBar = () => {
         { label: "Reservations", link: "/reservationspage_admin" },
         { label: "Rooms", link: "/roomspage_admin" },
         { label: "Accounts", link: "/accountspage_admin" },
-        { label: "Schedules", link: "/schedulepage_admin" },
+        { label: "Schedules", link: "/schedulepage" },
         { label: "Edit Room Info", link: "/editroominfopage_admin" },
         {
           label: "Make Reservation",
           link: "/bookreservationpage_admin",
         },
+        { label: "Add Room", link: "/addroom_admin" },
         { label: "Normal User", onClick: () => setIsAdmin(false) },
       ]
     : [
@@ -58,11 +67,40 @@ const NavBar = () => {
         { label: "Home", link: "/homepage" },
         { label: "View Rooms", link: "/viewroomspage" },
         { label: "My Reservations", link: "/reservationspage" },
+        { label: "Schedules", link: "/schedulepage" },
+        { label: "Track Reservation", link: "/reservationtracker_guest" },
+        { label: "View Rooms Guest", link: "/viewrooms_guest" },
+        { label: "Book Room", link: "/roombookingform_guest" },
+
         { label: "FAQs", link: "/faqspage" },
+
         { label: "Admin", onClick: () => setIsAdmin(true) }, // non-admin menu items here
 
         // { label: "Account", link: "/accountpage" },
       ];
+
+  useEffect(() => {
+    // Fetch the profile data when the component mounts
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch("https://icspaces-backend.onrender.com/get-profile", {
+          credentials: "include", // Include credentials in the request
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log(data);
+        if (data.success) {
+          setProfileData(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
 
   return (
     <Box sx={{ marginBottom: { xs: 3, sm: 8, md: 1 } }}>
@@ -113,10 +151,30 @@ const NavBar = () => {
             }}
           >
             <IconButton color="secondary">
-              <AccountCircleIcon />
+              {profileData ? (
+                <Avatar
+                  alt={profileData.firstName}
+                  src={profileData.profilepic}
+                />
+              ) : (
+                <AccountCircleIcon />
+              )}
             </IconButton>
-            <Typography variant="button" color="inherit">
-              Account
+            <Typography
+              variant="button"
+              color={
+                location.pathname === "/accountpage" ? "secondary" : "inherit"
+              }
+              sx={{
+                "&:hover": {
+                  color: "secondary.main",
+                },
+                "&:active": {
+                  color: "secondary.main",
+                },
+              }}
+            >
+              {profileData ? profileData.firstName : "Account"}
             </Typography>
           </Button>
 

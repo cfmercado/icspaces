@@ -28,7 +28,14 @@ const RoomNameCell: React.FC<RoomNameCellProps> = ({ roomId }) => {
     fetchRoomName();
   }, [roomId]);
 
-  return <TableCell align="center">{roomName}</TableCell>;
+  return (
+    <TableCell
+      align="center"
+      style={{ wordWrap: "break-word", maxWidth: "150px" }}
+    >
+      {roomName}
+    </TableCell>
+  );
 };
 
 export default RoomNameCell;

@@ -4,12 +4,73 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import BookmarksOutlinedIcon from '@mui/icons-material/BookmarksOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const MuiHomeGrid = () => {
+const MuiHomeGrid: React.FC = () => {
+
+    const userTypeMapping: { [key: number]: string } = {
+        0: "Student",
+        1: "Faculty",
+        2: "Officer In Charge",
+        3: "Director",
+    };
+
+    interface User {
+        email: string;
+        displayname: string;
+        profilepic: string;
+        usertype: string; // Changed this to string
+    }
+
+    const [user, setUser] = useState<User | null>(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const response = await axios.get("https://icspaces-backend.onrender.com/get-profile", {
+                    withCredentials: true,
+                });
+
+                if (response.data.success) {
+                    const user = response.data.data;
+                    // Map the usertype number to its corresponding string
+                    user.usertype = userTypeMapping[user.usertype];
+                    setUser(user);
+                } else {
+                    throw new Error(response.data.errmsg);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user:", error);
+                navigate("/login");
+            }
+        };
+
+        fetchUser();
+    }, [navigate]);
+
+
+    const [currentDate, setCurrentDate] = useState(new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentDate(new Date());
+        }, 1000); // Update every second
+        return () => clearInterval(interval);
+    }, []);
+
+    const formattedDate = currentDate.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
 
     const StyledBox = (props:any) => (
         <Box sx={{
-            backgroundColor: '#DDDDDD90',
+            background: 'linear-gradient(to bottom, #FFFFFF, #c5d2d9)',
             color: '#183048',
             borderRadius: '15px',
             display: "flex",
@@ -22,9 +83,10 @@ const MuiHomeGrid = () => {
                 lg: 18,
             },
             padding: 1,
+            boxShadow: '0px 8px 12px rgba(0, 0, 0, 0.2)',
             '&:hover': {
                 color: '#FFFFFF',
-                backgroundColor: '#183048'
+                background: '#183048'
             },
             "&:hover .AnyIcon": {
                 color: '#FFFFFF'
@@ -52,6 +114,7 @@ const MuiHomeGrid = () => {
                 lg: 24,
             },
             padding: 1,
+            boxShadow: '0px 8px 12px rgba(0, 0, 0, 0.2)',
         }}>
             {props.children}
         </Box>
@@ -64,18 +127,21 @@ const MuiHomeGrid = () => {
                     display: "flex",
                     justifyContent: "left",
                     alignItems: "left",
-                    textAlign:'left',
+                    textAlign:'left',  
                     backgroundColor: '#183048',
                     color: '#FFFFFF',
                     borderRadius:'15px',
                     padding:'3.5%',
                     paddingLeft:'5%',
-                    fontFamily: 'Calibri, sans-serif'
+                    fontFamily: 'Calibri, sans-serif',
+                    boxShadow: '0px 8px 12px rgba(0, 0, 0, 0.2)',
                 }}>
                     <Stack direction='column' spacing={1}>
-                        <Typography variant='h3' sx={{ fontSize: { xs: 30, sm: 40 }, color: "#FFB532" }}>Hello, Frontend!</Typography>
-                        <Typography variant="body1">Today is Tuesday, March 04, 2024.</Typography>
-                        <Typography variant="body1">You have 3 upcoming events.</Typography>
+                        <Typography variant='h3' sx={{ fontSize: { xs: 30, sm: 40 }, color: "#FFB532" }}>Hello, {user?.displayname}!</Typography>
+                        <Stack>
+                        <Typography variant="body1">Today is {formattedDate}</Typography>
+                        {/* <Typography variant="body1">You have 3 upcoming events.</Typography> */}
+                        </Stack>
                     </Stack>
                 </Box>
             </Grid>
@@ -104,17 +170,17 @@ const MuiHomeGrid = () => {
                 <Grid item xs={5}>
                     <Grid container justifyContent="flex-end" spacing={1}>
                         <Grid item xs={6}>
-                            <Link to='/rooms' style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <Link to='/accountpage' style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <StyledBox>
                                     <Stack direction="column" alignItems="center">
                                         <SearchIcon sx={{ fontSize: 40, color: '#183048' }} className='AnyIcon' />
-                                        <div>View ICS Rooms</div>
+                                        <div>Accounts</div>
                                     </Stack>
                                 </StyledBox>
                             </Link>
                         </Grid>
                         <Grid item xs={6}>
-                            <Link to='/reserve' style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <Link to='/viewroomspage' style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <StyledBox>
                                     <Stack direction="column" alignItems="center">
                                         <CalendarTodayIcon sx={{ fontSize: 40, color: '#183048' }} className='AnyIcon' />
@@ -124,7 +190,7 @@ const MuiHomeGrid = () => {
                             </Link>
                         </Grid>
                         <Grid item xs={6}>
-                            <Link to='/status' style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <Link to='/reservationspage' style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <StyledBox>
                                     <Stack direction="column" alignItems="center">
                                         <BookmarksOutlinedIcon sx={{ fontSize: 40, color: '#183048' }} className='AnyIcon' />

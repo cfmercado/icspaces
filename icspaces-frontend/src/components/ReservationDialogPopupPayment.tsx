@@ -8,7 +8,7 @@ import {
   Grid, Paper, Divider,
   IconButton, Box
 } from "@mui/material";
-import { Reservation } from "./types";
+import { Reservation, ReservationDataForModal} from "./types";
 import React, { useState, useEffect, useRef } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import Circle from './Circle';
@@ -27,7 +27,7 @@ const BOOKED_FONT_COLOR = '#15bd8d';
 interface ReservationDialogProps {
   open: boolean;
   onClose: () => void;
-  reservation: Reservation | null;
+  reservation: ReservationDataForModal | null;
 }
 
 const ReservationDialogPopupPayment: React.FC<ReservationDialogProps> = ({
@@ -44,13 +44,37 @@ const ReservationDialogPopupPayment: React.FC<ReservationDialogProps> = ({
   // Handles approved accept operation
   const handlePayment = () => {
 
-    // perform action here
-    window.location.reload(); 
+    // set as paid
+    fetch('https://icspaces-backend.onrender.com/set-as-paid', {
+      method: 'POST', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({reservation_id: reservation?.reservation_id, user_id: reservation?.user_id}), // Uncomment this line if you need to send data in the request body
+    })
+    .then(response => response.json())
+    .then(data => {
+      
+      // add comment
+      fetch('https://icspaces-backend.onrender.com/add-comment', {
+        method: 'POST', // or 'PUT'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({reservation_id: reservation?.reservation_id, user_id: reservation?.user_id, comment_text: reservation?.note_from_admin}), // Uncomment this line if you need to send data in the request body
+      })
+      .then(response => response.json())
+      .then(data => {
+        
+        alert(`The reservation has been successfully marked as paid.`);
+        window.location.reload(); 
+      });
+    });
   }
   
 
   return (
-    <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px'}}}>
+    <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', overflow: 'auto'}}}>
         <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </IconButton>

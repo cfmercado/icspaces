@@ -86,7 +86,7 @@ const callbackHandler = async (req,res,next) => {
         else{
             conn = await pool.getConnection();
             const rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
-            console.log('hello')
+            
 
             //Upsert user
             // Scenario 1: FAIL - User doesn't exist
@@ -101,31 +101,23 @@ const callbackHandler = async (req,res,next) => {
                 await conn.query("UPDATE user SET fname = ?, lname = ?, profilePicUrl = ? WHERE email =?", [firstName, lastName, profilepic, email]);
             }
 
+            const new_rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
+            console.log(new_rows[0].usertype)
             //create a session
-            // const data = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
-            // const new_session = await createSession(data.email, req.get("user-agent")||"")
-
             //add a function here cookies and detecting if new user if successful
             // Save user data in session
-            req.session.user = userData;
-            console.log(req.session.user)
-
-            // // create an access token and sign using jwt
-            // const accessToken = signJwt(
-            //     { ...user, session: session._id },
-            //     { expiresIn: process.env.ACCESS_TOKEN_TTL } // 60 minutes
-            // );
-            // // create a refresh token and sign using jwt
-            // const refreshToken = signJwt(
-            //     { ...user, session: session._id },
-            //     { expiresIn: process.env.REFRESH_TOKEN_TTL } // 1 year
-            // );
+            req.session.email = email;
+            req.session.displayname = userData.name;
+            req.session.fname = firstName;
+            req.session.lname = lastName;
+            req.session.profilepic = profilepic;
+            req.session.usertype = rows[0].usertype ; // 0 for student, 1 for faculty, 2 for oic, 3 for director
+            // req.session.access_token = user.access_token;
+            // console.log(req.session.user)
+            // console.log(req.session.id)
+            const sessionData = await req.sessionStore.get(req.session.id)
+            console.log(sessionData)
             
-            // //add to cookie
-            // res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-
-            // res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
-
             // then make the client redirect to the home page xd
             res.redirect(process.env.AUTH_SUCCESS_REDIRECT || 'https://icspaces.onrender.com/homepage')
         }
@@ -144,38 +136,52 @@ const callbackHandler = async (req,res,next) => {
 }
 
 const getProfileData = async (req, res) => {
-    
-    res.send({ success: true, msg: "Session data set" });
-}
-
-const refreshAcessToken = async (req, res) => {
-
+    if (req.session.email){
+        res.send({ 
+            success: true, 
+            data: {
+            email: req.session.email,
+            displayname: req.session.displayname,
+            firstName: req.session.fname,
+            lastName: req.session.lname,
+            profilepic: req.session.profilepic,
+            usertype: req.session.usertype
+            }
+        });
+    }else{
+        res.send({ 
+            success: false, 
+            msg: "Not Authenticated."
+        });
+    }
 } 
 
-const setSession = async (req, res) => {
-    req.session.testData = "Testing session data";
-    res.send({ success: true, msg: "Session data set" });
-}
-
-const getSession = async (req, res) => {
-    res.send({ success: true, msg: "Session data retrieved", data: req.session.testData });
-}
-
 const logout = async (req, res) => {
-    req.session = null;
-    res.send({ success: true, msg: "Logged out successfully" });
+    // req.session = null;
+    const email = req.session.email
+    req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session:', err)
+          res.status(500).send('Internal Server Error')
+        } else {
+          // Redirect the user to the login page or any other page
+          console.log(`User ${email} has been logged out`)
+        //   res.redirect(`${process.env.LOGOUT_REDIRECT}`);
+          res.send({success:true});
+        }
+    })
 }
 
 //handles the checking of login
 const checkIfLoggedIn = async (req, res) => {
-    if (req.session.user) {
+    if (req.session.email) {
       res.send({ isLoggedIn: true });
     } else {
       res.send({ isLoggedIn: false });
     }
 }
 
-const  setUserInfoFirstLogin = async (req, res) => {
+const setUserInfoFirstLogin = async (req, res) => {
     const { usertype } = req.body
     try {
         switch(usertype) {
@@ -230,7 +236,7 @@ const setDirectorInfoFirstLogin = async (req, res) => {
 
 }
 
-export {generateURL, callbackHandler, checkIfLoggedIn, setSession, getSession, logout, setUserInfoFirstLogin}
+export {generateURL, callbackHandler, checkIfLoggedIn, getProfileData, logout, setUserInfoFirstLogin}
 
 
 

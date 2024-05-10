@@ -11,11 +11,21 @@ CREATE TABLE room(
 );
 
 CREATE TABLE utility(
+    utility_id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT,
     item_name VARCHAR(50), -- example: chair, PC, fan, aircon
     item_qty INT,
     fee DECIMAL(10,2),
     CONSTRAINT room_utility_fk FOREIGN KEY(room_id) REFERENCES room(room_id) ON DELETE CASCADE
+);
+
+CREATE TABLE room_file(
+    room_file_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_id INT,
+    file_path VARCHAR(255) NOT NULL,
+    date_created DATETIME DEFAULT NOW(),
+    UNIQUE(file_path), -- to prevent duplicate files
+    CONSTRAINT room_file_room_id_fk FOREIGN KEY(room_id) REFERENCES room(room_id) ON DELETE CASCADE
 );
 
 --dummy

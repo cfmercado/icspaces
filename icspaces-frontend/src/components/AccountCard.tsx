@@ -12,7 +12,7 @@ interface AccountCardProps {
 const userRole: Record<number, string> = { 
   0: 'Student',
   1: 'Faculty',
-  2: 'OIC',
+  2: 'Admin',
   3: 'Director',
 
   // add other status codes as needed
@@ -35,7 +35,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
   const GrayTypography = (
     props: any //Bottom three cells
   ) => (
-    <Typography variant='subtitle2' color='#8A8A8A' >
+    <Typography variant='subtitle2' color='#8A8A8A' align='left' >
       {props.children}
     </Typography>
   ); 
@@ -65,7 +65,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         <Grid container  >
           <Grid item xs={12}>{/* 1st Row */}
             <Stack direction="row"  justifyContent='space-evenly' padding={1}>
-              <Box marginRight='auto'> 
+              <Box marginRight='auto' minWidth='25%'maxWidth='25%' sx={{ textOverflow:'ellipsis'}}> 
                 <Typography align='left' variant='h6' color='#183048'> {users.lname},&nbsp;{users.fname}</Typography>
                 <GrayTypography>Last name, First name</GrayTypography>
               </Box>
@@ -78,7 +78,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
                 
                 <GrayTypography>Email</GrayTypography>
               </Box>
-              <Box marginRight='auto'>
+              <Box marginRight='auto' maxWidth='25%'>
                 <BlueTypography>32</BlueTypography>
                 <GrayTypography>Total Room Reservations</GrayTypography>
               </Box>

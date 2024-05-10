@@ -158,6 +158,10 @@ const UserReservations = () => {
     },
     // Add more dummy reservations here...
   ]);
+
+
+
+  
   const [open, setOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
@@ -209,7 +213,7 @@ const UserReservations = () => {
         </Table>
 
         {/* Select reservation based on status */}
-        {selectedReservation && ((() => {
+        {/* {selectedReservation && ((() => {
           switch (selectedReservation.status) {
             case "For Verification":
               return <ReservationDialogForVerification open={open} onClose={() => setSelectedReservation(null)} reservation={selectedReservation}/>;
@@ -222,7 +226,7 @@ const UserReservations = () => {
             default:
               return <ReservationDialogBooked open={open} onClose={() => setSelectedReservation(null)} reservation={selectedReservation}/>;
           }})()
-        )}
+        )} */}
 
       </TableContainer>
     </Stack>

@@ -15,7 +15,7 @@ const getAllUsers = async (req, res) => {
         // return the results
         res.send(result);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all users", success: false });
     } finally {
         if (conn) return conn.release();
     }
@@ -36,7 +36,7 @@ const getAllStudents = async (req, res) => {
         // return the results
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all students", success: false });
     } finally {
         if (conn) return conn.release();
     }
@@ -57,7 +57,7 @@ const getAllFaculty = async (req, res) => {
         // return the results
         res.send(rows);
     } catch (err) {
-        throw err;
+        res.send({errmsg: "Failed to get all faculty users", success: false });
     } finally {
         if (conn) return conn.release();
     }
@@ -89,8 +89,10 @@ const changeUserType = async (req, res) => {
         // return the results
         res.send({ message: 'User type updated, student data deleted, user added to faculty, and isFirstTimeLogin set to true.' });
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to change faculty type", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
 }
 
 const updateStudentDetails = async (req, res) => {
@@ -108,8 +110,10 @@ const updateStudentDetails = async (req, res) => {
         // return the results
         res.send({message: 'Student details successfully updated.'});
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to update student details", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
 }
 
 const updateFacultyDetails = async (req, res) => {
@@ -126,8 +130,10 @@ const updateFacultyDetails = async (req, res) => {
         // return the results
         res.send({ message: 'Faculty member details updated successfully.' });
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to change faculty details", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
 }
 
 const getUserfromReservation = async (req, res) => {
@@ -143,8 +149,10 @@ const getUserfromReservation = async (req, res) => {
         // return the results
         res.send({ message: 'Faculty member details updated successfully.' });
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to get user from reservation", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
 }
 
 const searchUserbyName = async (req, res) => {
@@ -171,9 +179,101 @@ const getUserInformation = async (req, res) => {
         // return the results
         res.send(rows[0]);
     } catch (err) {
-        throw err;
-    } 
+        res.send({errmsg: "Failed to get user information", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
 }
+
+// get the details of the student
+// input: "email"
+const getStudentDetails = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { email } = req.body;
+
+        var query = `
+            SELECT 
+                user.email, 
+                CONCAT(user.fname, ' ', user.lname) as name, 
+                user.usertype, 
+                user.profilePicUrl, 
+                student.student_number, 
+                student.org, 
+                student.course, 
+                student.college, 
+                student.department 
+            FROM 
+                user 
+            JOIN 
+                student ON user.email = student.email 
+            WHERE 
+                user.email = ?`;
+        const rows = await conn.query(query, email);
+
+        // return the results
+        res.send(rows[0]);
+    } catch (err) {
+        res.send({errmsg: "Failed to get user information", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
+}
+
+// get the details of the faculty members
+// input: "email"
+const getFacultyDetails = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { email } = req.body;
+
+        var query = `
+            SELECT 
+                user.email, 
+                CONCAT(user.fname, ' ', user.lname) as name, 
+                user.usertype, 
+                user.profilePicUrl, 
+                faculty_member.college, 
+                faculty_member.department 
+            FROM 
+                user 
+            JOIN 
+                faculty_member ON user.email = faculty_member.email 
+            WHERE 
+                user.email = ?`; 
+        const rows = await conn.query(query, email);
+
+        // return the results
+        res.send(rows[0]);
+    } catch (err) {
+        res.send({errmsg: "Failed to get user information", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
+}
+
+// update user type to admin: 2
+// input: "email"
+const setFacultyToAdmin = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { email } = req.body;
+
+        var query = "UPDATE user SET usertype = 2 WHERE email = ?;";
+        await conn.query(query, email);
+
+        // return the results
+        res.send("Successfully edited user type to admin");
+    } catch (err) {
+        res.send({errmsg: "Failed to set faculty to admin", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
+}
+
 
 // get the email of the user
 // input: "fname", "lname"
@@ -202,4 +302,4 @@ const getEmail = async (req, res) => {
 };
 
 
-export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail }
+export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin }
