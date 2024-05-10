@@ -22,7 +22,12 @@ const accessTokenCookieOptions = {
   };
 
 const generateURL = async (req,res,next) => {
-    res.header('Access-Control-Allow-Origin', 'https://app.icspaces.online')
+    const allowedOrigins = ['https://app.icspaces.online','https://www.icspaces.online','https://icspaces.online']
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    // res.header('Access-Control-Allow-Origin', 'https://app.icspaces.online')
     res.header('Referrer-Policy', 'no-referrer-when-downgrade')
 
     const redirectUrl = process.env.GOOGLE_AUTH_REDIRECT
