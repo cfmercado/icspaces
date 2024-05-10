@@ -55,6 +55,8 @@ CREATE TABLE reservation_utility(
     CONSTRAINT reservation_utility_utility_id_fk FOREIGN KEY(utility_id) REFERENCES utility(utility_id)
 );
 
--- dummy
+--dummy
 INSERT INTO reservation(activity_name, activity_desc, room_id, user_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code) VALUES('ICS 123', 'Subject of ICS', 1, 'ajsantiago@up.edu.ph', '2020-12-01 08:00:00', '2020-12-01 10:00:00', 0.00, 0.00, 5000.00, 0);
 INSERT INTO reservation(activity_name, activity_desc, room_id, user_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code) VALUES('ICS 124', 'Subject of ICS', 2, 'ddoffemaria@up.edu.ph', '2020-12-01 08:00:00', '2020-12-01 10:00:00', 0.00, 0.00, 3000.00, 0);
+INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(1, 'ajsantiago@up.edu.ph', 0);
+INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(2, 'ddoffemaria@up.edu.ph', 0);

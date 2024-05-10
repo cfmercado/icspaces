@@ -32,7 +32,7 @@ app.use(express.json());
 
 //Allow CORS
 app.use(cors({
-    origin: [`${process.env.FRONTEND_URL}:3000`], //allowed URLs
+    origin: ['https://app.icspaces.online','https://www.icspaces.online','https://icspaces.online'], //allowed URLs
     methods: ['GET', 'POST', 'OPTIONS'], //allowed HTTP methods
     credentials: true, //allow cookies
     // allowedHeaders: ['Access-Control-Allow-Origin','Access-Control-Allow-Methods','Origin','Accept','Content-Type','X-Requested-With','Cookie']
