@@ -422,7 +422,14 @@ const ReservationsPage = () => {
   ];
 
   return (
-    <div style={{ maxWidth: "95%", margin: "0 auto" }}>
+    <div
+      style={{
+        maxWidth: "95%",
+        margin: "0 auto",
+        height: "100vh",
+        marginBottom: "100px",
+      }}
+    >
       <Box
         style={{
           display: "flex",

@@ -315,7 +315,7 @@ const addReservation = async (req, res) => {
         const result = await conn.query(query, values);
 
         //insert utilities if there is any
-        if (utilities.length !== 0) {
+        if (utilities && utilities.length !== 0) {
             for (const utility of utilities) {
                 const { utility_id, reserved_quantity, running_total } = utility;
                 const utilityInsertQuery = `INSERT INTO reservation_utility(reservation_id, utility_id, reserved_quantity, running_total) VALUES(?,?,?,?)`;
