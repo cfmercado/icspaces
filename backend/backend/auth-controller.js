@@ -22,7 +22,7 @@ const accessTokenCookieOptions = {
   };
 
 const generateURL = async (req,res,next) => {
-    res.header('Access-Control-Allow-Origin', 'https://app.icspaces.online/')
+    res.header('Access-Control-Allow-Origin', 'https://app.icspaces.online')
     res.header('Referrer-Policy', 'no-referrer-when-downgrade')
 
     const redirectUrl = process.env.GOOGLE_AUTH_REDIRECT
