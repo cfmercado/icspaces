@@ -3,6 +3,7 @@ dotenv.config()
 import pool from "./db.js"
 
 import { v4 as uuidv4 } from 'uuid'
+import { nanoid } from "nanoid"
 import nodemailer from 'nodemailer'
 
 let configMailerOptions = {
@@ -21,7 +22,8 @@ const addGuestReservation = async (req, res) => {
         
         await conn.beginTransaction();
         //Add guest with new transactionid
-        const transaction_id = uuidv4()
+        // const transaction_id = uuidv4()
+        const transaction_id = nanoid(32)
         const addGuestResult = await conn.query(`INSERT INTO guest(transaction_id, reservation_id, fname, lname, email) VALUES(?,?,?,?)`,[transaction_id, null, fname, lname, email])
 
         var query = `INSERT INTO reservation(

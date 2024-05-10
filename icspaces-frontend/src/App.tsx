@@ -27,7 +27,6 @@ import ViewRooms_GuestPage from "./pages/guest/ViewRooms_GuestPage";
 import Room_GuestPage from "./pages/guest/Room_GuestPage";
 import GuestBookingForm_Page from "./pages/guest/GuestBookingForm_Page";
 import PrivateRoute from "./utils/PrivateRoute";
-import BookReservationPage_Admin from "./pages/admin/BookReservationPage_Admin";
 
 //Changes the default theme of the app
 const theme = createTheme({
@@ -57,10 +56,12 @@ function App() {
               <Route path="/" element={<LoginPage />} />
 
               <Route path="/login-fail" element={<LoginPage />} />
+
               <Route
                 path="/homepage"
                 element={<PrivateRoute component={HomePage} />}
               />
+
               <Route
                 path="/accountpage"
                 element={<PrivateRoute component={AccountPage} />}
@@ -93,7 +94,7 @@ function App() {
               />
               <Route
                 path="/reservationspage_admin"
-                element={<ReservationsPage_Admin />}
+                element={<PrivateRoute component={ReservationsPage_Admin} />}
               />
               <Route
                 path="/editroominfopage_admin/:room_id"
@@ -103,13 +104,9 @@ function App() {
                 path="/roomspage_admin"
                 element={<PrivateRoute component={RoomsPage_Admin} />}
               />
-              {/* <Route
-                path="/accountspage_admin"
-                element={<AccountsPage_Admin />}
-              /> */}
               <Route
                 path="/accountspage_admin"
-                element={<AccountsPage_Admin />}
+                element={<PrivateRoute component={AccountsPage_Admin} />}
               />
               <Route
                 path="/schedulepage"
@@ -121,30 +118,18 @@ function App() {
                   <PrivateRoute component={BookRoomReservationPage_Admin} />
                 }
               />
-
               <Route
                 path="/addroom_admin"
                 element={<PrivateRoute component={AddRoom_Admin} />}
-              />
-
-              <Route
-                path="/bookroom_admin"
-                element={<PrivateRoute component={BookReservationPage_Admin} />}
               />
               <Route
                 path="/reservationtracker_guest"
                 element={<Tracking_GuestPage />}
               />
-
               <Route
                 path="/viewrooms_guest"
-                element={<PrivateRoute component={ViewRooms_GuestPage} />}
-              />
-
-              {/* <Route
-                path="/viewrooms_guest"
                 element={<ViewRooms_GuestPage />}
-              /> */}
+              />
 
               <Route path="/room_guest" element={<Room_GuestPage />} />
               <Route

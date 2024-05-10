@@ -104,7 +104,7 @@ const callbackHandler = async (req,res,next) => {
                 await conn.query("INSERT INTO student (email) VALUES (?)", [email]);
 
             }else{ // UPDATE user 
-                await conn.query("UPDATE user SET fname = ?, lname = ?, profilePicUrl = ? WHERE email =?", [firstName, lastName, profilepic, email]);
+                await conn.query("UPDATE user SET fname = ?, lname = ?, profilePicUrl = ?, last_login = NOW() WHERE email =?", [firstName, lastName, profilepic,email]);
             }
 
             const new_rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);

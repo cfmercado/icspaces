@@ -2,7 +2,7 @@ import { generateURL, checkIfLoggedIn, callbackHandler, getProfileData, logout, 
 
 
 import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom } from "./room-controller.js"
-import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin } from "./user-controller.js"
+import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate } from "./user-controller.js"
 import { 
     getReservationIdByEventName, getAdminCommentByID,getNewAccounts, getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getReservationByRoom, 
     getAllReservationsByUser, getReservation, getReservationByName, getReservationByStatus, addReservation, setAsApproved, setAsCancelled,  setAsDisapproved, 
@@ -11,7 +11,11 @@ import {
     getReservationTimeline, editReservation
 } from "./reservation-controller.js"
 import {addGuestReservation,trackGuestReservation} from "./guest-controller.js"
+import { getRoomImage, uploadRoomImage } from "./file-controller.js"
+
+//utilities
 import { sendEmail } from "./utils/email-sender.js"
+import { upload } from "./utils/multer-util.js"
 
 
 const setUpRoutes = (app) => {
@@ -39,6 +43,7 @@ const setUpRoutes = (app) => {
     app.post('/get-student-details', getStudentDetails)
     app.post('/get-faculty-details', getFacultyDetails)
     app.post('/set-faculty-to-admin',setFacultyToAdmin)
+    app.post('/get-last-login-date', getLastLoggedInDate)
 
     //rooms
     app.post('/get-room-info', getRoomInfo)
@@ -90,6 +95,10 @@ const setUpRoutes = (app) => {
     //guests
     app.post('/track-guest-reservation', trackGuestReservation)
     app.post('/add-guest-reservation', addGuestReservation)
+
+    //files
+    app.post('/upload-room-image', upload.single('image'), uploadRoomImage)
+    app.post('/get-room-image', getRoomImage)
 
     //email testing
     app.post('/send-email', sendEmail)

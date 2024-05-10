@@ -32,8 +32,7 @@ import Calendar from "../../components/Calendar";
 import HourButtons from "../../components/HourButtons";
 import DropDown_Admin from "../../components/DropDown_Admin";
 import RoomDropdown from "../../components/RoomDropdown";
-import dayjs, { Dayjs } from 'dayjs'; 
-
+import dayjs, { Dayjs } from "dayjs";
 
 const cell = {
   color: "white",
@@ -63,8 +62,7 @@ const styles = {
   },
 };
 
-const RoomPage = () => {
-
+const BookReservationPage_Admin = () => {
   const { room_id } = useParams<{ room_id: string }>();
 
   // State to keep track of the current image index
@@ -82,19 +80,43 @@ const RoomPage = () => {
     );
   };
 
-  const statusMapping: Record<string, string> = { 
-    '0': 'Ground',
-    '1': 'First',
-    '2': 'Second',
-    '3': 'N/A'
+  const statusMapping: Record<string, string> = {
+    "0": "Ground",
+    "1": "First",
+    "2": "Second",
+    "3": "N/A",
     // add other status codes as needed
   };
 
-  
   const handleDateSelect = (selectedDate: Dayjs) => {
     // Do something with the selected date
     console.log("Selected Date:", selectedDate);
   };
+
+  const [reservations, setReservations] = useState<ReservationsInfo | null>();
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3001/get-available-room-time",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ room_id: room_id, date: selectedDate.format("dddd DD MMM YYYY")}),
+          }
+        );
+        const data = await response.json();
+        setReservations(data);
+        console.log(reservations);
+      } catch (error) {
+        console.error("Failed to fetch reservations:", error);
+      }
+    };
+    fetchReservations();
+  }, []);
 
   interface Room {
     additional_fee_per_hour: string;
@@ -105,15 +127,19 @@ const RoomPage = () => {
     room_name: string;
     room_type: string;
   }
-  
+
+  interface ReservationsInfo {
+    availableTimes: any;
+  }
+
   interface Utility {
     fee: string;
-  item_name: string;
-  item_qty: number;
-  room_id: number;
+    item_name: string;
+    item_qty: number;
+    room_id: number;
     // add properties here based on the structure of utility objects
   }
-  
+
   interface RoomInfo {
     room: Room;
     utility: Utility[];
@@ -126,41 +152,55 @@ const RoomPage = () => {
     // Define your reservation properties here
   }
 
-
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [room, setRoom] = useState<RoomInfo | null>();
 
-
   useEffect(() => {
     if (selectedRoomId !== null) {
-      fetch('https://api.icspaces.online/get-room-info', {
-        method: 'POST',
+      fetch("http://localhost:3001/get-room-info", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ room_id: selectedRoomId }),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           setRoom(data);
           console.log(data);
         });
     }
   }, [selectedRoomId]);
 
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+
+  useEffect(() => {
+    fetch("http://localhost:3001/get-room-info", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ room_id: room_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setRoom(data);
+        console.log(data);
+      });
+  }, [selectedDate]);
+
   return (
-    
-    <Box       
+    <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start', // Aligns content to the top
-        alignItems: 'center', // Centers content horizontally
-        height: '100vh', // Maintains full viewport height
-        overflowY: 'auto', // Allows scrolling
-        position: 'relative', // Allows positioning of children
-    }}>
-      
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start", // Aligns content to the top
+        alignItems: "center", // Centers content horizontally
+        height: "100vh", // Maintains full viewport height
+        overflowY: "auto", // Allows scrolling
+        position: "relative", // Allows positioning of children
+      }}
+    >
       <Box
         sx={{
           position: "absolute",
@@ -181,19 +221,19 @@ const RoomPage = () => {
           height: 700,
         }}
       >
-        <HourButtons />
+        <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} />
       </Box>
       <Button
         startIcon={<ArrowBackIcon />}
         sx={{ position: "absolute", top: 80, left: 20 }}
         variant="contained"
         onClick={() =>
-          (window.location.href = "https://app.icspaces.online/viewroomspage")
+          (window.location.href = "http://localhost:3000/viewroomspage")
         }
       >
         Back to ICS Rooms
       </Button>
-      
+
       <Box
         component="img"
         src={roomImages[currentImageIndex]}
@@ -226,104 +266,132 @@ const RoomPage = () => {
         onRoomChange={setSelectedRoomId}
       />
       <Card
-        sx={{
-          width: 300,
-          height: 370,
-          position: "absolute",
-          top: "400px",
-          right: "120px",
-          transform: "translate(-50%, -50%)",
-          p: 2,
-          backgroundColor: "#183048",
-          borderRadius: 4,
-        }}
-      >
-
-        <CardContent>
+      sx={{
+        width: 300,
+        height: 370,
+        position: "absolute",
+        top: "400px",
+        right: "120px",
+        transform: "translate(-50%, -50%)",
+        p: 2,
+        backgroundColor: "#183048",
+        borderRadius: 4,
+      }}
+    >
+      <CardContent>
+        {selectedRoomId && (
+          <>
+            <Typography
+              variant="h4"
+              component="div"
+              sx={{
+                fontWeight: "bold",
+                color: "#FFB532",
+                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              {room?.room?.room_name}
+            </Typography>
+            <Stack spacing={1} mt={2}>
+              <TableContainer component={Paper} sx={{ border: "none", mb: 16 }}>
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell style={styles.boldCell}>Room type:</TableCell>
+                      <TableCell style={styles.cell}>
+                        {room?.room?.room_type}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell style={styles.boldCell}>Location:</TableCell>
+                      <TableCell style={styles.cell}>
+                        {statusMapping[room?.room?.floor_number ?? "3"]}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell style={styles.boldCell}>Capacity:</TableCell>
+                      <TableCell style={styles.cell}>
+                        {room?.room?.room_capacity}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Typography
+                color="text.secondary"
+                gutterBottom
+                align="left"
+                style={{ fontSize: "1rem" }}
+              >
+                <span style={{ color: "white" }}>Available equipment:</span>
+              </Typography>
+              <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
+                {room?.utility?.map((utilityItem) => (
+                  <li key={utilityItem.item_name}>
+                    <Typography
+                      style={{
+                        color: "white",
+                        fontWeight: "bold",
+                        fontSize: "0.8rem",
+                      }}
+                      align="left"
+                    >
+                      {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
+                    </Typography>
+                  </li>
+                ))}
+              </ul>
+              <Typography
+                color="text.secondary"
+                gutterBottom
+                align="left"
+                style={{ fontSize: "1rem" }}
+              >
+                <span style={{ color: "white" }}>Hourly Fee:</span>
+              </Typography>
+              <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
+                {[
+                  `P ${parseInt(room?.room?.fee ?? "")} / hour`,
+                  `P ${parseInt(room?.room?.additional_fee_per_hour ?? "")} / hour overtime`,
+                ].map((fee) => (
+                  <li key={fee}>
+                    <Typography
+                      style={{
+                        color: "white",
+                        fontWeight: "bold",
+                        fontSize: "0.8rem",
+                      }}
+                      align="left"
+                    >
+                      {fee}
+                    </Typography>
+                  </li>
+                ))}
+              </ul>
+            </Stack>
+          </>
+        )}
+        {!selectedRoomId && (
           <Typography
-            variant="h4"
-            component="div"
             sx={{
-              fontWeight: "bold",
-              color: "#FFB532",
-              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+              color: "white",
+              textAlign: "center",
+              m: 2,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              height: 300,  // Use 100% height to take full height of the parent container
             }}
           >
-            {room?.room.room_name}
+            Please select a room to view details.
           </Typography>
-          <Stack spacing={1} mt={2}>
-            <TableContainer component={Paper} sx={{ border: "none", mb: 16 }}>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell style={styles.boldCell}>Room type:</TableCell>
-                    <TableCell style={styles.cell}>{room?.room.room_type}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell style={styles.boldCell}>Location:</TableCell>
-                    <TableCell style={styles.cell}>{statusMapping[room?.room.floor_number ?? 3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell style={styles.boldCell}>Capacity:</TableCell>
-                    <TableCell style={styles.cell}>{room?.room.room_capacity}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Typography
-              color="text.secondary"
-              gutterBottom
-              align="left"
-              style={{ fontSize: "1rem" }}
-            >
-              <span style={{ color: "white" }}>Available equipment:</span>
-            </Typography>
-            <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {room?.utility?.map((utilityItem) => (
-                <li key={utilityItem.item_name}>
-                  <Typography
-                    style={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                    }}
-                    align="left"
-                  >
-                    {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
-                  </Typography>
-                </li>
-              ))}
-            </ul>
-            <Typography
-              color="text.secondary"
-              gutterBottom
-              align="left"
-              style={{ fontSize: "1rem" }}
-            >
-              <span style={{ color: "white" }}>Hourly Fee:</span>
-            </Typography>
-            <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {[`P ${parseInt(room?.room.fee ?? '')} / hour`, `P ${parseInt(room?.room.additional_fee_per_hour ?? '')} / hour overtime`].map((fee) => (
-              <li key={fee}>
-                <Typography
-                  style={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "0.8rem",
-                  }}
-                  align="left"
-                >
-                  {fee}
-                </Typography>
-              </li>
-            ))}
-          </ul>
-          </Stack>
-        </CardContent>
 
-      </Card>
+        )}
+      </CardContent>
+    </Card>
     </Box>
   );
 };
 
-export default RoomPage;
+export default BookReservationPage_Admin;

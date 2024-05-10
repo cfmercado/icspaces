@@ -165,7 +165,7 @@ const getRoomInfo = async (req,res) => {
     let conn;
     try {
         conn = await pool.getConnection()
-        await pool.beginTransaction();
+        // await pool.beginTransaction();
 
         const room_id= parseInt(req.body.room_id)
         var roomquery = `SELECT * FROM room WHERE room_id = ?`
@@ -180,10 +180,10 @@ const getRoomInfo = async (req,res) => {
             'utility': utilrows
         }
 
-        await conn.commit();
+        // await conn.commit();
         res.send(result)
     } catch (err) {
-        await conn.rollback();
+        // await conn.rollback();
         res.send({errmsg: "Failed to get room info by room ID", success: false });
     } finally {
         if (conn) conn.release();
@@ -196,7 +196,7 @@ const getAllRoomsAndUtilities = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        await pool.beginTransaction();
+        // await pool.beginTransaction();
         const rooms = await conn.query("SELECT * FROM room");
         const utilities = await conn.query("SELECT * FROM utility");
 
@@ -206,10 +206,11 @@ const getAllRoomsAndUtilities = async (req, res) => {
             return room;
         });
 
-        await conn.commit();
+        // await conn.commit();
         res.send(roomsWithUtilities);
     } catch (err) {
-        await conn.rollback();
+        // await conn.rollback();
+        console.log(err)
         res.send({errmsg: "Failed to get rooms and utilities", success: false });
     } finally {
         if (conn) conn.release();
@@ -291,17 +292,17 @@ const setEditedRoom = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        await pool.beginTransaction();
-        const { room_name, room_capacity, fee, room_type, additional_fee_per_hour, room_id } = req.body
+        await conn.beginTransaction();
+        const { room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, room_id } = req.body
         const query =  `UPDATE room SET 
         room_name = ?,
         room_capacity = ?,
         fee = ?,
         room_type = ?,
+        floor_number = ?,
         additional_fee_per_hour = ?
         WHERE room_id = ?`;
-        const values = [ room_name, room_capacity, fee, room_type, additional_fee_per_hour, room_id];
-
+        const values = [ room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, room_id];
         await conn.query(query, values);
         await conn.commit();
         res.send({ message: "Successfully edited room details." });
@@ -440,13 +441,13 @@ const processUtilities = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { room_id, utilities, room_capacity, fee, room_type, floor_number, additional_fee_per_hour } = req.body
+        const { room_name, room_id, utilities, room_capacity, fee, room_type, floor_number, additional_fee_per_hour } = req.body
 
         await conn.beginTransaction();
 
         // Update room details
-        const updateRoomQuery = `UPDATE room SET room_capacity = ?, fee = ?, room_type = ?, floor_number = ?, additional_fee_per_hour = ? WHERE room_id = ?`;
-        const updateRoomValues = [room_capacity, fee, room_type, floor_number, additional_fee_per_hour, room_id];
+        const updateRoomQuery = `UPDATE room SET room_name=?, room_capacity = ?, fee = ?, room_type = ?, floor_number = ?, additional_fee_per_hour = ? WHERE room_id = ?`;
+        const updateRoomValues = [room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, room_id];
 
         await conn.query(updateRoomQuery, updateRoomValues);
 
@@ -489,6 +490,7 @@ const processUtilities = async (req, res) => {
         await conn.commit();
         res.send({ message: "Successfully processed utilities and updated room details." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to process utilities and update room details", success: false });
     } finally {
         if (conn) conn.release();
@@ -499,14 +501,16 @@ const addNewRoom = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, utilities } = req.body
 
         // Check if the room already exists in the database
         const existingRoomQuery = `SELECT * FROM room WHERE room_name = ?`;
         const existingRoom = await conn.query(existingRoomQuery, [room_name]);
-
+        let returnedRoomId
         if (existingRoom.length > 0) {
             // If the room exists, send an error response
+            await conn.commit();
             res.send({errmsg: "Room already exists", success: false });
             return;
         } else {
@@ -518,7 +522,8 @@ const addNewRoom = async (req, res) => {
             // Get the ID of the inserted room
             const result = await conn.query('SELECT LAST_INSERT_ID() as room_id');
             const room_id = result[0].room_id;
-            // console.log('Room ID:', room_id);
+            returnedRoomId = room_id
+            console.log('Room ID:', room_id, returnedRoomId);
 
             for (let i = 0; i < utilities.length; i++) {
                 const { item_name, item_qty, fee } = utilities[i];
@@ -539,10 +544,12 @@ const addNewRoom = async (req, res) => {
             }
         }
 
-        res.send({ message: "Successfully added room and processed utilities."});
+        await conn.commit();
+        res.send({ room_id: Number(returnedRoomId) ,message: "Successfully added room and processed utilities."});
 
     } catch (err) {
-        res.send({errmsg: "Failed to add room and process utilities", success: false });
+        await conn.rollback();
+        res.send({errmsg: `Failed to add room and process utilities: ${err}`, success: false });
     } finally {
         if (conn) conn.release();
     }

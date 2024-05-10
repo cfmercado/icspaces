@@ -315,5 +315,30 @@ const getEmail = async (req, res) => {
     }
 };
 
+const getLastLoggedInDate = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { email } = req.body;
+        await conn.beginTransaction();
+        // Check if the user exists
+        const query = 'SELECT last_login FROM user WHERE email = ?';
+        const rows = await conn.query(query, [email]);
 
-export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin }
+        if (!rows || rows.length === 0) {
+            res.status(404).send({ message: "User not found." });
+            return;
+        }
+        await conn.commit();
+        // Send the email
+        res.send({ email: rows[0].last_login });
+    } catch (err) {
+        await conn.rollback();
+        res.status(500).send({ error: 'Database query error' });
+    } finally {
+        if (conn) conn.release();
+    }
+};
+
+
+export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate }

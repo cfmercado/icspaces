@@ -67,6 +67,18 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   const location = useLocation();
 
   useEffect(() => {
+    const checkLoginStatus = async () => {
+      const response = await fetch("http://localhost:3001/is-logged-in", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      setIsLoggedIn(data.isLoggedIn);
+    };
+
+    checkLoginStatus();
+  }, []);
+
+  useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const response = await fetch("https://api.icspaces.online/get-profile", {
@@ -93,12 +105,14 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   }, []);
 
   useEffect(() => {
-    // const accessibleRoutes = notLoggedInRoutes;
-    // if (!accessibleRoutes.includes(location.pathname)) {
-    //   navigate("/");
-    // }
+    if (!isLoading && !isLoggedIn) {
+      const accessibleRoutes = notLoggedInRoutes;
+      if (!accessibleRoutes.includes(location.pathname)) {
+        navigate("/");
+      }
+    }
 
-    if (!isLoading && userType !== null) {
+    if (!isLoading && userType !== null && isLoggedIn) {
       const accessibleRoutes = userTypeRoutes[userType];
       if (!accessibleRoutes.includes(location.pathname)) {
         if (userType === 0 || userType === 1) {
@@ -107,7 +121,6 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
         if (userType === 2 || userType === 3) {
           navigate("/homepage_admin");
         }
-        // navigate("/");
       }
     }
   }, [isLoading, userType, navigate, location.pathname]);
