@@ -71,7 +71,7 @@ function GuestBookingForm_Page() {
       event_desc,
       other_details,
     } = emailInfo;
-    const recipient = "jglatigay@up.edu.ph"; //Replace this with admin's email
+    const recipient = "icspacesdev@gmail.com"; //Replace this with admin's email
     const templateSubject = `ICSpaces Room Reservation Request - ${event_name}`;
     const templateEmail = `
       Hi, I am ${name} I would like to reserve a room for my event. 
@@ -179,7 +179,7 @@ function GuestBookingForm_Page() {
               }
               onChange={(newValue) => handleTimeChange("time_start", newValue)}
               label="Start Time"
-              minutesStep={5}
+              minutesStep={60}
             />
           </Grid>
           <Grid item xs={4}>
@@ -190,7 +190,7 @@ function GuestBookingForm_Page() {
               }
               onChange={(newValue) => handleTimeChange("time_end", newValue)}
               label="End Time"
-              minutesStep={5}
+              minutesStep={60}
             />
             {errorMessage && <p>{errorMessage}</p>}
           </Grid>

@@ -76,23 +76,23 @@ import {
 
     function ConfirmEdit(usertype:string){
 
-      if(itemsCount==='Student'){
-        fetch('https://api.icspaces.online/update-student-details', {
-          method: 'POST', // or 'PUT'
-          headers: {
-          'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            student_number:studentNumber,
-            org:org,course:course,college:college,department:department,email:userMail
-          }), // Uncomment this line if you need to send data in the request body
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-        });
-      }
-      else if(usertype=='Student' && itemsCount=='Faculty'){//student to Faculty
+      // if(itemsCount==='Student'){
+      //   fetch('https://api.icspaces.online/update-student-details', {
+      //     method: 'POST', // or 'PUT'
+      //     headers: {
+      //     'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({
+      //       student_number:studentNumber,
+      //       org:org,course:course,college:college,department:department,email:userMail
+      //     }), // Uncomment this line if you need to send data in the request body
+      //   })
+      //   .then(response => response.json())
+      //   .then(data => {
+      //       console.log(data);
+      //   });
+      // }
+      if(usertype=='Student' && itemsCount=='Faculty'){//student to Faculty
         console.log('Student to Faculty');
         fetch('https://api.icspaces.online/change-user-type', {
           method: 'POST', // or 'PUT'
@@ -108,22 +108,22 @@ import {
           console.log(data);
         });
       }
-      else if(itemsCount=='Faculty' && usertype=='Faculty'){
+      // else if(itemsCount=='Faculty' && usertype=='Faculty'){
         
-        fetch('https://api.icspaces.online/update-faculty-details', {
-          method: 'POST', // or 'PUT'
-          headers: {
-          'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            college:college,department:department,email:userMail
-          }), // Uncomment this line if you need to send data in the request body
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log(data);
-        });
-      }
+      //   fetch('https://api.icspaces.online/update-faculty-details', {
+      //     method: 'POST', // or 'PUT'
+      //     headers: {
+      //     'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({
+      //       college:college,department:department,email:userMail
+      //     }), // Uncomment this line if you need to send data in the request body
+      //   })
+      //   .then(response => response.json())
+      //   .then(data => {
+      //     console.log(data);
+      //   });
+      // }
       else if(itemsCount=='Admin' && usertype=='Faculty'){//Faculty to Admin
         console.log(userMail);
         fetch('https://api.icspaces.online/set-faculty-to-admin', {
@@ -235,18 +235,18 @@ import {
                 <Typography variant="body1">
                 Email: &nbsp; {userMail}
                  </Typography>
-                 {itemsCount==='Student' && 
+                 {/* {itemsCount==='Student' && 
                  <>
                   <TextField helperText='Student Number' value={studentNumber} onChange={handleStudentNumberChange}/>
                   <TextField helperText='Org' value={org} onChange={handleOrgChange}/>
                   <TextField helperText='Course' value={course} onChange={handleCourseChange}/>
                  </>
-                 }
+                 } */}
                 
 
                   
 
-                {itemsCount!=='Admin' &&  itemsCount!=='Director'&&
+                {/* {itemsCount!=='Admin' &&  itemsCount!=='Director'&&
                 <>
                   <FormControl variant="outlined" size='small' style={{maxWidth: 300}}>
                         <InputLabel id="items-count-college">College</InputLabel>
@@ -278,7 +278,7 @@ import {
                 </>
                 
                 
-                }
+                } */}
 
 
             </Stack>

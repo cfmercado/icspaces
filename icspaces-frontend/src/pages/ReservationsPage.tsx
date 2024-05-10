@@ -120,12 +120,9 @@ const ReservationsPage = () => {
           const reservationsData = await reservationsResponse.json();
           console.log("Reservations data:", reservationsData);
 
-          if (reservationsData.success || reservationsData.length === 0) {
-            setDataTable(reservationsData.data || []);
-            setOriginalData(reservationsData.data || []);
-          } else {
-            throw new Error(reservationsData.errmsg);
-          }
+          console.log("HERRRREEEEEEE");
+          setDataTable(reservationsData || []);
+          setOriginalData(reservationsData || []);
         }
       } catch (error) {
         console.error("Failed to fetch reservations:", error);
@@ -357,13 +354,24 @@ const ReservationsPage = () => {
                   overall_fee: row.total_amount_due,
 
                   // dates
-                  verified_date: formatDateTime(`${otherReservationInfo.booked_date}`),
-                  payment_date: formatDateTime(`${otherReservationInfo.paid_date}`),
-                  verification_date: formatDateTime(`${otherReservationInfo.disapproved_date}`),
-                  disapproved_date: formatDateTime(`${otherReservationInfo.disapproved_date}`),
-                  approved_date: formatDateTime(`${otherReservationInfo.booked_date}`),
-                  cancellation_date: formatDateTime(`${otherReservationInfo.cancelled_date}`),
-
+                  verified_date: formatDateTime(
+                    `${otherReservationInfo.booked_date}`
+                  ),
+                  payment_date: formatDateTime(
+                    `${otherReservationInfo.paid_date}`
+                  ),
+                  verification_date: formatDateTime(
+                    `${otherReservationInfo.disapproved_date}`
+                  ),
+                  disapproved_date: formatDateTime(
+                    `${otherReservationInfo.disapproved_date}`
+                  ),
+                  approved_date: formatDateTime(
+                    `${otherReservationInfo.booked_date}`
+                  ),
+                  cancellation_date: formatDateTime(
+                    `${otherReservationInfo.cancelled_date}`
+                  ),
 
                   // note
                   note_from_admin:

@@ -2,7 +2,7 @@ import { TableRow, TableCell, Button,Grid,Box, Avatar, Stack,Typography, Divider
 import { Users } from "./types";
 import HomeBG from "../assets/room_images/HomeBG.png";
 import LocalPostOfficeIcon from '@mui/icons-material/LocalPostOffice';
-import { useState } from "react";
+import { useState,useEffect } from "react";
 
 interface AccountCardProps {
   users: Users;
@@ -21,10 +21,45 @@ const userRole: Record<number, string> = {
 
 
 const AccountCard: React.FC<AccountCardProps> = ({
+
+  
   users,
   onClick,
 }) => {
-  
+  function FetchReservationDetails(email1:string){
+
+    useEffect(() => {
+        fetch('https://api.icspaces.online/get-total-reservations', {
+            method: 'POST', // or 'PUT'
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({email:email1}), // Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Reservations ["+data.totalReservations+"]")
+          setTotalReservations(data.totalReservations);
+        });
+      }, []);
+  };
+  function FetchLastLogin(email1:string){
+    useEffect(() => {
+        fetch('https://api.icspaces.online/get-last-login-date', {
+            method: 'POST', // or 'PUT'
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({email:email1}), // Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data.email)
+          setlastLogin(data.email.slice(0,10));
+
+        });
+      }, []);
+  };
   const BlueTypography = (
     props: any //Bottom three cells
   ) => (
@@ -39,15 +74,22 @@ const AccountCard: React.FC<AccountCardProps> = ({
       {props.children}
     </Typography>
   ); 
+ 
+ const [totalReservations,setTotalReservations]=useState(0);
+ const [lastLogin,setlastLogin]=useState('');
 
 
   return (
+    <>
+  {users && FetchReservationDetails(users.email)}
+  {users && FetchLastLogin(users.email)}
     <Grid
     container
     width='100%'
     borderRadius='15px'
     sx={{border:'solid',borderWidth:'0.5px', borderColor:"#B9B9B9"}}
   >
+    
     <Grid item xs={1}>{/* Image */}
       <Grid container style={{ height: "100%"}} justifyContent='space-evenly' >
         <Box
@@ -64,7 +106,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
       <Grid item xs={11}  > {/* User Details */}
         <Grid container  >
           <Grid item xs={12}>{/* 1st Row */}
-            <Stack direction="row"  justifyContent='space-evenly' padding={1}>
+            <Stack direction={"row"}  justifyContent='space-evenly' padding={1}>
               <Box marginRight='auto' minWidth='25%'maxWidth='25%' sx={{ textOverflow:'ellipsis'}}> 
                 <Typography align='left' variant='h6' color='#183048'> {users.lname},&nbsp;{users.fname}</Typography>
                 <GrayTypography>Last name, First name</GrayTypography>
@@ -78,12 +120,14 @@ const AccountCard: React.FC<AccountCardProps> = ({
                 
                 <GrayTypography>Email</GrayTypography>
               </Box>
+
               <Box marginRight='auto' maxWidth='25%'>
-                <BlueTypography>32</BlueTypography>
+                <BlueTypography>{totalReservations}</BlueTypography>
                 <GrayTypography>Total Room Reservations</GrayTypography>
               </Box>
+              
               <Box marginRight={4}>
-                <BlueTypography>January 3, 2024</BlueTypography>
+                <BlueTypography>{lastLogin}</BlueTypography>
                 <GrayTypography>Last log-in</GrayTypography>
               </Box>
             </Stack>
@@ -108,7 +152,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
       </Grid>
 
   </Grid>
-
+  </>
  
   );
 };

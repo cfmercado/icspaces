@@ -18,11 +18,11 @@ const RoomReservationForm = () => {
         const costCalculator = async () => {
             let start=startTime.slice(0,2);
             let end=endTime.slice(0,2);
-            console.log("Cost")
-            console.log(start)
-            console.log(end)
+            // console.log("Cost")
+            // console.log(start)
+            // console.log(end)
             let cost1 =  (Number(end)-Number(start)) * Number( hourlyFee);
-            console.log(cost1);
+            // console.log(cost1);
             setsumCost(cost1);
         }
         const fetchRoomInfo = async () => {
@@ -49,13 +49,18 @@ const RoomReservationForm = () => {
 
     useEffect(() => {
     const receivedValues=location.state;
-    console.log("Received this")
-    console.log(receivedValues);
+    // console.log("Received this")
+    // console.log(receivedValues);
     setroom_id(receivedValues.room_id);
-    setDate(receivedValues.date);
+
     setstartTime(receivedValues.start_dateTime)
     setendTime(receivedValues.end_dateTime)
-
+    let tempDate= new Date(receivedValues.date).toISOString().slice(0,10)
+    // console.log("tempDate "+tempDate)
+    setDate(tempDate);
+    let newDate = new Date().toISOString().slice(0,10);
+    // console.log(newDate)
+    setcreationDate(newDate);
     const fetchUser = async () => {
         try {
             const response = await axios.get("https://api.icspaces.online/get-profile", {
@@ -122,6 +127,7 @@ const RoomReservationForm = () => {
     const [endTime,setendTime]=useState('');
     const [hourlyFee,sethourlyFee]=useState('');
     const [sumCost,setsumCost]=useState(0);
+    const [creationDate,setcreationDate]=useState('');
     const [eventDetails,seteventDetails]=useState('');
     const [submitFail,setsubmitFail]=useState(false);
     const zero=0;
@@ -135,20 +141,36 @@ const RoomReservationForm = () => {
     const HandleSubmit = (e:any) => {
         e.preventDefault();
         console.log("Submitting")
-        console.log({name,email,contact,eventName,eventDetails})
+        const startDateTime= date+" "+startTime
+        const endDateTime= date+" "+endTime
+        // console.log({name,email,contact,eventName,eventDetails})
+        // console.log({creationDate,zero,sumCost})
+        // console.log({startDateTime,endDateTime})
+        // console.log("Submitting End")
         fetch('https://api.icspaces.online/add-reservation', {
             method: 'POST', // or 'PUT'
             headers: {
             'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                activity_name:eventName,
-                room_id: room_id,user_id:email,discount:zero,additional_fee:zero,total_amount_due:sumCost,status_code:zero}), // Uncomment this line if you need to send data in the request body
+                activity_name:eventName, 
+                activity_desc:eventDetails,
+                room_id: room_id,
+                user_id:email,
+                date_created:creationDate,
+                start_datetime: startDateTime,
+                end_datetime: endDateTime,
+                discount:zero,
+                additional_fee:zero,
+                total_amount_due:sumCost,
+                status_code:zero,
+                utilities:'',
+            }), // Uncomment this line if you need to send data in the request body
         })
         .then(response => response.json())
         .then(data => {
             console.log(data)
-            window.location.href = "https://app.icspaces.online/homepage"
+            // window.location.href = "https://app.icspaces.online/homepage"
         })
         .catch(err => {
             console.log(err)
@@ -156,7 +178,7 @@ const RoomReservationForm = () => {
         }
     )
 
-        // app.post('/add-reservation', addReservation)
+    // app.post('/add-reservation', addReservation)
     }
     return (
         <>

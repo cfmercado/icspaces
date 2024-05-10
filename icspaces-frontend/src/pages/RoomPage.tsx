@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from 'react-router-dom';
+import { useParams } from "react-router-dom";
 import {
   Box,
   Card,
@@ -29,7 +29,7 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import Calendar from "../components/Calendar";
 import HourButtons from "../components/HourButtons";
-import dayjs, { Dayjs } from 'dayjs'; 
+import dayjs, { Dayjs } from "dayjs";
 
 const cell = {
   color: "white",
@@ -60,11 +60,11 @@ const styles = {
 };
 
 const RoomPage = () => {
-
   const { room_id } = useParams<{ room_id: string }>();
-  const  dummyDate = "Thurs Dec 03 2020";
+
   // State to keep track of the current image index
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
   // Handler to go to the next image
   const nextImage = () => {
@@ -78,16 +78,18 @@ const RoomPage = () => {
     );
   };
 
-  const statusMapping: Record<string, string> = { 
-    '0': 'Ground',
-    '1': 'Second',
-    '2': 'Third',
-    '3': 'Fourth'
+  const statusMapping: Record<string, string> = {
+    "0": "Ground",
+    "1": "Second",
+    "2": "Third",
+    "3": "Fourth",
     // add other status codes as needed
   };
 
   const handleDateSelect = (selectedDate: Dayjs) => {
     // Do something with the selected date
+    setSelectedDate(selectedDate);
+
     console.log("Selected Date:", selectedDate);
   };
 
@@ -100,15 +102,15 @@ const RoomPage = () => {
     room_name: string;
     room_type: string;
   }
-  
+
   interface Utility {
     fee: string;
-  item_name: string;
-  item_qty: number;
-  room_id: number;
+    item_name: string;
+    item_qty: number;
+    room_id: number;
     // add properties here based on the structure of utility objects
   }
-  
+
   interface RoomInfo {
     room: Room;
     utility: Utility[];
@@ -120,19 +122,20 @@ const RoomPage = () => {
 
   const [room, setRoom] = useState<RoomInfo | null>();
   const [reservations, setReservations] = useState<ReservationsInfo | null>();
-  
+
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch("https://api.icspaces.online/get-available-room-time", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ room_id: room_id,
-            date: dummyDate
-           }),
-        });
+        const response = await fetch(
+          "https://api.icspaces.online/get-available-room-time",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ room_id: room_id, date: selectedDate.format("dddd DD MMM YYYY")}),
+          }
+        );
         const data = await response.json();
         setReservations(data);
         console.log(reservations);
@@ -144,32 +147,33 @@ const RoomPage = () => {
   }, []);
 
   useEffect(() => {
-    fetch('https://api.icspaces.online/get-room-info', {
-      method: 'POST', // or 'PUT'
+    fetch("https://api.icspaces.online/get-room-info", {
+      method: "POST", // or 'PUT'
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({room_id: room_id}), // Uncomment this line if you need to send data in the request body
+      body: JSON.stringify({ room_id: room_id }), // Uncomment this line if you need to send data in the request body
     })
-    .then(response => response.json())
-    .then(data => {
-      setRoom(data);
-      console.log(data);
-    });
-  }, []);
+      .then((response) => response.json())
+      .then((data) => {
+        setRoom(data);
+        console.log(data);
+      });
+  }, [selectedDate]);
 
   return (
-    <Box       
+    <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start', // Aligns content to the top
-        alignItems: 'center', // Centers content horizontally
-        height: '100vh', // Maintains full viewport height
-        width: '184vh',
-        overflowY: 'auto', // Allows scrolling
-        position: 'relative', // Allows positioning of children
-    }}>
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start", // Aligns content to the top
+        alignItems: "center", // Centers content horizontally
+        height: "100vh", // Maintains full viewport height
+        width: "184vh",
+        overflowY: "auto", // Allows scrolling
+        position: "relative", // Allows positioning of children
+      }}
+    >
       <Box
         sx={{
           position: "absolute",
@@ -179,8 +183,7 @@ const RoomPage = () => {
           height: 300,
         }}
       >
-         <Calendar onDateSelect={handleDateSelect} />
-
+        <Calendar onDateSelect={handleDateSelect} />
       </Box>
       <Box
         sx={{
@@ -191,7 +194,7 @@ const RoomPage = () => {
           height: 700,
         }}
       >
-        <HourButtons availableTimes = {reservations?.availableTimes}/>
+        <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} />
       </Box>
       <Button
         startIcon={<ArrowBackIcon />}
@@ -260,15 +263,21 @@ const RoomPage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Room type:</TableCell>
-                    <TableCell style={styles.cell}>{room?.room.room_type}</TableCell>
+                    <TableCell style={styles.cell}>
+                      {room?.room.room_type}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Location:</TableCell>
-                    <TableCell style={styles.cell}>{statusMapping[room?.room.floor_number ?? 3]}</TableCell>
+                    <TableCell style={styles.cell}>
+                      {statusMapping[room?.room.floor_number ?? 3]}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Capacity:</TableCell>
-                    <TableCell style={styles.cell}>{room?.room.room_capacity}</TableCell>
+                    <TableCell style={styles.cell}>
+                      {room?.room.room_capacity}
+                    </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -306,21 +315,26 @@ const RoomPage = () => {
               <span style={{ color: "white" }}>Hourly Fee:</span>
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {[`P ${parseInt(room?.room.fee ?? '')} / hour`, `P ${parseInt(room?.room.additional_fee_per_hour ?? '')} / hour overtime`].map((fee) => (
-              <li key={fee}>
-                <Typography
-                  style={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "0.8rem",
-                  }}
-                  align="left"
-                >
-                  {fee}
-                </Typography>
-              </li>
-            ))}
-          </ul>
+              {[
+                `P ${parseInt(room?.room.fee ?? "")} / hour`,
+                `P ${parseInt(
+                  room?.room.additional_fee_per_hour ?? ""
+                )} / hour overtime`,
+              ].map((fee) => (
+                <li key={fee}>
+                  <Typography
+                    style={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "0.8rem",
+                    }}
+                    align="left"
+                  >
+                    {fee}
+                  </Typography>
+                </li>
+              ))}
+            </ul>
           </Stack>
         </CardContent>
       </Card>

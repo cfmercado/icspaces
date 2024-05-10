@@ -85,7 +85,7 @@ const NavBar = () => {
     const fetchProfileData = async () => {
       try {
         const response = await fetch("https://api.icspaces.online/get-profile", {
-          credentials: "include", // Include credentials in the request
+          credentials: "include",
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -125,7 +125,6 @@ const NavBar = () => {
           { label: "Home", link: "/homepage" },
           { label: "View Rooms", link: "/viewroomspage" },
           { label: "My Reservations", link: "/reservationspage" },
-          { label: "Account", link: "/accountpage" },
           { label: "FAQs", link: "/faqspage" },
         ]
       : Number(userType) === 1
@@ -134,15 +133,14 @@ const NavBar = () => {
           { label: "View Rooms", link: "/viewroomspage" },
           { label: "My Reservations", link: "/reservationspage" },
           { label: "Schedules", link: "/schedulepage" },
-          { label: "Account", link: "/accountpage" },
           { label: "FAQs", link: "/faqspage" },
         ]
       : [
           { label: "Home", link: "/homepage_admin" },
-          { label: "Reserve Room", link: "/bookroom_admin" },
+          { label: "Reserve Room", link: "/bookreservationpage_admin" },
           { label: "Reservations", link: "/reservationspage_admin" },
           { label: "Rooms", link: "/roomspage_admin" },
-          { label: "Accounts", link: "/accountspage_admin" },
+          { label: "Add Room", link: "/addroom_admin" },
           { label: "Schedules", link: "/schedulepage" },
           { label: "FAQs", link: "/faqspage" },
         ]

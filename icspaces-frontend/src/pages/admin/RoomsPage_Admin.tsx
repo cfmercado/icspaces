@@ -8,7 +8,7 @@ import {
   Stack,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useParams } from 'react-router-dom';
+import { useParams } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import {Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import roomImages from "../../assets/room_images/RoomImages";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
@@ -70,21 +70,21 @@ const RoomsPage_Admin = () => {
     );
   };
 
-  const statusMapping: Record<string, string> = { 
-    '0': 'Ground Floor',
-    '1': 'Second Floor',
-    '2': 'Third Floor',
-    '3': 'Fourth Floor',
+  const statusMapping: Record<string, string> = {
+    "0": "Ground Floor",
+    "1": "Second Floor",
+    "2": "Third Floor",
+    "3": "Fourth Floor",
     // add other status codes as needed
   };
 
   interface Utility {
-  fee: string;
-  item_name: string;
-  item_qty: number;
-  room_id: number;
+    fee: string;
+    item_name: string;
+    item_qty: number;
+    room_id: number;
   }
-  
+
   interface RoomInfo {
     id: number;
     name: string;
@@ -132,36 +132,42 @@ const RoomsPage_Admin = () => {
     fetchRooms();
   }, []);
 
-
   return (
-    <Box       
+    <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start', // Aligns content to the top
-        alignItems: 'center', // Centers content horizontally
-        height: '100vh', // Maintains full viewport height
-        overflowY: 'auto', // Allows scrolling
-        position: 'relative', // Allows positioning of children
-    }}>
-        
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start", // Aligns content to the top
+        alignItems: "center", // Centers content horizontally
+        height: "100vh", // Maintains full viewport height
+        overflowY: "auto", // Allows scrolling
+        position: "relative", // Allows positioning of children
+      }}
+    >
       <Box
         sx={{
           position: "absolute",
           top: 560, // Adjust these values as needed
           left: 230,
-          width: '66%', // Specify width and height if necessary
+          width: "66%", // Specify width and height if necessary
           height: 300,
         }}
       >
         <RoomPhotos />
       </Box>
-    
+
       <Button
         startIcon={<ArrowBackIcon />}
-        sx={{ position: "absolute", top: 80, left: 20, backgroundColor: "#CFCFCF", color:'black',  '&:hover': {
-          backgroundColor: 'lightgrey',
-        }}}
+        sx={{
+          position: "absolute",
+          top: 80,
+          left: 20,
+          backgroundColor: "#CFCFCF",
+          color: "black",
+          "&:hover": {
+            backgroundColor: "lightgrey",
+          },
+        }}
         variant="contained"
         onClick={() =>
           (window.location.href = "https://app.icspaces.online/viewroomspage")
@@ -226,15 +232,25 @@ const RoomsPage_Admin = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Room type:</TableCell>
-                    <TableCell style={styles.cell}>{rooms[currentImageIndex]?.type}</TableCell>
+                    <TableCell style={styles.cell}>
+                      {rooms[currentImageIndex]?.type}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Location:</TableCell>
-                    <TableCell style={styles.cell}>{statusMapping[rooms[currentImageIndex]?.floor_number ?? 3]}</TableCell>
+                    <TableCell style={styles.cell}>
+                      {
+                        statusMapping[
+                          rooms[currentImageIndex]?.floor_number ?? 3
+                        ]
+                      }
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell style={styles.boldCell}>Capacity:</TableCell>
-                    <TableCell style={styles.cell}>{rooms[currentImageIndex]?.capacity}</TableCell>
+                    <TableCell style={styles.cell}>
+                      {rooms[currentImageIndex]?.capacity}
+                    </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -248,20 +264,23 @@ const RoomsPage_Admin = () => {
               <span style={{ color: "white" }}>Available equipment:</span>
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {utility?.map((utilityItem) => (utilityItem.item_name && utilityItem.item_qty &&
-                <li key={utilityItem.item_name}>
-                  <Typography
-                    style={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                    }}
-                    align="left"
-                  >
-                    {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
-                    </Typography>
-                  </li>
-                )
+              {utility?.map(
+                (utilityItem) =>
+                  utilityItem.item_name &&
+                  utilityItem.item_qty && (
+                    <li key={utilityItem.item_name}>
+                      <Typography
+                        style={{
+                          color: "white",
+                          fontWeight: "bold",
+                          fontSize: "0.8rem",
+                        }}
+                        align="left"
+                      >
+                        {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
+                      </Typography>
+                    </li>
+                  )
               )}
             </ul>
             <Typography
@@ -273,40 +292,48 @@ const RoomsPage_Admin = () => {
               <span style={{ color: "white" }}>Hourly Fee:</span>
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {[`P ${parseInt(rooms[currentImageIndex]?.fee ?? '')} / hour`, `P ${parseInt(rooms[currentImageIndex]?.additional_fee_per_hour ?? '')} / hour overtime`].map((fee) => (
-              <li key={fee}>
-                <Typography
-                  style={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "0.8rem",
-                  }}
-                  align="left"
-                >
-                  {fee}
+              {[
+                `P ${parseInt(rooms[currentImageIndex]?.fee ?? "")} / hour`,
+                `P ${parseInt(
+                  rooms[currentImageIndex]?.additional_fee_per_hour ?? ""
+                )} / hour overtime`,
+              ].map((fee) => (
+                <li key={fee}>
+                  <Typography
+                    style={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "0.8rem",
+                    }}
+                    align="left"
+                  >
+                    {fee}
                   </Typography>
                 </li>
               ))}
             </ul>
-              <Button 
-              variant="contained" 
-              style={{alignSelf:'center'}}
+            <Button
+              variant="contained"
+              style={{ alignSelf: "center" }}
               component={Link}
-              to={`/editroominfopage_admin/${rooms[currentImageIndex]?.id}`} 
+              to={`/editroominfopage_admin/${rooms[currentImageIndex]?.id}`}
               sx={{
-                      textTransform: "none",
-                      backgroundColor: '#FFB532',
-                      height: "23px",
-                      width: '40%',
-                      color: 'black', 
-                      borderRadius: '20px',
-                      
-                      fontSize: "13px",
-                      '&:hover': {
-                          backgroundColor: '#FFC532',
-                      }
-                  }}> Edit </Button>
-            
+                textTransform: "none",
+                backgroundColor: "#FFB532",
+                height: "23px",
+                width: "40%",
+                color: "black",
+                borderRadius: "20px",
+
+                fontSize: "13px",
+                "&:hover": {
+                  backgroundColor: "#FFC532",
+                },
+              }}
+            >
+              {" "}
+              Edit{" "}
+            </Button>
           </Stack>
         </CardContent>
       </Card>

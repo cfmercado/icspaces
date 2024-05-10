@@ -191,7 +191,7 @@ const EditRoomInfoPage_Admin = () => {
     try {
       console.log('Room Details:', roomDetails);
       // Send an HTTP request to update utilities
-      const utilityResponse = await fetch("http://localhost:3001/add-new-room", {
+      const utilityResponse = await fetch("https://api.icspaces.online/add-new-room", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,7 +217,7 @@ const EditRoomInfoPage_Admin = () => {
               formData.append("room_id", room_id);
           }
 
-        fetch('http://localhost:3001/upload-room-image', {
+        fetch('https://api.icspaces.online/upload-room-image', {
             method: 'POST',
             body: formData
         })

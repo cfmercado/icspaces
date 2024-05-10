@@ -10,7 +10,7 @@ import { Box } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import googleIcon from "../assets/GoogleIcon.png";
 import googleLogin from "../utils/googleLogin";
-
+import { Link } from "react-router-dom";
 const SignInBox = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -67,32 +67,37 @@ const SignInBox = () => {
           >
             Sign in using your UP account
           </Button>
-          <Button variant="outlined" sx={buttonStyle}>
+          <Button variant="outlined" onClick={() => googleLogin()} sx={buttonStyle} startIcon={
+              <Avatar src={googleIcon} sx={{ width: 20, height: 20 }} />
+            }>
             Log in as Administrator
           </Button>
         </Stack>
         <Divider sx={{ marginY: 2 }}>or</Divider>
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "#FFB532",
-            color: "black",
-            borderRadius: "12px",
-            textTransform: "none",
-            width: "100%",
-            height: "50px", // Slightly smaller height
-            fontSize: "0.875rem", // Smaller font size
-            "&:hover": {
-              backgroundColor: "#FFC532",
-            },
-          }}
-        >
-          <span style={{ padding: "20px 20px" }}>
-            {" "}
-            {/* Added padding around the text */}
-            Are you a guest? <b>Reserve a room</b>
-          </span>
-        </Button>
+        <Link to="/viewrooms_guest">
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: "#FFB532",
+              color: "black",
+              borderRadius: "12px",
+              textTransform: "none",
+              width: "100%",
+              height: "50px", // Slightly smaller height
+              fontSize: "0.875rem", // Smaller font size
+              "&:hover": {
+                backgroundColor: "#FFC532",
+              },
+            }}
+          >
+            <span style={{ padding: "20px 20px" }}>
+              {" "}
+              {/* Added padding around the text */}
+              Are you a guest? <b>Reserve a room</b>
+            </span>
+          </Button>
+        </Link>
+        
       </Stack>
     </Box>
   );

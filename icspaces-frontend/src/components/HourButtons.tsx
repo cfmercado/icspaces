@@ -5,9 +5,10 @@ import {Link } from "react-router-dom";
 
 interface HourButtonsProps {
     availableTimes?: any;
+    dateTime?: any;
   }
 const HourButtons : React.FC<HourButtonsProps> = ({
-    availableTimes,
+    availableTimes, dateTime
   }) => {
     const { room_id } = useParams<{ room_id: string }>();
     const theme = useTheme();
@@ -22,9 +23,8 @@ const HourButtons : React.FC<HourButtonsProps> = ({
         start_dateTime: data1,
         end_dateTime: data2,
         room_id: room_id,
-        date: "Thurs Dec 03 2020"
+        date: dateTime.format("dddd DD MMM YYYY")
     }
-
     const handleClicked = (text:string) => {
         const newSelectedTime = [...selectedTime];
         if (newSelectedTime.includes(text)) {
@@ -42,7 +42,6 @@ const HourButtons : React.FC<HourButtonsProps> = ({
         const newTimeString = `${hours.toString().padStart(2, '0')}:00:00`;
         setData2(newTimeString);
     }
-
     const handleReserve = () => {
         return <Button variant="contained"
         disabled={selectedTime[1] === undefined} 
@@ -140,7 +139,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
             backgroundColor: 'lightgrey',
           },
     };
-    console.log(selectedTime[1]);
+
     const boxStyle = {
         backgroundColor: '#F2F2F2',
         display: 'fixed',
@@ -160,11 +159,11 @@ const HourButtons : React.FC<HourButtonsProps> = ({
       
     const amButtons = availableTimes?.slice(7,13)
     const pmButtons = availableTimes?.slice(13,22)
-    const AMButtons = ["07:00:00", "08:00:00", "09:00:00", "10:00:00", "11:00:00", "12:00:00"]
-    const PMButtons = ["13:00:00", "14:00:00", "15:00:00", "16:00:00", "17:00:00", "18:00:00", "19:00:00", "20:00:00", "21:00:00",]
+    // const AMButtons = ["07:00:00", "08:00:00", "09:00:00", "10:00:00", "11:00:00", "12:00:00"]
+    // const PMButtons = ["13:00:00", "14:00:00", "15:00:00", "16:00:00", "17:00:00", "18:00:00", "19:00:00", "20:00:00", "21:00:00",]
     const selectedButtons1 = ["7-8 AM", "8-9 AM", "9-10 AM", "10-11 AM", "11-12 PM", "12-1 PM"]
     const selectedButtons2 = ["1-2 PM", "2-3 PM", "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM", "8-9 PM", "9-10 PM", ]
-    console.log(data1);
+    
     const renderButtons = () => {
         if (isSwitchOn) {
           // Render set of buttons when the switch is on

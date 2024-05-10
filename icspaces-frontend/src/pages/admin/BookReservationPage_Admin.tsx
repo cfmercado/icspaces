@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from 'react-router-dom';
+import { useParams } from "react-router-dom";
 import {
   Box,
   Card,
@@ -99,7 +99,7 @@ const BookReservationPage_Admin = () => {
     const fetchReservations = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3001/get-available-room-time",
+          "https://api.icspaces.online/get-available-room-time",
           {
             method: "POST",
             headers: {
@@ -157,7 +157,7 @@ const BookReservationPage_Admin = () => {
 
   useEffect(() => {
     if (selectedRoomId !== null) {
-      fetch("http://localhost:3001/get-room-info", {
+      fetch("https://api.icspaces.online/get-room-info", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +175,7 @@ const BookReservationPage_Admin = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
   useEffect(() => {
-    fetch("http://localhost:3001/get-room-info", {
+    fetch("https://api.icspaces.online/get-room-info", {
       method: "POST", // or 'PUT'
       headers: {
         "Content-Type": "application/json",
@@ -228,7 +228,7 @@ const BookReservationPage_Admin = () => {
         sx={{ position: "absolute", top: 80, left: 20 }}
         variant="contained"
         onClick={() =>
-          (window.location.href = "http://localhost:3000/viewroomspage")
+          (window.location.href = "https://app.icspaces.online/viewroomspage")
         }
       >
         Back to ICS Rooms
