@@ -125,7 +125,7 @@ const RoomPage = () => {
 
   useEffect(() => {
     if (selectedRoomId !== null) {
-      fetch('https://api.icspaces.online//get-room-info', {
+      fetch('https://api.icspaces.online/get-room-info', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ const RoomPage = () => {
         sx={{ position: "absolute", top: 80, left: 20 }}
         variant="contained"
         onClick={() =>
-          (window.location.href = "https://app.icspaces.online//viewroomspage")
+          (window.location.href = "https://app.icspaces.online/viewroomspage")
         }
       >
         Back to ICS Rooms

@@ -108,7 +108,7 @@ const RoomFilters = () => {
   });
 
   useEffect(() => {
-    fetch('https://api.icspaces.online//get-all-room-filters', {
+    fetch('https://api.icspaces.online/get-all-room-filters', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

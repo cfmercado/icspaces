@@ -101,7 +101,7 @@ const RoomsPage_Admin = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch("https://api.icspaces.online//get-all-rooms", {
+        const response = await fetch("https://api.icspaces.online/get-all-rooms", {
           method: "POST",
         });
         const data = await response.json();
@@ -164,7 +164,7 @@ const RoomsPage_Admin = () => {
         }}}
         variant="contained"
         onClick={() =>
-          (window.location.href = "https://app.icspaces.online//viewroomspage")
+          (window.location.href = "https://app.icspaces.online/viewroomspage")
         }
       >
         Back to ICS Rooms

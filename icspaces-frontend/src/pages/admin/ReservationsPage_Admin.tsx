@@ -64,7 +64,7 @@ const ReservationsPage_Admin = () => {
   const [originalData, setOriginalData] = useState<Reservation[]>([]);
 
   useEffect(() => {
-  fetch('https://api.icspaces.online//get-all-reservation', {
+  fetch('https://api.icspaces.online/get-all-reservation', {
     method: 'POST', // or 'PUT'
     headers: {
       'Content-Type': 'application/json',
@@ -211,7 +211,7 @@ const formatDateTimeToHHMMPM = (dateTimeString: string): string => {
     console.log(row);
 
     // Fetch values first
-    fetch("https://api.icspaces.online//get-all-reservations-with-dummy-data", {
+    fetch("https://api.icspaces.online/get-all-reservations-with-dummy-data", {
       method: "POST", // or 'PUT'
       headers: {
         "Content-Type": "application/json",
@@ -225,7 +225,7 @@ const formatDateTimeToHHMMPM = (dateTimeString: string): string => {
 
 
         // Fetch name values
-        fetch("https://api.icspaces.online//get-user-information", {
+        fetch("https://api.icspaces.online/get-user-information", {
           method: "POST", // or 'PUT'
           headers: {
             "Content-Type": "application/json",
@@ -239,7 +239,7 @@ const formatDateTimeToHHMMPM = (dateTimeString: string): string => {
 
 
             // Fetch other values
-            fetch("https://api.icspaces.online//get-reservation", {
+            fetch("https://api.icspaces.online/get-reservation", {
               method: "POST", // or 'PUT'
               headers: {
                 "Content-Type": "application/json",

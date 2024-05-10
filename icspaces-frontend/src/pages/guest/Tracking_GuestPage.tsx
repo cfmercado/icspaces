@@ -81,7 +81,7 @@ const ReservationsPage = () => {
 
   //         console.log("Fetching reservations...");
   //         const reservationsResponse = await fetch(
-  //           "https://api.icspaces.online//get-all-reservations-by-user",
+  //           "https://api.icspaces.online/get-all-reservations-by-user",
   //           {
   //             method: "POST",
   //             headers: {
@@ -116,7 +116,7 @@ const ReservationsPage = () => {
   //   fetchReservations();
   // }, []);
   // useEffect(() => {
-  //   fetch('https://api.icspaces.online//get-all-reservation', {
+  //   fetch('https://api.icspaces.online/get-all-reservation', {
   //     method: 'POST', // or 'PUT'
   //     headers: {
   //       'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ const ReservationsPage = () => {
   
   setSearchTerm(search);
   if (search !== "") {
-    fetch('https://api.icspaces.online//get-reservation', {
+    fetch('https://api.icspaces.online/get-reservation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

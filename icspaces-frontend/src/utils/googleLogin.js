@@ -3,7 +3,7 @@ const navigate = (url) => {
 };
 
 const googleLogin = async () => {
-  const response = await fetch("https://api.icspaces.online//auth/google", {
+  const response = await fetch("https://api.icspaces.online/auth/google", {
     method: "POST",
   });
   const data = await response.json(); // user data

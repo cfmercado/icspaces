@@ -32,7 +32,7 @@ const SchedulesPage_Admin = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch("https://api.icspaces.online//get-all-rooms", {
+        const response = await fetch("https://api.icspaces.online/get-all-rooms", {
           method: "POST",
         });
         const data = await response.json();
@@ -60,7 +60,7 @@ const SchedulesPage_Admin = () => {
           let options = {};
 
           if (selectedRoom === -1) {
-            url = "https://api.icspaces.online//get-all-reservation";
+            url = "https://api.icspaces.online/get-all-reservation";
             options = {
               method: "POST",
               headers: {
@@ -68,7 +68,7 @@ const SchedulesPage_Admin = () => {
               },
             };
           } else {
-            url = "https://api.icspaces.online//get-all-reservations-by-room";
+            url = "https://api.icspaces.online/get-all-reservations-by-room";
             options = {
               method: "POST",
               headers: {

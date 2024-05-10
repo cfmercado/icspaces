@@ -52,7 +52,7 @@ const UserInfo: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("https://api.icspaces.online//logout", {
+      const response = await fetch("https://api.icspaces.online/logout", {
         credentials: "include",
         method: "GET",
       });

@@ -2,7 +2,7 @@ import pool from './db.js';
 
 
 
-// Form: https://api.icspaces.online//search?type={TYPE}&room_id={ROOM_ID}
+// Form: https://api.icspaces.online/search?type={TYPE}&room_id={ROOM_ID}
 const searchHandler = async (req, res) => {
     const { type } = req.body;
     try {

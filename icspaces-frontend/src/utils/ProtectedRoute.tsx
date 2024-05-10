@@ -16,7 +16,7 @@ const ProtectedRoute = ({
   useEffect(() => {
     const checkIfLoggedIn = async () => {
       try {
-        const response = await axios.get("https://api.icspaces.online//is-logged-in", {
+        const response = await axios.get("https://api.icspaces.online/is-logged-in", {
           withCredentials: true,
         });
         console.log(response.data); // Add this line

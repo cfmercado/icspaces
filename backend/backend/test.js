@@ -1,5 +1,5 @@
 let query = "/get-all-reservations-by-user"
-let url = `https://api.icspaces.online//${query}`
+let url = `https://api.icspaces.online/${query}`
 
 let options = {
     method: 'POST',

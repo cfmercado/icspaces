@@ -119,7 +119,7 @@ const callbackHandler = async (req,res,next) => {
             console.log(sessionData)
             
             // then make the client redirect to the home page xd
-            res.redirect(process.env.AUTH_SUCCESS_REDIRECT || 'https://app.icspaces.online//homepage')
+            res.redirect(process.env.AUTH_SUCCESS_REDIRECT || 'https://app.icspaces.online/homepage')
         }
         
     }
@@ -127,7 +127,7 @@ const callbackHandler = async (req,res,next) => {
         let errmsg = `Error with Google Sign in: ${err.message}`
         console.log(errmsg)
         // res.send(errmsg)
-        res.redirect(process.env.AUTH_FAILURE_REDIRECT || `https://app.icspaces.online//login-fail?error=${errmsg}`)
+        res.redirect(process.env.AUTH_FAILURE_REDIRECT || `https://app.icspaces.online/login-fail?error=${errmsg}`)
         // res.redirect(process.env.AUTH_SUCESS_FAILURE)
     } finally {
         if (conn) conn.end();

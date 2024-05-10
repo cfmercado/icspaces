@@ -166,7 +166,7 @@ const EditRoomInfoPage_Admin = () => {
   
     try {
       // Send an HTTP request to the backend
-      const response = await fetch("https://api.icspaces.online//add-new-room", {
+      const response = await fetch("https://api.icspaces.online/add-new-room", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
