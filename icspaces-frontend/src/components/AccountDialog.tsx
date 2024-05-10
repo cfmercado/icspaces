@@ -131,7 +131,7 @@ import {
           headers: {
           'Content-Type': 'application/json',
           },
-          body: JSON.stringify({userMail}), // Uncomment this line if you need to send data in the request body
+          body: JSON.stringify({email:userMail}), // Uncomment this line if you need to send data in the request body
         })
         .then(response => response.json())
         .then(data => {

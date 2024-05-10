@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useParams } from "react-router-dom";
 import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
 import '../../App.css';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const darkColor = '#183048';
 const inputStyle = {
@@ -227,6 +228,21 @@ const EditRoomInfoPage_Admin = () => {
     // Clear the input fields
     setSnackbarMessage("Changes have been discarded.");
     setSnackbarOpen(true);
+  };
+  const [image, setImage] = useState<File | null>(null);
+  const [photoName, setPhotoName] = useState<string>('');
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedImage = e.target.files?.[0];
+    if (selectedImage) {
+      setImage(selectedImage);
+      setPhotoName(selectedImage.name); // Set the photo name
+    }
+  };
+
+  const handleUpload = () => {
+    // You can implement image upload logic here, e.g., using Axios or Fetch API
+    console.log(image);
   };
 
 
@@ -503,7 +519,7 @@ const EditRoomInfoPage_Admin = () => {
             </ListItem>
           ))}
           
-          {items.length <= 5 && (
+          {items.length <= 4 && (
           <ListItem style={styles.listItem}>
           <TextField
               // label="Add New Equipment"
@@ -525,6 +541,60 @@ const EditRoomInfoPage_Admin = () => {
           </ListItem>
           )}
         </List>
+        <div style={{ margin: '0px', padding: '0px' }}>
+          <input
+            accept="image/*"
+            id="image-upload"
+            type="file"
+            onChange={handleImageChange}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor="image-upload">
+            <Button
+              component="span"
+              variant="contained"
+              tabIndex={-1}
+              startIcon={<CloudUploadIcon />}
+            >
+              Upload file
+            </Button>
+          </label>
+          <Button
+            variant="contained"
+            onClick={handleUpload}
+            disabled={!image}
+            component="span"
+            sx={{
+              margin: '1rem',
+              height: '40px',
+              borderRadius: '50px',
+              '&:hover': {
+                backgroundColor: '#FFB532', // Change hover color
+                color: darkColor, // Change hover text color
+                fontWeight: 700,
+              },
+            }}
+          >
+            Submit
+          </Button>
+          <TextField
+            value={photoName}
+            variant="outlined"
+            size="small"
+            disabled
+            sx={{
+              width: '40%',
+              backgroundColor: '#FFFFFF',
+              color: 'black', // Change text color to black
+              fontFamily: 'Inter',
+              fontWeight: 400,
+              fontSize: '15px',
+              marginTop: '15px',
+            }}
+            inputProps={{ color: 'black' }} // Additional input color for consistency
+          />
+
+        </div>
         
       </Stack>
       

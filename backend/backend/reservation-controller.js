@@ -7,14 +7,17 @@ const getAllReservationsByUser = async (req, res) => {
     const { user_id } = req.body;
     try {
         conn = await pool.getConnection();
-        
+        await conn.beginTransaction();
         console.log("User ID received:", user_id);
         const query = "SELECT * FROM reservation WHERE user_id = ?";
         const values = [user_id];
         const rows = await conn.query(query, values);
         console.log(rows)
+        await conn.commit();
         res.send(rows);
     } catch (err) {
+        
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations by User ID", success: false });
         
     } finally {
@@ -26,6 +29,7 @@ const getReservation = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id } = req.body;
         const query = `
             SELECT 
@@ -57,7 +61,7 @@ const getReservation = async (req, res) => {
         WHERE r.reservation_id = ?`;
 
         const util_rows = await conn.query(util_query, values);
-
+        await conn.commit();
         if (rows[0]) {
             // Format the dates
             ['pending_date', 'booked_date', 'paid_date', 'disapproved_date', 'cancelled_date'].forEach(dateField => {
@@ -70,6 +74,7 @@ const getReservation = async (req, res) => {
             res.status(404).send({errmsg: "Reservation not found", success: false});
         }
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations by reservation ID",success: false });
         
     } finally {
@@ -81,12 +86,15 @@ const getAllReservationsbyRoom = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { room_id } = req.body;
         const query = "SELECT * FROM reservation WHERE room_id = ?";
         const values = [room_id];
         const rows = await conn.query(query, values);
+        await conn.commit();
         res.send(rows);
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations by Room ID",success: false });
         
     } finally {
@@ -100,6 +108,7 @@ const getReservationByName =  async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { user_id, event_name } = req.body;
         const query = "SELECT * FROM reservation WHERE user_id = ? AND activity_name = ?";
         const values = [user_id, event_name];
@@ -113,10 +122,11 @@ const getReservationByName =  async (req, res) => {
         WHERE r.user_id = ? AND r.activity_name = ?`;
 
         const util_rows = await conn.query(util_query, values);
-
+        await conn.commit();
 
         res.send({reservations: rows, utilities: util_rows});
     } catch (err){
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations by User ID and Activity Name", success: false });
         
     } finally {
@@ -191,6 +201,7 @@ const getReservationByStatus = async (req, res)  => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { user_id, status_code } = req.body;
         const query = "SELECT * FROM reservation WHERE user_id = ? AND status_code = ?";
         const values = [user_id, status_code];
@@ -203,10 +214,11 @@ const getReservationByStatus = async (req, res)  => {
         WHERE r.user_id = ? AND r.status_code = ?`;
 
         const util_rows = await conn.query(util_query, values);
-
+        await conn.commit();
 
         res.send({reservations: rows, utilities: util_rows});
     } catch (err){
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations by user_id and status", success: false });
         
     } finally {
@@ -219,6 +231,7 @@ const getReservationSortedOldest = async (req, res)  => {
     let conn;
     try {
         conn = await pool.getConnection()
+        await conn.beginTransaction();
         const { user_id } = req.body
         const query = "SELECT * FROM reservation WHERE user_id = ? ORDER BY date_created ASC"
         const values = [user_id]
@@ -232,10 +245,11 @@ const getReservationSortedOldest = async (req, res)  => {
         ORDER BY r.date_created ASC`;
 
         const util_rows = await conn.query(util_query, values);
-
+        await conn.commit();
 
         res.send({reservations: rows, utilities: util_rows});
     } catch (err){
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations", success: false });
         
     } finally {
@@ -247,6 +261,7 @@ const getReservationSortedNewest = async (req, res)  => {
     let conn;
     try {
         conn = await pool.getConnection()
+        await conn.beginTransaction();
         const { user_id } = req.body;
         const query = "SELECT * FROM reservation WHERE user_id = ? ORDER BY date_created DESC"
         const values = [user_id]
@@ -260,10 +275,11 @@ const getReservationSortedNewest = async (req, res)  => {
         ORDER BY r.date_created DESC`;
 
         const util_rows = await conn.query(util_query, values);
-
+        await conn.commit();
 
         res.send({reservations: rows, utilities: util_rows});
     } catch (err){
+        await conn.rollback();
         console.log(err)
         res.send({errmsg: "Failed to get all reservations", success: false });
         
@@ -277,6 +293,7 @@ const addReservation = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { activity_name, activity_desc, room_id, user_id, date_created, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code, utilities } = req.body
         
         var query = `INSERT INTO reservation(
@@ -311,9 +328,10 @@ const addReservation = async (req, res) => {
         const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,?,?)`;
         const notifValues = [result.insertId, user_id, status_code, date_created];
         await conn.query(notifQuery, notifValues);
-
+        await conn.commit();
         res.send({ message: "Successfully added reservation." });
     } catch (err) {
+        await conn.rollback();
         console.error(err);
         res.send({errmsg: "Failed to add reservation", success: false });
     } finally {
@@ -326,6 +344,7 @@ const editReservation = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id, activity_name, room_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due } = req.body
         
         var query = `UPDATE reservation SET
@@ -340,8 +359,10 @@ const editReservation = async (req, res) => {
         const values = [activity_name, room_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, reservation_id];
         
         await conn.query(query, values);
+        await conn.commit();
         res.send({ success: true, message: "Successfully edited reservation." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to edited reservation", success: false });
     } finally {
         if (conn) conn.release();
@@ -354,6 +375,7 @@ const addComment = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id, user_id, comment_text, status_code } = req.body
         var query = `INSERT INTO comment(reservation_id, user_id, comment_text) VALUES(?,?,?)`
         const values = [reservation_id, user_id, comment_text]
@@ -363,9 +385,10 @@ const addComment = async (req, res) => {
         var notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,?)`
         const notifValues = [reservation_id, user_id, status_code]
         await conn.query(notifQuery, notifValues);
-
+        await conn.commit();
         res.send({ message: "Successfully added comment." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to add comment", success: false });
         
     } finally {
@@ -379,6 +402,7 @@ const setAsApproved = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 1 WHERE reservation_id = ?";
         const values = [reservation_id];
@@ -390,9 +414,10 @@ const setAsApproved = async (req, res) => {
         const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,1)`;
         const notifValues = [reservation_id, user_id];
         await conn.query(notifQuery, notifValues);
-
+        await conn.commit();
         res.send({ message: "Successfully edited status to approved." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to set reservation as approved", success: false });
         
     } finally {
@@ -406,6 +431,7 @@ const setAsPaid = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 2 WHERE reservation_id = ?";
         const values = [reservation_id];
@@ -414,9 +440,10 @@ const setAsPaid = async (req, res) => {
         const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES (?, ?, 2)";
         const insertValues = [reservation_id, user_id];
         await conn.query(insertNotificationQuery, insertValues);
-
+        await conn.commit();
         res.send({ message: "Successfully edited status to paid." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to set reservation as paid", success: false });
         
     } finally {
@@ -430,6 +457,7 @@ const setAsDisapproved = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 3 WHERE reservation_id = ?";
         const values = [reservation_id];
@@ -438,9 +466,10 @@ const setAsDisapproved = async (req, res) => {
         const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES (?, ?, 3)";
         const insertValues = [reservation_id, user_id];
         await conn.query(insertNotificationQuery, insertValues);
-
+        await conn.commit();
         res.send({ message: "Successfully edited status to disapproved." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to set reservation as disapproved", success: false });
         
     } finally {
@@ -454,6 +483,7 @@ const setAsCancelled = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id, user_id } = req.body
         const query = "UPDATE reservation SET status_code = 4 WHERE reservation_id = ?";
         const values = [reservation_id];
@@ -465,9 +495,10 @@ const setAsCancelled = async (req, res) => {
         const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,4)`;
         const notifValues = [reservation_id, user_id];
         await conn.query(notifQuery, notifValues);
-
+        await conn.commit();
         res.send({ message: "Successfully edited status to cancelled." });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to set reservation as cancelled", success: false });
         
     } finally {
@@ -485,6 +516,7 @@ const getReservationByRoom = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { room_id,start_datetime, end_datetime } = req.body
         
         // var query = `INSERT INTO room(room_name, room_capacity, fee, room_type) VALUES(?,?,?,?)`;
@@ -506,10 +538,11 @@ const getReservationByRoom = async (req, res) => {
         AND end_datetime <= ?`;
 
         const util_rows = await conn.query(util_query, values);
-
+        await conn.commit();
 
         res.send({reservations: rows, utilities: util_rows});
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get resevations by room", success: false });
         
     } finally {
@@ -522,14 +555,16 @@ const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
+            await conn.beginTransaction();
             
             var query = `SELECT COUNT(*) AS count FROM reservation WHERE status_code IN (0, 1)`;
             
             var result = await conn.query(query);
-    
+            await conn.commit();
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
+            await conn.rollback();
             res.send({errmsg: "Failed to get total number of requests", success: false });
             
         } finally {
@@ -541,14 +576,17 @@ const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
+            await conn.beginTransaction();
             
             var query = `SELECT COUNT(*) AS count FROM reservation WHERE status_code = 0`;
             
             var result = await conn.query(query);
-    
+            
+            await conn.commit();
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
+            await conn.rollback();
             res.send({errmsg: "Failed to get total number of pending requests",success: false });
             
         } finally {
@@ -560,14 +598,17 @@ const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
+            await conn.beginTransaction();
             
             var query = `SELECT COUNT(*) AS count FROM user`;
             
             var result = await conn.query(query);
-    
+            
+            await conn.commit();
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
+            await conn.rollback();
             res.send({errmsg: "Failed to get total number of accounts", success: false });
             
         } finally {
@@ -579,14 +620,17 @@ const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
+            await conn.beginTransaction();
             
             var query = `SELECT COUNT(*) AS count FROM user WHERE isFirstTimeLogin = TRUE`;
             
             var result = await conn.query(query);
-    
+            
+            await conn.commit();
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
+            await conn.rollback();
             res.send({errmsg: "Failed to get total number of new accounts", success: false });
             
         } finally {
@@ -598,15 +642,18 @@ const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
+            await conn.beginTransaction();
             
             var query = `SELECT SUM((total_amount_due + additional_fee) * (1 - discount)) AS count
             FROM reservation WHERE status_code = 2`;
             
             var result = await conn.query(query);
-    
+            
+            await conn.commit();
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
+            await conn.rollback();
             res.send({errmsg: "Failed to get sum of payments", success: false });
             
         } finally {
@@ -618,16 +665,19 @@ const getTotalRequest = async (req, res) => {
         let conn;
         try {
             conn = await pool.getConnection();
+            await conn.beginTransaction();
             
             var query = `SELECT SUM((total_amount_due + additional_fee) * (1 - discount)) AS count
             FROM reservation
             WHERE status_code = 1`;
             
             var result = await conn.query(query);
+            await conn.commit();
     
             // Extract count from result and send as JSON
             res.json({ count: Number(result[0].count) });
         } catch (err) {
+            await conn.rollback();
             res.send({errmsg: "Failed to get sum of pending payments", success: false });
             
         } finally {
@@ -640,14 +690,17 @@ const getTotalRoomReservations = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { email } = req.body
         const query = "SELECT COUNT(*) as totalReservations FROM reservation WHERE user_id = ?";
         const values = [email];
         const rows = await conn.query(query, values);
         //convert to number
         rows[0].totalReservations = Number(rows[0].totalReservations);
+        await conn.commit();
         res.send(rows[0]);
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get sum of all room reservations", success: false });
         
     } finally {
@@ -656,14 +709,17 @@ const getTotalRoomReservations = async (req, res) => {
 }
 
 
-    const getAllReservations = async (req, res) => {
+const getAllReservations = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const query = "SELECT reservation.*, room.room_name FROM reservation JOIN room ON reservation.room_id = room.room_id; ";
         const rows = await conn.query(query);
+        await conn.commit();
         res.send(rows);
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get all reservations", success: false });
         
     } finally {
@@ -675,6 +731,7 @@ const getAvailableRoomTime = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { room_id, date } = req.body;
         const selectedDate = new Date(date);
 
@@ -719,9 +776,11 @@ const getAvailableRoomTime = async (req, res) => {
             let hours = time.toString().padStart(2, '0');
             return `${hours}:00:00`;
         });
+        await conn.commit();
 
         res.send({ availableTimes: availableTimesFormatted });
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get available room times", success: false });
         
     } finally {
@@ -733,12 +792,15 @@ const getAdminCommentByID = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+        await conn.beginTransaction();
         const { reservation_id } = req.body
         const query = "SELECT * from comment WHERE reservation_id = ?";
         const values = [reservation_id];
         const rows = await conn.query(query, values);
+        await conn.commit();
         res.send(rows);
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get admin comment by reservation ID", success: false });
         
     } finally {
@@ -752,14 +814,16 @@ const getReservationIdByEventName = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection()
+        await conn.beginTransaction();
         const { activity_name } = req.body
         const query = "SELECT reservation_id from reservation WHERE activity_name = ?"
         const name = `%${activity_name}%`
         const values = [name]
         const rows = await conn.query(query, values)
-
+        await conn.commit()
         res.send(rows);
     } catch (err) {
+        await conn.rollback();
         res.send({errmsg: "Failed to get reservation id by activity name", success: false });
         
     } finally {
@@ -771,9 +835,11 @@ const getReservationTimeline = async(req,res) => {
     let conn;
     try{
         conn = await pool.getConnection()
+        await conn.beginTransaction();
         const { reservation_id } = req.body
 
         const rows = await conn.query("SELECT * FROM reservation_notification WHERE reservation_id = ? ORDER BY date DESC", [reservation_id]);
+        await conn.commit();
         if(rows.length === 0){
             res.send({success:false, msg: "Reservation not found"})
         }else{
@@ -781,6 +847,7 @@ const getReservationTimeline = async(req,res) => {
         }
         
     }catch{
+        await conn.rollback();
         res.send({success:false, msg: "Failed to get Resevation"})
     }finally {
         if (conn) conn.release()

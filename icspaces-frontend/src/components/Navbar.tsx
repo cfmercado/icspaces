@@ -26,6 +26,9 @@ const NavBar = () => {
   const [anchorNav, setAnchorNav] = useState<null | HTMLElement>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const openMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorNav(event.currentTarget);
@@ -46,41 +49,39 @@ const NavBar = () => {
   // ];
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
-  const [isAdmin, setIsAdmin] = useState(false);
-  const menuItems = isAdmin
-    ? [
-        { label: "Home", link: "/homepage_admin" },
-        { label: "Reservations", link: "/reservationspage_admin" },
-        { label: "Rooms", link: "/roomspage_admin" },
-        { label: "Accounts", link: "/accountspage_admin" },
-        { label: "Schedules", link: "/schedulepage" },
-        { label: "Edit Room Info", link: "/editroominfopage_admin" },
-        {
-          label: "Make Reservation",
-          link: "/bookreservationpage_admin",
-        },
-        { label: "Add Room", link: "/addroom_admin" },
-        { label: "Normal User", onClick: () => setIsAdmin(false) },
-      ]
-    : [
-        { label: "Login", link: "/" },
-        { label: "Home", link: "/homepage" },
-        { label: "View Rooms", link: "/viewroomspage" },
-        { label: "My Reservations", link: "/reservationspage" },
-        { label: "Schedules", link: "/schedulepage" },
-        { label: "Track Reservation", link: "/reservationtracker_guest" },
-        { label: "View Rooms Guest", link: "/viewrooms_guest" },
-        { label: "Book Room", link: "/roombookingform_guest" },
+  // const [isAdmin, setIsAdmin] = useState(false);
+  // const menuItems = isAdmin
+  //   ? [
+  //       { label: "Home", link: "/homepage_admin" },
+  //       { label: "Reservations", link: "/reservationspage_admin" },
+  //       { label: "Rooms", link: "/roomspage_admin" },
+  //       { label: "Accounts", link: "/accountspage_admin" },
+  //       { label: "Schedules", link: "/schedulepage" },
+  //       {
+  //         label: "Make Reservation",
+  //         link: "/bookreservationpage_admin",
+  //       },
+  //       { label: "Add Room", link: "/addroom_admin" },
+  //       { label: "Normal User", onClick: () => setIsAdmin(false) },
+  //     ]
+  //   : [
+  //       { label: "Login", link: "/" },
+  //       { label: "Home", link: "/homepage" },
+  //       { label: "View Rooms", link: "/viewroomspage" },
+  //       { label: "My Reservations", link: "/reservationspage" },
+  //       { label: "Schedules", link: "/schedulepage" },
+  //       { label: "Track Reservation", link: "/reservationtracker_guest" },
+  //       { label: "View Rooms Guest", link: "/viewrooms_guest" },
+  //       { label: "Book Room", link: "/roombookingform_guest" },
 
-        { label: "FAQs", link: "/faqspage" },
+  //       { label: "FAQs", link: "/faqspage" },
 
-        { label: "Admin", onClick: () => setIsAdmin(true) }, // non-admin menu items here
+  //       { label: "Admin", onClick: () => setIsAdmin(true) }, // non-admin menu items here
 
-        // { label: "Account", link: "/accountpage" },
-      ];
+  //       // { label: "Account", link: "/accountpage" },
+  //     ];
 
   useEffect(() => {
-    // Fetch the profile data when the component mounts
     const fetchProfileData = async () => {
       try {
         const response = await fetch("https://api.icspaces.online/get-profile", {
@@ -90,17 +91,75 @@ const NavBar = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(data);
         if (data.success) {
           setProfileData(data.data);
+          setUserType(data.data.usertype);
+          setIsLoggedIn(true); // Set isLoggedIn to true
         }
+        setIsLoading(false);
       } catch (error) {
         console.error("Failed to fetch profile data:", error);
+        setIsLoading(false);
       }
     };
 
     fetchProfileData();
   }, []);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const response = await fetch("https://api.icspaces.online/check-login", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      setIsLoggedIn(data.isLoggedIn);
+    };
+
+    checkLoginStatus();
+  }, []);
+  console.log("PROFILE DATA", profileData);
+  console.log("USER TYPE:", userType);
+  const buttons = isLoggedIn
+    ? Number(userType) === 0
+      ? [
+          { label: "Home", link: "/homepage" },
+          { label: "View Rooms", link: "/viewroomspage" },
+          { label: "My Reservations", link: "/reservationspage" },
+          { label: "Account", link: "/accountpage" },
+          { label: "FAQs", link: "/faqspage" },
+        ]
+      : Number(userType) === 1
+      ? [
+          { label: "Home", link: "/homepage" },
+          { label: "View Rooms", link: "/viewroomspage" },
+          { label: "My Reservations", link: "/reservationspage" },
+          { label: "Schedules", link: "/schedulepage" },
+          { label: "Account", link: "/accountpage" },
+          { label: "FAQs", link: "/faqspage" },
+        ]
+      : [
+          { label: "Home", link: "/homepage_admin" },
+          { label: "Reserve Room", link: "/bookroom_admin" },
+          { label: "Reservations", link: "/reservationspage_admin" },
+          { label: "Rooms", link: "/roomspage_admin" },
+          { label: "Accounts", link: "/accountspage_admin" },
+          { label: "Schedules", link: "/schedulepage" },
+          { label: "FAQs", link: "/faqspage" },
+        ]
+    : [
+        { label: "View Rooms Guest", link: "/viewrooms_guest" },
+        { label: "Book Room", link: "/roombookingform_guest" },
+        { label: "Track Reservation", link: "/reservationtracker_guest" },
+        { label: "FAQs", link: "/faqspage" },
+      ];
+
+  if (location.pathname === "/") {
+    return null;
+  }
+
+  if (location.pathname === "/login-fail") {
+    return null;
+  }
 
   return (
     <Box sx={{ marginBottom: { xs: 3, sm: 8, md: 1 } }}>
@@ -118,30 +177,33 @@ const NavBar = () => {
           <Box sx={{ justifyContent: "center" }} />
 
           {/* Render menu items */}
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ display: { xs: "none", md: "flex" }, flexGrow: 1 }}
-            justifyContent="center"
-          >
-            {menuItems.map((item, index) => (
-              <Button
-                key={index}
-                component={item.link ? RouterLink : "button"}
-                to={item.link}
-                onClick={() => {
-                  if (typeof item.onClick === "function") {
-                    item.onClick();
-                  }
-                  setSelectedItem(item.label); // Set the selected item
-                }}
-                color={selectedItem === item.label ? "secondary" : "inherit"} // Change color if selected
-                sx={{ "&:hover": { color: "#FFB532" } }}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Stack>
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : (
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ display: { xs: "none", md: "flex" }, flexGrow: 1 }}
+              justifyContent="center"
+            >
+              {buttons.map((button, index) => (
+                <Button
+                  key={index}
+                  component={button.link ? RouterLink : "button"}
+                  to={button.link}
+                  onClick={() => {
+                    setSelectedItem(button.label); // Set the selected item
+                  }}
+                  color={
+                    selectedItem === button.label ? "secondary" : "inherit"
+                  } // Change color if selected
+                  sx={{ "&:hover": { color: "#FFB532" } }}
+                >
+                  {button.label}
+                </Button>
+              ))}
+            </Stack>
+          )}
           <Button
             color="inherit"
             component={Link}
@@ -197,16 +259,20 @@ const NavBar = () => {
               PaperProps={{ style: { width: "40%" } }}
             >
               <Stack>
-                {menuItems.map((item, index) => (
+                {buttons.map((button, index) => (
                   <Button
                     key={index}
-                    component={item.link ? RouterLink : "button"}
-                    to={item.link}
-                    onClick={item.onClick}
-                    color="inherit"
+                    component={button.link ? RouterLink : "button"}
+                    to={button.link}
+                    onClick={() => {
+                      setSelectedItem(button.label); // Set the selected item
+                    }}
+                    color={
+                      selectedItem === button.label ? "secondary" : "inherit"
+                    } // Change color if selected
                     sx={{ "&:hover": { color: "#FFB532" } }}
                   >
-                    {item.label}
+                    {button.label}
                   </Button>
                 ))}
               </Stack>

@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useParams } from "react-router-dom";
 import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
 import '../../App.css';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const darkColor = '#183048';
 const inputStyle = {
@@ -298,15 +299,22 @@ const getRoomInformation = async () => {
     setSnackbarOpen(true);
   };
 
-  // const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-  //   const keyCode = event.keyCode || event.which;
-  //   const keyValue = String.fromCharCode(keyCode);
+  const [image, setImage] = useState<File | null>(null);
+  const [photoName, setPhotoName] = useState<string>('');
 
-  //   // Allow only numbers
-  //   if (!/^\d+$/.test(keyValue)) {
-  //     event.preventDefault();
-  //   }
-  // };
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedImage = e.target.files?.[0];
+    if (selectedImage) {
+      setImage(selectedImage);
+      setPhotoName(selectedImage.name); // Set the photo name
+    }
+  };
+
+  const handleUpload = () => {
+    // You can implement image upload logic here, e.g., using Axios or Fetch API
+    console.log(image);
+  };
+
 
   return (
       <>
@@ -345,7 +353,7 @@ const getRoomInformation = async () => {
         display: 'flex',
         flexDirection: { xs: 'column', md: 'column' }, // Stack vertically on small screens, horizontally on medium screens and above
         alignItems: 'center', // Align items at the start
-        height: '50vh', // Full height of the viewport
+        height: {xs: '90vh', md: '60vh'}, // Full height of the viewport
         justifyContent: 'center', // Center children horizontally
         boxSizing: 'border-box',
         marginTop: '20vh',
@@ -586,7 +594,7 @@ const getRoomInformation = async () => {
             </ListItem>
           ))}
           
-          {items.length <= 5 && (
+          {items.length <= 4 && (
           <ListItem style={styles.listItem}>
           <TextField
               // label="Add New Equipment"
@@ -610,6 +618,63 @@ const getRoomInformation = async () => {
         </List>
         
         )}
+        <div style={{ margin: '0px', padding: '0px' }}>
+          <input
+            accept="image/*"
+            id="image-upload"
+            type="file"
+            onChange={handleImageChange}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor="image-upload">
+            <Button
+              component="span"
+              variant="contained"
+              tabIndex={-1}
+              startIcon={<CloudUploadIcon />}
+            >
+              Upload file
+            </Button>
+          </label>
+          <Button
+            variant="contained"
+            onClick={handleUpload}
+            disabled={!image}
+            component="span"
+            sx={{
+              margin: '1rem',
+              height: '40px',
+              borderRadius: '50px',
+              '&:hover': {
+                backgroundColor: '#FFB532', // Change hover color
+                color: darkColor, // Change hover text color
+                fontWeight: 700,
+              },
+            }}
+          >
+            Submit
+          </Button>
+          <TextField
+            value={photoName}
+            variant="outlined"
+            size="small"
+            disabled
+            sx={{
+              width: '40%',
+              backgroundColor: '#FFFFFF',
+              color: 'black', // Change text color to black
+              fontFamily: 'Inter',
+              fontWeight: 400,
+              fontSize: '15px',
+              marginTop: '15px',
+            }}
+            inputProps={{ color: 'black' }} // Additional input color for consistency
+          />
+
+        </div>
+
+            {/* {fileName && <span>{fileName}</span>} Render the file name if it exists */}
+
       </Stack>
       
 

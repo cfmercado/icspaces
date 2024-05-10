@@ -32,6 +32,8 @@ import Calendar from "../../components/Calendar";
 import HourButtons from "../../components/HourButtons";
 import DropDown_Admin from "../../components/DropDown_Admin";
 import RoomDropdown from "../../components/RoomDropdown";
+import dayjs, { Dayjs } from 'dayjs'; 
+
 
 const cell = {
   color: "white",
@@ -86,6 +88,12 @@ const RoomPage = () => {
     '2': 'Second',
     '3': 'N/A'
     // add other status codes as needed
+  };
+
+  
+  const handleDateSelect = (selectedDate: Dayjs) => {
+    // Do something with the selected date
+    console.log("Selected Date:", selectedDate);
   };
 
   interface Room {
@@ -162,7 +170,7 @@ const RoomPage = () => {
           height: 300,
         }}
       >
-        <Calendar />
+        <Calendar onDateSelect={handleDateSelect} />
       </Box>
       <Box
         sx={{

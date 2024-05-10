@@ -81,10 +81,12 @@ const CalendarSchedule_Admin: React.FC<CalendarSchedule_AdminProps> = ({
             <>
               <Typography variant="h6">{selectedEvent.title}</Typography>
               <Typography variant="body1">
-                Start: {selectedEvent.start.toString()}
+                Start: {selectedEvent.start.toLocaleDateString()}{" "}
+                {selectedEvent.start.toLocaleTimeString()}
               </Typography>
               <Typography variant="body1">
-                End: {selectedEvent.end.toString()}
+                End: {selectedEvent.end.toLocaleDateString()}{" "}
+                {selectedEvent.end.toLocaleTimeString()}
               </Typography>
             </>
           )}

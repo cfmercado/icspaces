@@ -123,7 +123,7 @@ const SchedulesPage_Admin = () => {
               rooms={rooms}
               width={900}
             />
-            <PrintSched_Admin />
+            {/* <PrintSched_Admin /> */}
           </Box>
         </Grid>
         <Grid item xs={12} mt={-2}>

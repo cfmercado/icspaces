@@ -1,4 +1,4 @@
-import { Box, Typography, Stack, Button, useMediaQuery, useTheme, Switch, Divider, ButtonGroup } from "@mui/material";
+import { Typography, Stack, Button, useMediaQuery, useTheme, Switch, Divider, ButtonGroup } from "@mui/material";
 import { useState } from "react";
 import { useParams } from 'react-router-dom';
 import {Link } from "react-router-dom";
@@ -14,8 +14,8 @@ const HourButtons : React.FC<HourButtonsProps> = ({
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const [isSwitchOn, setIsSwitchOn] = useState(false);
     const [selectedTime, setSelectedTime] = useState(['']);
-    const [activeButton, setActiveButton] = useState(null);
-    const [activeButton2, setActiveButton2] = useState(null);
+    const [activeButton, setActiveButton] = useState([-1]);
+    const [activeButton2, setActiveButton2] = useState([-1]);
     const [data1, setData1] = useState('');
     const [data2, setData2] = useState('');   
     const valuesToSend = {
@@ -43,13 +43,45 @@ const HourButtons : React.FC<HourButtonsProps> = ({
         setData2(newTimeString);
     }
 
-    const handleClick = (index:any) => {
-        setActiveButton(index);
-      };
-      const handleClick2 = (index:any) => {
-        setActiveButton2(index);
+    const handleReserve = () => {
+        return <Button variant="contained"
+        disabled={selectedTime[1] === undefined} 
+        sx={{
+            textTransform: "none",
+            backgroundColor: '#FFB532',
+            height: isSmallScreen ? "0.875rem" : "23px",
+            width: '130%',
+            color: 'black', 
+            borderRadius: '20px',
+            fontSize: isSmallScreen ? "8px" : "13px",
+        }}> <b> Reserve </b> </Button>
+    }
+
+    const handleClick = (index:number) => {
+        const newSelectedIndexes = [...activeButton];
+
+        const indexExists = newSelectedIndexes.indexOf(index);
+        if (indexExists !== -1){
+            newSelectedIndexes.splice(indexExists, 1);
+        }else{
+            newSelectedIndexes.push(index);
+        }
+
+        setActiveButton(newSelectedIndexes);
       };
 
+      const handleClick2 = (index:number) => {
+        const newSelectedIndexes = [...activeButton2];
+
+        const indexExists = newSelectedIndexes.indexOf(index);
+        if (indexExists !== -1){
+            newSelectedIndexes.splice(indexExists, 1);
+        }else{
+            newSelectedIndexes.push(index);
+        }
+
+        setActiveButton2(newSelectedIndexes);
+      };
 
     const handleSwitchChange = () => {
         setIsSwitchOn(!isSwitchOn);
@@ -108,7 +140,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
             backgroundColor: 'lightgrey',
           },
     };
-
+    console.log(selectedTime[1]);
     const boxStyle = {
         backgroundColor: '#F2F2F2',
         display: 'fixed',
@@ -126,11 +158,13 @@ const HourButtons : React.FC<HourButtonsProps> = ({
     }
     
       
-    const amButtons = availableTimes?.slice(7,12)
-    const pmButtons = availableTimes?.slice(12,21)
+    const amButtons = availableTimes?.slice(7,13)
+    const pmButtons = availableTimes?.slice(13,22)
+    const AMButtons = ["07:00:00", "08:00:00", "09:00:00", "10:00:00", "11:00:00", "12:00:00"]
+    const PMButtons = ["13:00:00", "14:00:00", "15:00:00", "16:00:00", "17:00:00", "18:00:00", "19:00:00", "20:00:00", "21:00:00",]
     const selectedButtons1 = ["7-8 AM", "8-9 AM", "9-10 AM", "10-11 AM", "11-12 PM", "12-1 PM"]
     const selectedButtons2 = ["1-2 PM", "2-3 PM", "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM", "8-9 PM", "9-10 PM", ]
-        
+    console.log(data1);
     const renderButtons = () => {
         if (isSwitchOn) {
           // Render set of buttons when the switch is on
@@ -140,7 +174,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                 <Button key={index} variant="outlined" onClick={() => {
                     handleClicked(PMbuttonText)
                     handleClick2(index)
-                }} sx={buttonStyle}>
+                }} sx={activeButton2.includes(index) ? buttonStyle4 : buttonStyle2}>
                     {PMbuttonText}
                 </Button>
              ))}
@@ -151,11 +185,13 @@ const HourButtons : React.FC<HourButtonsProps> = ({
           return (
             <>
             {amButtons?.map((AMbuttonText:string, index:number) => (
-                <Button key={index} variant="outlined" onClick={() => {
+                <Button key={index} variant="outlined" 
+                // disabled={AMbuttonText !== AMButtons[index]} 
+                onClick={() => {
                     handleClicked(AMbuttonText) 
                     handleClick(index)
                 }} 
-                sx={activeButton === index ? buttonStyle3 : buttonStyle}>
+                sx={activeButton.includes(index) ? buttonStyle3 : buttonStyle}>
 
                     {AMbuttonText}
                 </Button>
@@ -182,7 +218,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                 </Typography>
                 <ButtonGroup disableElevation variant="outlined" size="medium" fullWidth> 
                     {selectedButtons1.map((buttonText, index) => (
-                        <Button key={index} variant="outlined" sx={activeButton === index ? buttonStyle4 : buttonStyle2}>
+                        <Button key={index} variant="outlined" sx={activeButton.includes(index) ? buttonStyle4 : buttonStyle2}>
                         {buttonText}
                         </Button>
                     ))}
@@ -190,7 +226,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                 </Stack>
                 <ButtonGroup disableElevation variant="outlined" size="large" > 
                    {selectedButtons2.map((buttonText, index) => (
-                        <Button key={index} variant="outlined" sx={activeButton2 === index ? buttonStyle4 : buttonStyle2}>
+                        <Button key={index} variant="outlined" sx={activeButton2.includes(index) ? buttonStyle4 : buttonStyle2}>
                         {buttonText}
                         </Button>
                     ))}
@@ -223,22 +259,22 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                     </Stack>
                 </Stack>
             </Stack>
+            { selectedTime[1] === undefined ? handleReserve() :  
             <Link to="/roomreservation" state={valuesToSend}>
-                <Button variant="contained" 
-                sx={{
-                    textTransform: "none",
-                    backgroundColor: '#FFB532',
-                    height: isSmallScreen ? "0.875rem" : "23px",
-                    width: '130%',
-                    color: 'black', 
-                    borderRadius: '20px',
-                    fontSize: isSmallScreen ? "8px" : "13px",
-                    
-                    '&:hover': {
-                        backgroundColor: '#FFC532',
-                    }
-                }}> <b> Reserve </b> </Button>
-            </Link>
+            <Button variant="contained"
+            sx={{
+                textTransform: "none",
+                backgroundColor: '#FFB532',
+                height: isSmallScreen ? "0.875rem" : "23px",
+                width: '130%',
+                color: 'black', 
+                borderRadius: '20px',
+                fontSize: isSmallScreen ? "8px" : "13px",
+                '&:hover': {
+                    backgroundColor: '#FFC532',
+                }
+            }}> <b> Reserve </b> </Button>
+        </Link>}
             
         </Stack>
     );

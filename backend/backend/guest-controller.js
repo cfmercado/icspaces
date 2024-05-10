@@ -19,6 +19,7 @@ const addGuestReservation = async (req, res) => {
         conn = await pool.getConnection()
         const { fname, lname, email, activity_name, activity_desc, room_id, user_id, date_created, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code, utilities } = req.body
         
+        await conn.beginTransaction();
         //Add guest with new transactionid
         const transaction_id = uuidv4()
         const addGuestResult = await conn.query(`INSERT INTO guest(transaction_id, reservation_id, fname, lname, email) VALUES(?,?,?,?)`,[transaction_id, null, fname, lname, email])
@@ -64,7 +65,6 @@ const addGuestReservation = async (req, res) => {
             subject: 'ICSpaces Room Reservation', // Email subject
             text: `Congratulations ${fname} ${lname} your ${activity_name} have been succesfully added! Please communicate with the appropriate staff at ${process.env.SMTP_EMAIL} for further concerns` // Email content (plain text)
         };
-
         // Send the email
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
@@ -73,10 +73,12 @@ const addGuestReservation = async (req, res) => {
                 console.log('Email sent:', info.response);
             }
         });
+        await conn.commit();
 
         res.send({success:true, transaction_id: transaction_id, message: "Successfully added reservation." });
     } catch (err) {
         console.log(err);
+        await conn.rollback();
         res.send({errmsg: "Failed to add reservation", success: false });
     } finally {
         if (conn) conn.release();
@@ -88,16 +90,21 @@ const trackGuestReservation = async (req, res) => {
     try{
         conn = await pool.getConnection();
         const { transaction_id } = req.body;
-        
+        await conn.beginTransaction();
     
         const guests = await conn.query("SELECT * FROM guest WHERE transaction_id = ?", [transaction_id]);
         if (guests.length === 0){
-            res.send({status: false, msg: "Reservation no found"})
+            res.send({status: false, msg: "Reservation not found"})
         }else{
             const resdetails = await conn.query("SELECT * FROM reservation WHERE user_id = ? and reservation_id = ?", [guests[0].email, guests[0].reservation_id])
+            res.send({status: true, data: resdetails})
         }
+        await conn.commit();
+        
+        
         
     }catch(e){
+        await conn.rollback();
         console.log(`Error: ${e}`)
         res.send({errmsg: "Server Error: Failed to get Reservation", success: false });
     }finally {

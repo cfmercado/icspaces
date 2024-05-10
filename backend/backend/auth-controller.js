@@ -77,7 +77,9 @@ const callbackHandler = async (req,res,next) => {
         const email = userData.email;
         const profilepic = userData.picture;
         const isVerified = userData.email_verified
-        
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+
         //check if email is verified
         if (isVerified != true){
             let redirectMsg = "Email not verified"
@@ -89,9 +91,8 @@ const callbackHandler = async (req,res,next) => {
             res.redirect(`${process.env.AUTH_FAILURE_REDIRECT}?error=${redirectMsg}`)
         }
         else{
-            conn = await pool.getConnection();
-            const rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
             
+            const rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
 
             //Upsert user
             // Scenario 1: FAIL - User doesn't exist
@@ -116,13 +117,15 @@ const callbackHandler = async (req,res,next) => {
             req.session.fname = firstName;
             req.session.lname = lastName;
             req.session.profilepic = profilepic;
-            req.session.usertype = rows[0].usertype ; // 0 for student, 1 for faculty, 2 for oic, 3 for director
+            req.session.usertype = new_rows[0].usertype ; // 0 for student, 1 for faculty, 2 for oic, 3 for director
             // req.session.access_token = user.access_token;
             // console.log(req.session.user)
             // console.log(req.session.id)
             const sessionData = await req.sessionStore.get(req.session.id)
             console.log(sessionData)
             
+            await conn.commit();
+
             // then make the client redirect to the home page xd
             res.redirect(process.env.AUTH_SUCCESS_REDIRECT || 'https://app.icspaces.online/homepage')
         }
@@ -131,9 +134,11 @@ const callbackHandler = async (req,res,next) => {
     catch(err){
         let errmsg = `Error with Google Sign in: ${err.message}`
         console.log(errmsg)
+        await conn.rollback();
         // res.send(errmsg)
         res.redirect(process.env.AUTH_FAILURE_REDIRECT || `https://app.icspaces.online/login-fail?error=${errmsg}`)
         // res.redirect(process.env.AUTH_SUCESS_FAILURE)
+        
     } finally {
         if (conn) conn.end();
     }
@@ -141,7 +146,6 @@ const callbackHandler = async (req,res,next) => {
 }
 
 const getProfileData = async (req, res) => {
-    console.log(req.session.email)
     if (req.session.email){
         res.send({ 
             success: true, 
@@ -201,6 +205,7 @@ const setUserInfoFirstLogin = async (req, res) => {
                 return await setDirectorInfoFirstLogin(req, res);
         }
     } catch (err) {
+        await conn.rollback();
         console.error("Error in setUserInfoOnFirstLogin:", err);
     }
 }
@@ -210,9 +215,12 @@ const setStudentInfoFirstLogin = async (req, res) => {
     let conn;
     conn = await pool.getConnection();
     try{
+        await conn.beginTransaction();
         await conn.query("UPDATE student SET student_number = ?, org = ?, course = ?, college = ? WHERE email = ?", [student_number, org, course, college, email]);
         await conn.query("UPDATE user SET isFirstTimeLogin = ? WHERE  email = ?", [true, email]);
+        await conn.commit();
     } catch(err) {
+        await conn.rollback();
         console.error("Error in setStudentInfoOnFirstLogin:", err);
     } finally {
         if (conn) conn.release();
@@ -224,9 +232,12 @@ const setFacultyInfoFirstLogin = async (req, res) => {
     let conn;
     conn = await pool.getConnection();
     try{
+        await conn.beginTransaction();
         await conn.query("UPDATE student SET college = ?, department = ? WHERE email = ?", [college, department, email]);
         await conn.query("UPDATE user SET isFirstTimeLogin = ? WHERE email = ?", [true, email]);
+        await conn.commit();
     } catch(err) {
+        await conn.rollback();
         console.error("Error in setStudentInfoOnFirstLogin:", err);
     } finally {
         if (conn) conn.release();
