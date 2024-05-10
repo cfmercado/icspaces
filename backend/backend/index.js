@@ -48,7 +48,6 @@ app.use(
 		cookie: {
 			secure: false,
 			httpOnly: true,
-            sameSite: 'none',
 			maxAge: Number(process.env.ACCESS_TOKEN_TTL)
 		}
     })
