@@ -11,9 +11,9 @@ const ViewRoomsPage = () => {
         justifyContent="space-evenly"
         sx={{ mt: { xs: 10, sm: 10, md: 5 } }}
       >
-        <Grid item>
+        {/* <Grid item>
           <RoomFilters />
-        </Grid>
+        </Grid> */}
         <Grid item>
           <RoomList />
         </Grid>

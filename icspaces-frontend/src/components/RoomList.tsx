@@ -139,7 +139,7 @@ const RoomList: React.FC = () => {
   const [roomImages, setRoomImages] = useState<{ [key: number]: string }>({});
 
   useEffect(() => {
-    fetch("http://localhost:3001/get-all-rooms", {
+    fetch("https://api.icspaces.online//get-all-rooms", {
       method: "POST", // or 'PUT'
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +155,7 @@ const RoomList: React.FC = () => {
 
           try {
             const response = await fetch(
-              "http://localhost:3001/get-room-image",
+              "https://api.icspaces.online//get-room-image",
               {
                 method: "POST",
                 headers: {
