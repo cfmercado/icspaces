@@ -101,7 +101,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
   // // Posts dataw
   // const postData = async () => {
   //   try {
-  //     const response = await fetch('https://api.icspaces.online//get-all-reservation', {
+  //     const response = await fetch('https://api.icspaces.online/get-all-reservation', {
   //       method: 'POST',
   //       headers: {
   //         'Content-Type': 'application/json',
