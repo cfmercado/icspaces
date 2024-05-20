@@ -67,11 +67,11 @@ const SignInBox = () => {
           >
             Sign in using your UP account
           </Button>
-          <Button variant="outlined" onClick={() => googleLogin()} sx={buttonStyle} startIcon={
+          {/* <Button variant="outlined" onClick={() => googleLogin()} sx={buttonStyle} startIcon={
               <Avatar src={googleIcon} sx={{ width: 20, height: 20 }} />
             }>
             Log in as Administrator
-          </Button>
+          </Button> */}
         </Stack>
         <Divider sx={{ marginY: 2 }}>or</Divider>
         <Link to="/viewrooms_guest">

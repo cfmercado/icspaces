@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   AppBar,
   Toolbar,
@@ -15,6 +15,7 @@ import { Link, useLocation } from "react-router-dom";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Link as RouterLink } from "react-router-dom";
+import AuthContext from "../utils/AuthContext";
 
 interface ProfileData {
   firstName: string;
@@ -23,10 +24,11 @@ interface ProfileData {
 }
 
 const NavBar = () => {
+  const { isLoggedIn } = useContext(AuthContext);
   const [anchorNav, setAnchorNav] = useState<null | HTMLElement>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userType, setUserType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -94,7 +96,7 @@ const NavBar = () => {
         if (data.success) {
           setProfileData(data.data);
           setUserType(data.data.usertype);
-          setIsLoggedIn(true); // Set isLoggedIn to true
+          // setIsLoggedIn(true); // Set isLoggedIn to true
         }
         setIsLoading(false);
       } catch (error) {
@@ -106,19 +108,19 @@ const NavBar = () => {
     fetchProfileData();
   }, []);
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      const response = await fetch("https://api.icspaces.online/is-logged-in", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setIsLoggedIn(data.isLoggedIn);
-    };
+  // useEffect(() => {
+  //   const checkLoginStatus = async () => {
+  //     const response = await fetch("https://api.icspaces.online/is-logged-in", {
+  //       credentials: "include",
+  //     });
+  //     const data = await response.json();
+  //     setIsLoggedIn(data.isLoggedIn);
+  //   };
 
-    checkLoginStatus();
-  }, []);
-  console.log("PROFILE DATA", profileData);
-  console.log("USER TYPE:", userType);
+  //   checkLoginStatus();
+  // }, []);
+  // console.log("PROFILE DATA", profileData);
+  // console.log("USER TYPE:", userType);
   const buttons = isLoggedIn
     ? Number(userType) === 0
       ? [
@@ -158,6 +160,7 @@ const NavBar = () => {
   if (location.pathname === "/login-fail") {
     return null;
   }
+  console.log("Navbar isLoggedIn:", isLoggedIn); // Print to console
 
   return (
     <Box sx={{ marginBottom: { xs: 3, sm: 8, md: 1 } }}>
@@ -202,41 +205,63 @@ const NavBar = () => {
               ))}
             </Stack>
           )}
-          <Button
-            color="inherit"
-            component={Link}
-            to="/accountpage"
-            onClick={() => {
-              /* Add the onClick handler for the "Account" button */
-            }}
-          >
-            <IconButton color="secondary">
-              {profileData ? (
-                <Avatar
-                  alt={profileData.firstName}
-                  src={profileData.profilepic}
-                />
-              ) : (
-                <AccountCircleIcon />
-              )}
-            </IconButton>
-            <Typography
-              variant="button"
-              color={
-                location.pathname === "/accountpage" ? "secondary" : "inherit"
-              }
-              sx={{
-                "&:hover": {
-                  color: "secondary.main",
-                },
-                "&:active": {
-                  color: "secondary.main",
-                },
+          {isLoggedIn ? (
+            <Button
+              color="inherit"
+              component={Link}
+              to="/accountpage"
+              onClick={() => {
+                /* Add the onClick handler for the "Account" button */
               }}
             >
-              {profileData ? profileData.firstName : "Account"}
-            </Typography>
-          </Button>
+              <IconButton color="secondary">
+                <Avatar
+                  alt={profileData ? profileData.firstName : ""}
+                  src={profileData ? profileData.profilepic : ""}
+                />
+              </IconButton>
+              <Typography
+                variant="button"
+                color={
+                  location.pathname === "/accountpage" ? "secondary" : "inherit"
+                }
+                sx={{
+                  "&:hover": {
+                    color: "secondary.main",
+                  },
+                  "&:active": {
+                    color: "secondary.main",
+                  },
+                }}
+              >
+                {profileData && profileData.firstName}
+              </Typography>
+            </Button>
+          ) : (
+            <Button
+              color="inherit"
+              component={Link}
+              to="/"
+              onClick={() => {
+                /* Add the onClick handler for the "Guest" button */
+              }}
+            >
+              <Typography
+                variant="button"
+                color="inherit"
+                sx={{
+                  "&:hover": {
+                    color: "secondary.main",
+                  },
+                  "&:active": {
+                    color: "secondary.main",
+                  },
+                }}
+              >
+                EXIT
+              </Typography>
+            </Button>
+          )}
 
           {/* Render mobile/tablet view */}
           {/* Render mobile/tablet view */}

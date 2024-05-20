@@ -43,7 +43,7 @@ const MuiHomeGrid: React.FC = () => {
         }
       } catch (error) {
         console.error("Failed to fetch user:", error);
-        navigate("/login");
+        navigate("/");
       }
     };
 

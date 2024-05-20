@@ -217,6 +217,32 @@ const getAllRoomsAndUtilities = async (req, res) => {
     }
 }
 
+const getAllRoomsAndUtilitiesComplete = async (req, res) => {
+
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        // await pool.beginTransaction();
+        const rooms = await conn.query("SELECT * FROM room");
+        const utilities = await conn.query("SELECT * FROM utility");
+
+        // Map utilities to their respective rooms
+        const roomsWithUtilities = rooms.map(room => {
+            room.utilities = utilities.filter(utility => utility.room_id === room.room_id).map(utility => utility);
+            return room;
+        });
+
+        // await conn.commit();
+        res.send(roomsWithUtilities);
+    } catch (err) {
+        // await conn.rollback();
+        console.log(err)
+        res.send({errmsg: "Failed to get rooms and utilities", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
 const getAllRooms = async (req, res) => {
     let conn;
     try {
@@ -558,5 +584,5 @@ const addNewRoom = async (req, res) => {
 
 
 
-export { searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom }
+export { searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRoomsAndUtilitiesComplete, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom }
 

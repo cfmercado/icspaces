@@ -19,3 +19,8 @@ INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin)
 INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('hyang@up.edu.ph','Heewon','Yang',1,NULL,TRUE);
 INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('jjkuya@up.edu.ph', 'Kuya', 'Jj', 2, NULL, TRUE);
 INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('maandoc@up.edu.ph', 'Doc', 'Maan', 3, NULL, TRUE);
+INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('lmaquino2@up.edu.ph', 'LJ', 'Aquino', 2, NULL, TRUE);
+INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('svtanig@up.edu.ph', 'Stephanie', 'Tanig', 2, NULL, TRUE);
+INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('cdleyco@up.edu.ph', 'Charlize Althea', 'Leyco', 2, NULL, TRUE);
+INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('jabaltazar3@up.edu.ph', 'John Yves', 'Baltazar', 2, NULL, TRUE);
+INSERT INTO user(email, fname, lname, usertype, profilePicUrl, isFirstTimeLogin) VALUES('geestillero@up.edu.ph', 'George Ian', 'Estillero', 2, NULL, TRUE);

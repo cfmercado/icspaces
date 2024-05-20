@@ -1,4 +1,5 @@
 import pool from './db.js';
+import { addUserStatusChangeNotification } from './notifications-controller.js';
 
 const getAllUsers = async (req, res) => {
     let conn;
@@ -68,12 +69,13 @@ const getAllFaculty = async (req, res) => {
     }
 }
 
+// notification
 const changeUserType = async (req, res) => {
     let conn;
     try {
         // establish a connection to MariaDB
         conn = await pool.getConnection();
-        const { email, college, department } = req.body;
+        const { email, college, department, admin_id } = req.body;
         await conn.beginTransaction();
 
         // create a new query to update the user type
@@ -93,6 +95,9 @@ const changeUserType = async (req, res) => {
         await conn.query(queryFirstLogin, [email]);
         await conn.commit();
         // return the results
+
+        await addUserStatusChangeNotification(admin_id, email, conn);
+
         res.send({ message: 'User type updated, student data deleted, user added to faculty, and isFirstTimeLogin set to true.' });
     } catch (err) {
         await conn.rollback();
@@ -340,5 +345,58 @@ const getLastLoggedInDate = async (req, res) => {
     }
 };
 
+// notification
+const setUsersToStudent = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { email, admin_id } = req.body;
+        await conn.beginTransaction();
+        
+        // Get the current usertype of the user
+        let query = "SELECT usertype FROM user WHERE email = ?";
+        let rows = await conn.query(query, [email]);
+        const usertype = rows[0].usertype;
 
-export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate }
+        // Update the usertype and isFirstTimeLogin in the user table
+        query = "UPDATE user SET usertype = 0, isFirstTimeLogin = true WHERE email = ?";
+        await conn.query(query, [email]);
+
+        // Conditionally delete the user from the respective table based on their current usertype
+        if (usertype === 1) {
+            query = "DELETE FROM faculty_member WHERE email = ?";
+            await conn.query(query, [email]);
+        } else if (usertype === 2) {
+            query = "DELETE FROM ics_rc_oic WHERE email = ?";
+            await conn.query(query, [email]);
+        } else if (usertype === 3) {
+            query = "DELETE FROM director WHERE email = ?";
+            await conn.query(query, [email]);
+        }
+
+        let student_number = null;
+        let org = null;
+        let course = null;
+        let college = "College of Arts and Sciences";
+        let department = "Institute of Computer Science";
+
+        // Insert the user into the student table
+        query = "INSERT INTO student(email, student_number, org, course, college, department) VALUES(?, ?, ?, ?, ?, ?)";
+        await conn.query(query, [email, student_number, org, course, college, department]);
+        
+        await addUserStatusChangeNotification(admin_id, email, conn);
+
+        await conn.commit();
+        
+        // return the results
+        res.send({message: "Successfully edited user type to student"});
+    } catch (err) {
+        await conn.rollback();
+        res.send({errmsg: "Failed to set user to student", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
+}
+
+
+export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent }

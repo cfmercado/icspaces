@@ -1,5 +1,14 @@
-import React, { useRef, useState } from "react";
-import { TextField, Button, Box, Grid, Typography } from "@mui/material";
+import React, { useRef, useState, useEffect } from "react";
+import {
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Typography,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import {
   DatePicker,
   TimePicker,
@@ -9,8 +18,20 @@ import dayjs from "dayjs";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import BackButton from "../../components/BackButton";
 
+interface Room {
+  // image: string;
+  room_id: string;
+  room_name: string;
+  // room_capacity: string;
+  // fee: string;
+  // room_type: string;
+  // floor_number: string;
+  // additional_fee_per_hour: string;
+  // utilities: string[];
+}
 function GuestBookingForm_Page() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
 
   const [emailInfo, setEmailInfo] = useState({
     name: "",
@@ -38,6 +59,7 @@ function GuestBookingForm_Page() {
     }));
   };
 
+  const [displayedEndTime, setDisplayedEndTime] = useState(emailInfo.time_end);
   const lastValidEndTime = useRef(emailInfo.time_end);
 
   const handleTimeChange = (
@@ -52,12 +74,17 @@ function GuestBookingForm_Page() {
     ) {
       // If the new end time is earlier or the same as the start time, show an alert and do not update the state
       alert("End time cannot be earlier or the same as the start time.");
+      setDisplayedEndTime(lastValidEndTime.current);
     } else {
-      // If the new end time is later than the start time, update the state
+      // If the new end time is later than the start time, update the state and the last valid end time
       setEmailInfo((prevState) => ({
         ...prevState,
         [name]: value ? timeValue.format("hh:mm A") : "",
       }));
+      if (name === "time_end") {
+        lastValidEndTime.current = value ? timeValue.format("hh:mm A") : "";
+        setDisplayedEndTime(value ? timeValue.format("hh:mm A") : "");
+      }
     }
   };
 
@@ -65,6 +92,7 @@ function GuestBookingForm_Page() {
     const {
       name,
       date,
+      room,
       time_start,
       time_end,
       event_name,
@@ -78,6 +106,7 @@ function GuestBookingForm_Page() {
 
       Below are the details:
       Event Name: ${event_name}
+      Room: ${room}
       Description: ${event_desc}
       Date: ${date}
       Start Time: ${time_start}
@@ -89,6 +118,21 @@ function GuestBookingForm_Page() {
       templateSubject
     )}&body=${encodeURIComponent(templateEmail)}`;
   };
+
+  useEffect(() => {
+    fetch("https://api.icspaces.online/get-all-rooms", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // body: JSON.stringify(data), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setRooms(data);
+        console.log(data);
+      });
+  }, []);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -132,12 +176,19 @@ function GuestBookingForm_Page() {
 
           <Grid item xs={6}>
             <TextField
+              select
               name="room"
               value={emailInfo.room}
               onChange={handleChange}
               label="Room"
               fullWidth
-            />
+            >
+              {rooms.map((room) => (
+                <MenuItem key={room.room_id} value={room.room_name}>
+                  {room.room_name}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
           <Grid item xs={6}>
             <TextField
@@ -183,12 +234,19 @@ function GuestBookingForm_Page() {
             />
           </Grid>
           <Grid item xs={4}>
-            <TimePicker
+            {/* <TimePicker
               name="time_end"
               value={
                 emailInfo.time_end ? dayjs(emailInfo.time_end, "hh:mm A") : null
               }
               onChange={(newValue) => handleTimeChange("time_end", newValue)}
+              label="End Time"
+              minutesStep={60}
+            /> */}
+            <TimePicker
+              name="time_end"
+              value={dayjs(displayedEndTime)}
+              onChange={(value) => handleTimeChange("time_end", value)}
               label="End Time"
               minutesStep={60}
             />

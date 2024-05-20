@@ -9,6 +9,7 @@ import { useState,useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 import axios from "axios";
+import dayjs, { Dayjs } from "dayjs";
 const RoomReservationForm = () => {
 
 
@@ -49,18 +50,19 @@ const RoomReservationForm = () => {
 
     useEffect(() => {
     const receivedValues=location.state;
-    // console.log("Received this")
-    // console.log(receivedValues);
+    console.log("Received this")
+    console.log(receivedValues);
     setroom_id(receivedValues.room_id);
-
+    console.log(receivedValues.date)
     setstartTime(receivedValues.start_dateTime)
     setendTime(receivedValues.end_dateTime)
-    let tempDate= new Date(receivedValues.date).toISOString().slice(0,10)
-    // console.log("tempDate "+tempDate)
+    console.log(receivedValues.date.substr(receivedValues.date.indexOf(" ") + 1))
+    let tempDate= dayjs(receivedValues.date).format('YYYY-MM-DD HH:mm:ss').toString().slice(0,10)
     setDate(tempDate);
-    let newDate = new Date().toISOString().slice(0,10);
-    // console.log(newDate)
+    let newDate = dayjs().format("YYYY-MM-DD HH:mm:ss")
+    console.log("newDate " +newDate)
     setcreationDate(newDate);
+
     const fetchUser = async () => {
         try {
             const response = await axios.get("https://api.icspaces.online/get-profile", {
@@ -143,10 +145,22 @@ const RoomReservationForm = () => {
         console.log("Submitting")
         const startDateTime= date+" "+startTime
         const endDateTime= date+" "+endTime
-        // console.log({name,email,contact,eventName,eventDetails})
-        // console.log({creationDate,zero,sumCost})
-        // console.log({startDateTime,endDateTime})
-        // console.log("Submitting End")
+        
+        console.log({startDateTime,endDateTime, date, creationDate})
+        console.log({room_id,eventName,eventDetails,email,sumCost})
+            fetch('https://api.icspaces.online/get-available-room-time', {
+                method: 'POST', // or 'PUT'
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({room_id,date}), // Uncomment this line if you need to send data in the request body
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+            });
+ 
+        
         fetch('https://api.icspaces.online/add-reservation', {
             method: 'POST', // or 'PUT'
             headers: {
@@ -178,7 +192,7 @@ const RoomReservationForm = () => {
         }
     )
 
-    // app.post('/add-reservation', addReservation)
+   
     }
     return (
         <>

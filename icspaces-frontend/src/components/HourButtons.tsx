@@ -113,7 +113,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
           },
     };
 
-    const buttonStyle3 = {
+    const buttonStyle3 = { 
         textTransform: "none",
         backgroundColor: '#183048',
         height: isSmallScreen ? "0.875rem" : "23px",
@@ -131,13 +131,10 @@ const HourButtons : React.FC<HourButtonsProps> = ({
         backgroundColor: '#183048',
         height: isSmallScreen ? "0.5rem" : "23px",
         width: isSmallScreen ? "0.5rem" :'100%',
-        color: '#828282', 
+        color: 'white!important', 
         borderRadius: '10px',
         fontSize: isSmallScreen ? "3px" : "10px",   
         padding: '0',
-        '&:hover': {
-            backgroundColor: 'lightgrey',
-          },
     };
 
     const boxStyle = {
@@ -155,26 +152,40 @@ const HourButtons : React.FC<HourButtonsProps> = ({
         color: '#2D5378',
         fontSize: isSmallScreen ? "6px" : "14px",
     }
-    
+    const convertTo12HourFormat = (time:any) => {
+        const militaryTime = time.split(':');
+        let hours = parseInt(militaryTime[0], 10);
+        const minutes = militaryTime[1];
+        const period = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const standardTime = `${hours}:${minutes} ${period}`;
+
+        return standardTime;
+    };
       
-    const amButtons = availableTimes?.slice(7,13)
-    const pmButtons = availableTimes?.slice(13,22)
-    // const AMButtons = ["07:00:00", "08:00:00", "09:00:00", "10:00:00", "11:00:00", "12:00:00"]
-    // const PMButtons = ["13:00:00", "14:00:00", "15:00:00", "16:00:00", "17:00:00", "18:00:00", "19:00:00", "20:00:00", "21:00:00",]
+    const filteredAvailableTimes = availableTimes?.filter((time:any) => time >= "07:00:00")
+    const availableMorningSlots = filteredAvailableTimes?.filter((time:any) => time <= "12:00:00")
+    const availableAfternoonSlots = filteredAvailableTimes?.filter((time:any) => time > "12:00:00" && time <= "21:00:00" );
+    const amButtons = ['07:00:00', '08:00:00', '09:00:00', '10:00:00', '11:00:00','12:00:00', '13:00:00'];
+    const pmButtons = ['13:00:00', '14:00:00', '15:00:00', '16:00:00', '17:00:00', '18:00:00', '19:00:00', '20:00:00', '21:00:00', '22:00:00']
     const selectedButtons1 = ["7-8 AM", "8-9 AM", "9-10 AM", "10-11 AM", "11-12 PM", "12-1 PM"]
     const selectedButtons2 = ["1-2 PM", "2-3 PM", "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM", "8-9 PM", "9-10 PM", ]
     
     const renderButtons = () => {
         if (isSwitchOn) {
           // Render set of buttons when the switch is on
+          
           return (
             <>
-             {pmButtons?.map((PMbuttonText:string, index:number) => (
-                <Button key={index} variant="outlined" onClick={() => {
+            
+             {pmButtons?.slice(0,-1).map((PMbuttonText:string, index:number) => (
+                <Button key={index} variant="outlined" 
+                disabled={!availableAfternoonSlots?.includes(PMbuttonText)}
+                onClick={() => {
                     handleClicked(PMbuttonText)
                     handleClick2(index)
-                }} sx={activeButton2.includes(index) ? buttonStyle4 : buttonStyle2}>
-                    {PMbuttonText}
+                }} sx={activeButton2.includes(index) ? buttonStyle3 : buttonStyle}>
+                    {convertTo12HourFormat(PMbuttonText)} - {convertTo12HourFormat(pmButtons[index+1])}
                 </Button>
              ))}
             </>
@@ -183,16 +194,16 @@ const HourButtons : React.FC<HourButtonsProps> = ({
           // Render set of buttons when the switch is off
           return (
             <>
-            {amButtons?.map((AMbuttonText:string, index:number) => (
-                <Button key={index} variant="outlined" 
-                // disabled={AMbuttonText !== AMButtons[index]} 
+            {amButtons?.slice(0,-1).map((AMbuttonText:string, index:number) => (
+                <Button key={index} variant="outlined"
+                disabled={!availableMorningSlots?.includes(AMbuttonText)} 
                 onClick={() => {
                     handleClicked(AMbuttonText) 
                     handleClick(index)
                 }} 
                 sx={activeButton.includes(index) ? buttonStyle3 : buttonStyle}>
 
-                    {AMbuttonText}
+                    {convertTo12HourFormat(AMbuttonText)} - {convertTo12HourFormat(amButtons[index+1])}
                 </Button>
              ))}
             </>
@@ -217,7 +228,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                 </Typography>
                 <ButtonGroup disableElevation variant="outlined" size="medium" fullWidth> 
                     {selectedButtons1.map((buttonText, index) => (
-                        <Button key={index} variant="outlined" sx={activeButton.includes(index) ? buttonStyle4 : buttonStyle2}>
+                        <Button key={index}  disabled variant="outlined" sx={activeButton.includes(index) ? buttonStyle4 : buttonStyle2}>
                         {buttonText}
                         </Button>
                     ))}
@@ -225,7 +236,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                 </Stack>
                 <ButtonGroup disableElevation variant="outlined" size="large" > 
                    {selectedButtons2.map((buttonText, index) => (
-                        <Button key={index} variant="outlined" sx={activeButton2.includes(index) ? buttonStyle4 : buttonStyle2}>
+                        <Button key={index} disabled variant="outlined" sx={activeButton2.includes(index) ? buttonStyle4 : buttonStyle2}>
                         {buttonText}
                         </Button>
                     ))}
@@ -249,8 +260,8 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                 
                 {/*Hour Buttons section */}
                 <Stack direction='column' padding={3} alignItems='flex-end'  justifyContent='center' >
-                    <Typography sx={{fontSize: isSmallScreen ? "6px" : "12px", color: '#2D5378',}}>
-                        <span style={{color: '#787BEC'}}> Philippine Standard Time</span> <br /> <b> am/pm</b><Switch checked={isSwitchOn} onChange={handleSwitchChange} size="small"/>24h 
+                    <Typography sx={{fontSize: isSmallScreen ? "6px" : "13px", color: '#2D5378',}}>
+                        <span style={{color: '#787BEC'}}><b>Click here to choose your time slot</b> </span> <br /> <b>AM<Switch checked={isSwitchOn} onChange={handleSwitchChange} size="small"/> PM</b>
                     </Typography>
                     <Stack direction='column' padding={2} spacing={2} width='110%' sx={{overflow: 'auto'}}>
                         {renderButtons()}

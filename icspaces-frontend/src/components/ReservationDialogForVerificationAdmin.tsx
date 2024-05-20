@@ -313,7 +313,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
 
               {/* Modular space for the date and time */}
               <Grid item xs= {20} sx={{ height: '100%', paddingBottom:'0px', paddingTop:'9px'}}>
-                <Paper elevation={0} sx={{ height: '100%', borderRadius: 2, padding: 1, backgroundColor: FOR_VERIFICATION_BG_COLOR, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Paper elevation={0} sx={{ height: '100%', borderRadius: 2, padding: 1, paddingBottom: '0px', backgroundColor: FOR_VERIFICATION_BG_COLOR, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Typography className="unselectable" sx={{fontWeight: 'bold', fontSize: '1.3vw', color: FOR_VERIFICATION_FONT_COLOR}}>
                     For verification
                   </Typography>
@@ -321,38 +321,33 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
               </Grid>
 
               {/* Restrict area for where event description text is displayed */}
-              <Box border={1} paddingTop={3} style={{ width: '100%', border:'none'}}>
-                <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingBottom: '13px'}}>
+              <Box border={1} paddingTop={1.2} paddingBottom={0.2} style={{ width: '100%', border:'none'}}>
+                <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingBottom: '13px', paddingTop: '0px'}}>
                   Approving this reservation moves it to <span style={{ color: '#8eafc1' }}>for payment</span> status. If you choose to disapprove, kindly provide anote explaining the reason/s for rejection to the reservation holder.
                 </Typography>
               </Box>
 
               {/* Text box area */}
               <TextField label="Note to reservation holder" variant="outlined" color="primary" placeholder="Type some text..." 
-                sx={{ height:'30px !important', borderRadius:'8px !important', width: '100%'}}
+                sx={{ height:'30px !important', borderRadius:'8px !important', width: '100%', paddingTop: '10px'}}
                 value={note} onChange={handleNoteChange}/>
 
-              {/* Spacer line */}
-              <Grid item xs={40} sx={{paddingTop:'70px'}}>
-                <Typography sx={{padding:'0px'}}/>
+              {/* Disapproved button */}
+              <Grid item xs={20} sx={{paddingTop:'40px'}}>
+                <Button variant="contained" style={{ backgroundColor: '#d9d9d9', color: '#878787', borderRadius: '25px', width: '100%', 
+                  fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleDisapprove}>
+                    Disapprove
+                </Button>
+              </Grid>  
+
+              {/* Approved button */}
+              <Grid item xs={20} sx={{paddingTop:'40px'}}>
+                <Button variant="contained" style={{ backgroundColor: '#ffb532', color: '#183048', borderRadius: '25px', width: '100%', 
+                  fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleApprove}>
+                    Approve
+                </Button>
               </Grid>  
             </Grid>
-
-            {/* Reservation Paid button*/}
-            <Button variant="contained" style={{ backgroundColor: '#ffb532', color: '#183048', borderRadius: '25px', width: '100%', 
-              fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleApprove}>
-                Approve
-            </Button>
-
-            {/* Spacer line */}
-            <Grid item xs={40} sx={{paddingBottom:'6px'}}>
-              <Typography sx={{padding:'0px'}}/>
-            </Grid>  
-
-            <Button variant="contained" style={{ backgroundColor: '#d9d9d9', color: '#878787', borderRadius: '25px', width: '100%', 
-              fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleDisapprove}>
-                Disapprove
-            </Button>
 
             {/* Render appropriate modal based on the action taken */}
             {actionTaken === "approve" && (

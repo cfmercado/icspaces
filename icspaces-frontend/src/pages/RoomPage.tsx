@@ -133,7 +133,7 @@ const RoomPage = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ room_id: room_id, date: selectedDate.format("dddd DD MMM YYYY")}),
+            body: JSON.stringify({ room_id: room_id, date: selectedDate.format("YYYY-MM-DD")}),
           }
         );
         const data = await response.json();
@@ -144,7 +144,7 @@ const RoomPage = () => {
       }
     };
     fetchReservations();
-  }, []);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetch("https://api.icspaces.online/get-room-info", {
@@ -170,6 +170,7 @@ const RoomPage = () => {
         alignItems: "center", // Centers content horizontally
         height: "100vh", // Maintains full viewport height
         width: "184vh",
+        overflowX: "hidden", // Prevents horizontal scrolling
         overflowY: "auto", // Allows scrolling
         position: "relative", // Allows positioning of children
       }}

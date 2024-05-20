@@ -16,7 +16,7 @@ import './ReservationDialogConfig.css';
 
 // Constant values for theme
 const SCHEME_FONT_DEFAULT_COLOR = '#204365';
-const SCHEME_FONT_GRAY_COLOR = '#acb4bc';
+const SCHEME_FONT_GRAY_COLOR = '#2d3033';
 const SCHEME_FONT_DARKER_GRAY_COLOR = '#748391';
 const SCHEME_FONT_DARK_BLUE_COLOR = '#183048';
 const BUTTON_COLOR_GRAY = '#eceef0';
@@ -50,7 +50,7 @@ const ReservationDialogCancelApproved: React.FC<ReservationDialogProps> = ({
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({reservation_id: reservation?.reservation_id, user_id: reservation?.user_id, comment_text: reservation?.note_from_admin}), // Uncomment this line if you need to send data in the request body
+      body: JSON.stringify({reservation_id: reservation?.reservation_id, user_id: reservation?.user_id}), // Uncomment this line if you need to send data in the request body
     })
     .then(response => response.json())
     .then(data => {

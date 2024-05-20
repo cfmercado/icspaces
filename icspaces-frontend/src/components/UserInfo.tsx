@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import {
   Card,
@@ -15,6 +15,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import AuthContext from "../utils/AuthContext";
 
 const userTypeMapping: { [key: number]: string } = {
   0: "Student",
@@ -47,6 +48,7 @@ const UserInfo: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const { setIsLoggedIn } = useContext(AuthContext);
 
   const [open, setOpen] = useState(false);
   const [studentNumber, setStudentNumber] = useState("");
@@ -88,7 +90,7 @@ const UserInfo: React.FC = () => {
         }
       } catch (error) {
         console.error("Failed to fetch user:", error);
-        navigate("/login");
+        navigate("/");
       }
     };
 
@@ -188,6 +190,7 @@ const UserInfo: React.FC = () => {
         throw new Error("Logout failed");
       }
       // If the response is ok, assume the logout was successful
+      setIsLoggedIn(false);
       setUser(null);
       navigate("/");
     } catch (error) {

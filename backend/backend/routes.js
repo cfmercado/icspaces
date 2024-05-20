@@ -1,21 +1,22 @@
 import { generateURL, checkIfLoggedIn, callbackHandler, getProfileData, logout, setUserInfoFirstLogin } from "./auth-controller.js"
 
 
-import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom } from "./room-controller.js"
-import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate } from "./user-controller.js"
+import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom, getAllRoomsAndUtilitiesComplete } from "./room-controller.js"
+import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent } from "./user-controller.js"
 import { 
     getReservationIdByEventName, getAdminCommentByID,getNewAccounts, getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getReservationByRoom, 
     getAllReservationsByUser, getReservation, getReservationByName, getReservationByStatus, addReservation, setAsApproved, setAsCancelled,  setAsDisapproved, 
     setAsPaid, addComment, getAllReservations, getTotalRoomReservations, getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom, getAvailableRoomTime,
     getAllReservationsWithDummyData,
-    getReservationTimeline, editReservation
+    getReservationTimeline, editReservation, getRevenueReport
 } from "./reservation-controller.js"
-import {addGuestReservation,trackGuestReservation} from "./guest-controller.js"
-import { getRoomImage, uploadRoomImage } from "./file-controller.js"
+import {addGuestReservation,trackGuestReservation, setGuestAsApproved, setGuestAsPaid, setGuestAsDisapproved, setGuestAsCancelled} from "./guest-controller.js"
+import { getRoomImage, uploadRoomImage, deleteRoomImage, uploadReservationDocument, getReservationDocument, deleteReservationDocument} from "./file-controller.js"
 
 //utilities
 import { sendEmail } from "./utils/email-sender.js"
-import { upload } from "./utils/multer-util.js"
+import { upload, multerVerify } from "./utils/multer-util.js"
+import { addReservationStatusChangeNotification, addUserStatusChangeNotification, addReservationCommentNotification, getNotificationsForUser } from "./notifications-controller.js"
 
 
 const setUpRoutes = (app) => {
@@ -44,12 +45,14 @@ const setUpRoutes = (app) => {
     app.post('/get-faculty-details', getFacultyDetails)
     app.post('/set-faculty-to-admin',setFacultyToAdmin)
     app.post('/get-last-login-date', getLastLoggedInDate)
+    app.post('/set-users-to-student', setUsersToStudent)
 
     //rooms
     app.post('/get-room-info', getRoomInfo)
     app.post('/search', searchHandler)
     app.post('/insert-room', insertRoom)
     app.post('/get-all-rooms',getAllRoomsAndUtilities)
+    app.post('/get-all-rooms-complete',getAllRoomsAndUtilitiesComplete)
     app.post('/set-class-schedule', setRoomClassSchedule)
     app.post('/edit-room-information', setEditedRoom) 
     app.post('/add-utility', addUtility)
@@ -83,6 +86,7 @@ const setUpRoutes = (app) => {
     app.post('/get-all-reservations-with-dummy-data', getAllReservationsWithDummyData)
     app.post('/get-reservation-timeline', getReservationTimeline)
     app.post('/edit-reservation', editReservation)
+    app.post('/get-revenue-report', getRevenueReport)
 
     // getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getNewAccounts
     app.post('/get-total-request', getTotalRequest)
@@ -95,14 +99,28 @@ const setUpRoutes = (app) => {
     //guests
     app.post('/track-guest-reservation', trackGuestReservation)
     app.post('/add-guest-reservation', addGuestReservation)
-
+    app.post('/set-guest-reservation-approved', setGuestAsApproved)
+    app.post('/set-guest-reservation-paid', setGuestAsPaid)
+    app.post('/set-guest-reservation-cancelled', setGuestAsCancelled)
+    app.post('/set-guest-reservation-disapproved', setGuestAsDisapproved)
     //files
-    app.post('/upload-room-image', upload.single('image'), uploadRoomImage)
+    // room images
+    app.post('/upload-room-image', upload.single('image'), multerVerify, uploadRoomImage)
     app.post('/get-room-image', getRoomImage)
+    app.post('/delete-room-image', deleteRoomImage)
+    // documents
+    app.post('/upload-reservation-document', upload.single('document'), multerVerify, uploadReservationDocument) // type: payment or letter
+    app.post('/get-reservation-document', getReservationDocument)
+    app.post('/delete-reservation-document', deleteReservationDocument)
 
     //email testing
     app.post('/send-email', sendEmail)
     
+    //notifications
+    app.post('/add-reservation-status-change-notification', addReservationStatusChangeNotification)
+    app.post('/add-user-status-change-notification', addUserStatusChangeNotification)
+    app.post('/add-reservation-comment-notification', addReservationCommentNotification)
+    app.post('/get-notifications-for-user', getNotificationsForUser)
 }
 
 export default setUpRoutes;

@@ -13,6 +13,7 @@ const userTypeRoutes: { [key: number]: string[] } = {
     "/accountpage",
     "/faqspage",
     "/roomreservation",
+    "/roompage",
   ],
   1: [
     "/homepage",
@@ -22,6 +23,7 @@ const userTypeRoutes: { [key: number]: string[] } = {
     "/faqspage",
     "/schedulepage",
     "/roomreservation",
+    "/roompage/:room_id",
   ],
   2: [
     "/homepage_admin",
@@ -105,27 +107,39 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!isLoading && !isLoggedIn) {
-      const accessibleRoutes = notLoggedInRoutes;
-      if (!accessibleRoutes.includes(location.pathname)) {
-        navigate("/");
+    if (!isLoading) {
+      if (isLoggedIn && userType !== null) {
+        const accessibleRoutes = userTypeRoutes[userType];
+        if (
+          !accessibleRoutes.includes(location.pathname) ||
+          notLoggedInRoutes.includes(location.pathname)
+        ) {
+          if (userType === 0 || userType === 1) {
+            if (!notLoggedInRoutes.includes(location.pathname)) {
+              navigate("/homepage");
+            }
+          } else if (userType === 2 || userType === 3) {
+            if (!notLoggedInRoutes.includes(location.pathname)) {
+              navigate("/homepage_admin");
+            }
+          }
+        }
+      } else if (!isLoggedIn) {
+        if (!notLoggedInRoutes.includes(location.pathname)) {
+          console.log("NOT SUPPOSED TO BE HERE");
+          navigate("/");
+        }
       }
     }
+  }, [isLoading, userType, navigate, location.pathname, isLoggedIn]);
 
-    if (!isLoading && userType !== null && isLoggedIn) {
-      const accessibleRoutes = userTypeRoutes[userType];
-      if (!accessibleRoutes.includes(location.pathname)) {
-        if (userType === 0 || userType === 1) {
-          navigate("/homepage");
-        }
-        if (userType === 2 || userType === 3) {
-          navigate("/homepage_admin");
-        }
-      }
-    }
-  }, [isLoading, userType, navigate, location.pathname]);
-
-  return isLoading ? <p>Loading...</p> : isLoggedIn ? <Component /> : null;
+  return isLoading ? (
+    <p>Loading...</p>
+  ) : isLoggedIn ? (
+    <Component />
+  ) : notLoggedInRoutes.includes(location.pathname) ? (
+    <Component />
+  ) : null;
 };
 
 export default PrivateRoute;

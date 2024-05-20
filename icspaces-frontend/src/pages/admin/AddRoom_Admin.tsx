@@ -42,7 +42,7 @@ const styles = {
 };
 
 
-const EditRoomInfoPage_Admin = () => {
+const AddRoom_Admin = () => {
 
 
   const [items, setItems] = useState<Utility[]>([]);
@@ -171,9 +171,9 @@ const EditRoomInfoPage_Admin = () => {
   
     // Validate if any required field is empty
     if (!name || !location || !capacity || !fee || !overtimeFee || !type) {
-      setSnackbarMessage("Please fill out all fields.");
+      setSnackbarMessage("Please fill out all fields with valid inputs.");
       setSnackbarOpen(true);
-      console.error("Please fill out all fields.");
+      console.error("Please fill out all fields with valid inputs.");
       return; // Exit early if any required field is empty
     }
   
@@ -303,6 +303,38 @@ const EditRoomInfoPage_Admin = () => {
     console.log(image);
   };
 
+  const [hourlyError, setHourlyError] = useState(false);
+  const [overtimeError, setOvertimeError] = useState(false);
+  const [roomNameError, setRoomNameError] = useState(false);
+
+
+  useEffect(() => {
+    if (roomOvertimeFee.current) {
+      roomOvertimeFee.current.value = room?.additional_fee_per_hour !== undefined ? room.additional_fee_per_hour.toString() : '';
+    } 
+    if (roomFee.current) {
+      roomFee.current.value = room?.fee !== undefined ? room.fee.toString() : '';
+    }
+    if (roomName.current) {
+      roomName.current.value = room?.room_name || '';
+    }
+  }, [room]);
+
+  const handleBlurRoomName = () => {
+    const value = roomName.current?.value || ''; // Use optional chaining
+    setRoomNameError(value === '');
+  }
+  
+  const handleBlurHourlyFee = () => {
+    const value = roomFee.current?.value || ''; // Use optional chaining
+    setHourlyError(value === '');
+  };
+
+  const handleBlurOvertimeFee = () => {
+    const value = roomOvertimeFee.current?.value || ''; // Use optional chaining
+    setOvertimeError(value === '');
+  };
+
 
   return (
       <>
@@ -392,7 +424,11 @@ const EditRoomInfoPage_Admin = () => {
             defaultValue="Room Name"
             variant="outlined" 
             size="small" 
+            error={roomNameError}
+            helperText={roomNameError ? 'This field is required.' : ''}
+            onBlur={handleBlurRoomName}
             inputRef={roomName}
+            margin = "normal"
             inputProps={{
               maxLength: 25,
             }}
@@ -460,8 +496,7 @@ const EditRoomInfoPage_Admin = () => {
       <TextField id="room-capaciy" 
             select 
             label="Room Capacity" 
-            // defaultValue={capacities[room?.room_capacity]}
-            // value={selectedCapacity}
+            defaultValue= "0.00"
             variant="outlined" 
             size = "small" 
             inputRef={roomCapacity}
@@ -481,26 +516,36 @@ const EditRoomInfoPage_Admin = () => {
       </TextField>
 
       <TextField id="room-fee" label="Fee per Hour" defaultValue={room?.fee} variant="outlined" size="small" type="number" inputRef={roomFee}
-      InputProps={{
-        style: inputStyle,
-        inputProps: {
-          maxLength: 10,
-          min: 0, // Optionally, you can set minimum value
-          step: 50, // Optionally, you can set step value
-          max: 100000,
-        },
-      }}
+        InputLabelProps={{ shrink: true }}
+        error={hourlyError}
+        helperText={hourlyError ? 'This field is required. Please add valid integer inputs.' : ''}
+        onBlur={handleBlurHourlyFee}
+        margin="normal"
+        InputProps={{
+          style: inputStyle,
+          inputProps: {
+            maxLength: 10,
+            min: 0, // Optionally, you can set minimum value
+            step: 50, // Optionally, you can set step value
+            max: 100000,
+          },
+        }}
     />
       <TextField id="room-overtime-fee" label = "Additional Fee per Hour"defaultValue='0' variant="outlined" size = "small" type = "number"  inputRef={roomOvertimeFee}
-      InputProps = {{
-        style: inputStyle,
-        inputProps: {
-          maxLength: 10,
-          min: 0, // Optionally, you can set minimum value
-          step: 50, // Optionally, you can set step value
-          max: 100000,
-        },
-      }}
+        InputLabelProps={{ shrink: true }}
+        error={overtimeError}
+        helperText={overtimeError ? 'This field is required. Please add valid integer inputs.' : ''}
+        onBlur={handleBlurOvertimeFee}
+        margin="normal"
+        InputProps = {{
+          style: inputStyle,
+          inputProps: {
+            maxLength: 10,
+            min: 0, // Optionally, you can set minimum value
+            step: 50, // Optionally, you can set step value
+            max: 100000,
+          },
+        }}
       />
 
         </>
@@ -683,7 +728,7 @@ const EditRoomInfoPage_Admin = () => {
   
 };
 
-export default EditRoomInfoPage_Admin;
+export default AddRoom_Admin;
 
 
 
