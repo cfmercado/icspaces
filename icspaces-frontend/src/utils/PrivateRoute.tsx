@@ -36,15 +36,20 @@ const userTypeRoutes: { [key: number]: string[] } = {
     "/accountpage",
     "/bookroom_admin",
     "/roomreservation",
+    "/addroom_admin",
   ],
   3: [
     "/homepage_admin",
+    "/reservationspage_admin",
     "/editroominfopage_admin",
     "/roomspage_admin",
     "/accountspage_admin",
     "/schedulepage",
     "/bookreservationpage_admin",
+    "/accountpage",
     "/bookroom_admin",
+    "/roomreservation",
+    "/addroom_admin",
   ],
 
   // Add more user types and routes as needed

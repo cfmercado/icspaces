@@ -51,11 +51,13 @@ const UserInfo: React.FC = () => {
   const { setIsLoggedIn } = useContext(AuthContext);
 
   const [open, setOpen] = useState(false);
-  const [studentNumber, setStudentNumber] = useState("");
-  const [course, setCourse] = useState("");
-  const [org, setOrg] = useState("");
-  const [college, setCollege] = useState("");
-  const [department, setDepartment] = useState("");
+  const [studentNumber, setStudentNumber] = useState(
+    user ? user.student_number : ""
+  );
+  const [course, setCourse] = useState(user ? user.course : "");
+  const [org, setOrg] = useState(user ? user.org : "");
+  const [college, setCollege] = useState(user ? user.college : "");
+  const [department, setDepartment] = useState(user ? user.department : "");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -198,8 +200,6 @@ const UserInfo: React.FC = () => {
     }
   };
 
-  console.log("userDetails", userDetails);
-
   return (
     <Card
       sx={{
@@ -335,9 +335,16 @@ const UserInfo: React.FC = () => {
           </DialogActions>
         </Dialog>
         <Stack mt={1}>
-          <Button variant="outlined" color="primary" onClick={handleClickOpen}>
-            Update
-          </Button>
+          {user &&
+            (user.usertype === "Student" || user.usertype === "Faculty") && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleClickOpen}
+              >
+                UPDATE
+              </Button>
+            )}
           <Button
             variant="contained"
             onClick={handleLogout}

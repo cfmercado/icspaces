@@ -57,7 +57,7 @@ const searchRoomByName = async (req, res) => {
 
         //need to optimize
 
-        const query = "SELECT * FROM room WHERE room_name LIKE ?";
+        const query = "SELECT * FROM room WHERE room_name LIKE ? AND isDeleted = FALSE";
         const searchvalue = `%${room_name}%`
  
         let values = [searchvalue]
@@ -81,7 +81,7 @@ const searchRoomByType = async (req, res) => {
         await pool.beginTransaction();
         const { type, room_type } = req.body;
 
-        const query = "SELECT * FROM room WHERE room_type LIKE ?";
+        const query = "SELECT * FROM room WHERE room_type LIKE ? AND isDeleted = FALSE";
         const searchvalue = `%${room_type}%`
 
         const values = [searchvalue]
@@ -104,7 +104,7 @@ const searchRoomByCapacity = async (req, res) =>{
         await pool.beginTransaction();
         const { type, room_capacity } = req.body;
 
-        const query = `SELECT * FROM room WHERE room_capacity <= ?`;
+        const query = `SELECT * FROM room WHERE room_capacity <= ? AND isDeleted = FALSE`;
         var values = [room_capacity]
         const rows = await conn.query(query, values);
 
@@ -126,7 +126,7 @@ const searchRoomByCapacityRange = async (req, res) =>{
         await pool.beginTransaction();
         const { type, upper_capacity, lower_capacity } = req.body;
 
-        const query = `SELECT * FROM room WHERE room_capacity >= lower_capacity AND room_capacity <= upper_capacity`;
+        const query = `SELECT * FROM room WHERE room_capacity >= lower_capacity AND room_capacity <= upper_capacity  AND isDeleted = FALSE`;
         var values = [upper_capacity, lower_capacity]
         const rows = await conn.query(query, values);
 
@@ -147,7 +147,7 @@ const searchRoomByFloor = async (req, res) =>{
         await pool.beginTransaction();
         const { type, floor_number } = req.body;
 
-        const query = `SELECT * FROM room WHERE floor_number = ?`;
+        const query = `SELECT * FROM room WHERE floor_number = ? AND isDeleted = FALSE`;
         var values = [floor_number]
         const rows = await conn.query(query, values);
 
@@ -197,7 +197,7 @@ const getAllRoomsAndUtilities = async (req, res) => {
     try {
         conn = await pool.getConnection();
         // await pool.beginTransaction();
-        const rooms = await conn.query("SELECT * FROM room");
+        const rooms = await conn.query("SELECT * FROM room WHERE isDeleted = FALSE");
         const utilities = await conn.query("SELECT * FROM utility");
 
         // Map utilities to their respective rooms
@@ -223,7 +223,7 @@ const getAllRoomsAndUtilitiesComplete = async (req, res) => {
     try {
         conn = await pool.getConnection();
         // await pool.beginTransaction();
-        const rooms = await conn.query("SELECT * FROM room");
+        const rooms = await conn.query("SELECT * FROM room WHERE isDeleted = FALSE");
         const utilities = await conn.query("SELECT * FROM utility");
 
         // Map utilities to their respective rooms
@@ -248,7 +248,7 @@ const getAllRooms = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await pool.beginTransaction();
-        const query = `SELECT * FROM room`;
+        const query = `SELECT * FROM room WHERE isDeleted = FALSE`;
         const rows = await conn.query(query);
 
         await conn.commit();
@@ -413,9 +413,9 @@ const getAllRoomFilters = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
-        const roomTypesResult = await conn.query("SELECT DISTINCT room_type FROM room");
-        const floorsResult = await conn.query("SELECT DISTINCT floor_number FROM room");
-        const capacitiesResult = await conn.query("SELECT DISTINCT room_capacity FROM room");
+        const roomTypesResult = await conn.query("SELECT DISTINCT room_type FROM room WHERE isDeleted = FALSE");
+        const floorsResult = await conn.query("SELECT DISTINCT floor_number FROM room WHERE isDeleted = FALSE");
+        const capacitiesResult = await conn.query("SELECT DISTINCT room_capacity FROM room WHERE isDeleted = FALSE");
 
         // Extract just the values into arrays
         const roomTypes = roomTypesResult.map(row => row.room_type);
@@ -581,8 +581,26 @@ const addNewRoom = async (req, res) => {
     }
 }
 
+const deleteRoom = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+        const { room_id } = req.body
+        const query =  `UPDATE room SET isDeleted = TRUE WHERE room_id = ?`;
+        const values = [room_id];
+        await conn.query(query, values);
+        await conn.commit();
+        res.send({ message: "Successfully deleted room." });
+    } catch (err) {
+        await conn.rollback();
+        res.send({errmsg: "Failed to set edited information of a room", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+}
 
 
 
-export { searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRoomsAndUtilitiesComplete, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom }
+export { deleteRoom, searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRoomsAndUtilitiesComplete, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom }
 
