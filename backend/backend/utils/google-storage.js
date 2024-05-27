@@ -58,5 +58,27 @@ const getObjectSignedUrl = async (fileName) => {
     }
 };
 
-export { uploadFile, deleteFile, getObjectSignedUrl};
+const getEmailFlair = async (fileName) => {
+    const bucket = storage.bucket(bucketName);
+    const directory = "/assets/email/"
+    const file = bucket.file(`${directory}${fileName}`);
+    
+
+    const options = {
+        version: 'v4',
+        action: 'read',
+        // expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+    };
+
+    try {
+        const [url] = await file.getSignedUrl(options);
+        // console.log(`The signed URL for ${fileName} is ${url}.`);
+        return { success: true, url };
+    } catch (error) {
+        console.error('Error generating signed URL:', error);
+        return { success: false, error: `Failed to generate signed URL: ${error.message}` };
+    }
+};
+
+export { uploadFile, deleteFile, getObjectSignedUrl, getEmailFlair};
 

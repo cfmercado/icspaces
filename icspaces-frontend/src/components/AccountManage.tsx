@@ -3,24 +3,16 @@ import {
   Stack,Typography, Button, Box, Grid, FormControl,InputLabel,TextField,ButtonGroup,Theme, MenuItem, Select,Avatar,
   Dialog,
   DialogTitle,
-  DialogContent
+  DialogContent,
 } from "@mui/material";
 import AccountCard from "./AccountCard";
-
-
-import { Reservation, TransactionDetails, usersAdmin} from "./types";
-import ReservationsFilters from "./ReservationsFilters";
-
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import AccountFilters from "./AccountFilters";
+import BackButton from "./BackButton";
 import AccountDialog from "./AccountDialog";
 import { Users } from "./types";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import SearchIcon from "@mui/icons-material/Search";
-import { SelectChangeEvent } from "@mui/material/Select";
-import CloseIcon from '@mui/icons-material/Close';
-import userEvent from "@testing-library/user-event";
-import { createImportSpecifier } from "typescript";
+
+import { Link } from "react-router-dom";
 const statusMapping: Record<number, string> = { 
   0: 'Student',
   1: 'Faculty',
@@ -46,6 +38,7 @@ const AccountManage = () => {
       setDataTable(data);
       setOriginalData(data);
       console.log("Data is fetched");
+      console.log(data)
     });
   }, [selectedUser]);
 
@@ -66,6 +59,7 @@ const AccountManage = () => {
             setCollege(data.college);
             setDepartment(data.department);
             setuserMail(data.email);
+            setuserIconURL(data.profilePicUrl)
             console.log('meow');
         });
    
@@ -81,6 +75,7 @@ const AccountManage = () => {
   const [originalData, setOriginalData] = useState<Users[]>([]);
   const [sortOrder, setSortOrder] = useState("Latest");
   const [open, setOpen] = useState(false);
+  const [userIconURL,setuserIconURL]=useState('');
   const isSmallScreen = useMediaQuery((theme: Theme) =>
     theme.breakpoints.down("md")
   );
@@ -157,11 +152,10 @@ const AccountManage = () => {
       {/* Return Button*/}
         <Grid container >
             <Stack direction='row' spacing={6} textAlign="left">
-                <Button variant='contained' size='small' sx={{backgroundColor:'#D9D9D9', color:'#183048',textTransform: 'none'}}>
-                    <ArrowBackIosNewIcon  sx={{ fontSize: {xs:20}, color: '#183048' }}/>
-                    <Typography variant='h5' sx={{fontSize: {xs:20}}}>Back</Typography>
-                </Button>
-                <Typography variant='h4'  sx={{  fontSize: {xs:30},color:'#183048'}}>Manage Accounts</Typography>
+              <Link to={'/homepage'} style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <BackButton/>
+                        </Link>
+                <Typography variant='h4'  sx={{  fontSize: {xs:17,md:30},color:'#183048'}}>Manage Accounts</Typography>
             </Stack>
         </Grid>
       {/* Account Filters */}

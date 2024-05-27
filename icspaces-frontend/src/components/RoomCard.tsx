@@ -79,7 +79,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ image, room_id, room_name, room_cap
                       color="text.secondary"
                       textAlign="start"
                     >
-                      <strong>Floor:</strong> {statusMapping[floor_number]}
+                      <strong>Cost:</strong> {fee}
                       <br />
                       <strong>Type:</strong> {room_type}
                     </Typography>

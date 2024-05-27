@@ -2,6 +2,8 @@ import pool from './db.js';
 import dotenv from 'dotenv'
 dotenv.config()
 import nodemailer from 'nodemailer'
+import fs from 'fs'
+import { getEmailFlair } from './utils/google-storage.js';
 
 let configMailerOptions = {
     host: "smtp.gmail.com",
@@ -102,22 +104,28 @@ const addReservationStatusChangeNotification = async (admin_id, reservation_id, 
     var act_name = qres3[0]["activity_name"]
 
     var status_code = ""
+    let banner_img = ""
 
     switch(qres3[0]["status_code"]) {
         case 0:
             status_code = "Pending"
+            banner_img = "thanks.png"
             break;
         case 1:
             status_code = "Payment Pending"
+            banner_img = "pending.png"
             break;
         case 2:
             status_code = "Approved"
+            banner_img = "approved.png"
             break;
         case 3:
             status_code = "Rejected"
+            banner_img = "disapproved.png"
             break;
         case 4:
             status_code = "Cancelled"
+            banner_img = "cancelled.png"
             break;
     }
 
@@ -135,10 +143,15 @@ const addReservationStatusChangeNotification = async (admin_id, reservation_id, 
     from: process.env.SMTP_EMAIL, // Sender address (your Gmail address)
     to: user_id, // Recipient address
     subject: `ICSpaces Room Reservation: ${act_name}'s status is changed to ${status_code}`, // Email subject
+    // Email content (HTML)
     html: `
+    <img src="cid:banner_image" style="width:700px; height:auto;"/>
+
     <p>Dear <strong>${user_name}</strong>,</p>
 
     <p>Admin <strong>${admin_name}</strong> has changed the status of your reservation for activity <strong>${act_name}</strong> to <strong>${status_code}</strong>.</p>
+
+    <img src="assets/ICSpaces Email Banners 2.png" alt="Banner Image" style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
 
     <h3>Reservation Details:</h3>
     <ul>
@@ -150,7 +163,12 @@ const addReservationStatusChangeNotification = async (admin_id, reservation_id, 
 
     <p>Best regards,<br/>
     <strong>ICSpaces Team</strong></p>
-    ` // Email content (HTML)
+    `, 
+    attachments: [{
+        filename: banner_img,
+        path: `./assets/${banner_img}`,
+        cid: 'banner_image' //same cid value as in the html img src
+    }]
 };
     // Send the email
     let transporter = nodemailer.createTransport(configMailerOptions);
@@ -221,7 +239,13 @@ const addUserStatusChangeNotification = async (admin_id, user_id, conn) => {
 
     <p>Best regards,<br/>
     <strong>ICSpaces Team</strong></p>
-    ` // Email content (HTML)
+    <img src="cid:banner_image" style="width:700px; height:auto;"/>
+    `, // Email content (HTML)
+    attachments: [{
+        filename: `banner.png`,
+        path: `./assets/banner.png`,
+        cid: 'banner_image' //same cid value as in the html img src
+    }]
 };
     // Send the email
     let transporter = nodemailer.createTransport(configMailerOptions);
@@ -272,6 +296,8 @@ const addReservationCommentNotification = async (admin_id, reservation_id, conn)
     to: user_id, // Recipient address
     subject: `ICSpaces Room Reservation: ${admin_name} Commented on Your Reservation for ${act_name}`, // Email subject
     html: `
+    <img src="cid:banner_image" style="width:700px; height:auto;"/>
+
     <p>Dear <strong>${user_name}</strong>,</p>
 
     <p>Admin <strong>${admin_name}</strong> has added a comment to your reservation for activity <strong>${act_name}</strong>.</p>
@@ -282,7 +308,13 @@ const addReservationCommentNotification = async (admin_id, reservation_id, conn)
 
     <p>Best regards,<br/>
     <strong>ICSpaces Team</strong></p>
-    ` // Email content (HTML)
+    <img src="cid:banner_image" style="width:700px; height:auto;"/>
+    `, // Email content (HTML)
+    attachments: [{
+        filename: `banner.png`,
+        path: `./assets/banner.png`,
+        cid: 'banner_image' //same cid value as in the html img src
+    }]
 };
     // Send the email
     let transporter = nodemailer.createTransport(configMailerOptions);
@@ -376,22 +408,28 @@ const addGuestReservationNotification = async (admin_id, transaction_id, conn) =
     }
 
     let status_code = ""
+    let banner_img = ""
 
     switch(qres3[0]["status_code"]) {
         case 0:
             status_code = "Pending"
+            banner_img = "thanks.png"
             break;
         case 1:
             status_code = "Payment Pending"
+            banner_img = "pending.png"
             break;
         case 2:
             status_code = "Approved"
+            banner_img = "approved.png"
             break;
         case 3:
             status_code = "Rejected"
+            banner_img = "disapproved.png"
             break;
         case 4:
             status_code = "Cancelled"
+            banner_img = "cancelled.png"
             break;
     }
 
@@ -410,13 +448,15 @@ const addGuestReservationNotification = async (admin_id, transaction_id, conn) =
     to: reciepient_email, // Recipient address
     subject: `ICSpaces Room Reservation: ${act_name}'s reservation has been added to the system.`, // Email subject
     html: `
-    <p>Dear <strong>${user_name}</strong>,</p>
+    <img src="cid:banner_image" style="width:700px; height:auto;"/>
 
+    <p>Dear <strong>${user_name}</strong>,</p>
+    
     <p>Admin <strong>${admin_name}</strong> has added your reservation for activity <strong>${act_name}</strong> </p>
 
     <h3>Reservation Details:</h3>
     <ul>
-        <li>Trnasaction ID: <strong>${transaction_id}</strong></li>
+        <li>Transaction ID: <strong>${transaction_id}</strong></li>
         <li>Activity: <strong>${act_name}</strong></li>
         <li>Status: <strong>${status_code}</strong></li>
         <li>Date created: <strong>${date_created}</strong></li>
@@ -430,7 +470,12 @@ const addGuestReservationNotification = async (admin_id, transaction_id, conn) =
 
     <p>Best regards,<br/>
     <strong>ICSpaces Team</strong></p>
-    ` // Email content (HTML)
+    `, // Email content (HTML)
+    attachments: [{
+        filename: banner_img,
+        path: `./assets/${banner_img}`,
+        cid: 'banner_image' //same cid value as in the html img src
+    }]
 };
     // Send the email
     let transporter = nodemailer.createTransport(configMailerOptions);
@@ -469,22 +514,28 @@ const addGuestReservationStatusChangeNotification = async (admin_id, transaction
     let act_name = qres3[0]["activity_name"]
 
     let status_code = ""
+    let banner_img = ""
 
     switch(qres3[0]["status_code"]) {
         case 0:
             status_code = "Pending"
+            banner_img = "thanks.png"
             break;
         case 1:
             status_code = "Payment Pending"
+            banner_img = "pending.png"
             break;
         case 2:
             status_code = "Approved"
+            banner_img = "approved.png"
             break;
         case 3:
             status_code = "Rejected"
+            banner_img = "disapproved.png"
             break;
         case 4:
             status_code = "Cancelled"
+            banner_img = "cancelled.png"
             break;
     }
 
@@ -503,6 +554,8 @@ const addGuestReservationStatusChangeNotification = async (admin_id, transaction
     to: reciepient_email, // Recipient address
     subject: `ICSpaces Room Reservation: ${act_name}'s status is changed to ${status_code}`, // Email subject
     html: `
+    <img src="cid:banner_image" style="width:700px; height:auto;"/>
+
     <p>Dear <strong>${user_name}</strong>,</p>
 
     <p>Admin <strong>${admin_name}</strong> has changed the status of your reservation for activity <strong>${act_name}</strong> to <strong>${status_code}</strong>.</p>
@@ -518,7 +571,12 @@ const addGuestReservationStatusChangeNotification = async (admin_id, transaction
 
     <p>Best regards,<br/>
     <strong>ICSpaces Team</strong></p>
-    ` // Email content (HTML)
+    `, // Email content (HTML)
+    attachments: [{
+        filename: banner_img,
+        path: `./assets/${banner_img}`,
+        cid: 'banner_image' //same cid value as in the html img src
+    }]
 };
     // Send the email
     let transporter = nodemailer.createTransport(configMailerOptions);

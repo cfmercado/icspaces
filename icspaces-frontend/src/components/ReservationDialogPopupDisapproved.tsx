@@ -6,7 +6,8 @@ import {
     Button,
     Typography,
     Grid, Paper, Divider,
-    IconButton, Box
+    IconButton, Box,
+    TextField
   } from "@mui/material";
   import { Reservation, ReservationDataForModal } from "./types";
   import React, { useState, useEffect, useRef } from 'react';
@@ -35,6 +36,14 @@ import {
     onClose,
     reservation,
   }) => {
+    
+    const [note, setNote] = useState<string>(''); // State to store the value of the TextField
+  
+    // Function to handle changes in the TextField value
+    const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setNote(event.target.value); // Update the state with the new value
+      console.log(`note is now '${note}'`);
+    };
   
     // Handles cancelled accept operation
     const handleCancel = () => {
@@ -61,7 +70,7 @@ import {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({reservation_id: reservation?.reservation_id, user_id: reservation?.user_id, comment_text: reservation?.note_from_admin, status_code:reservation?.status}), // Uncomment this line if you need to send data in the request body
+          body: JSON.stringify({reservation_id: reservation?.reservation_id, user_id: reservation?.user_id, comment_text: note, status_code:reservation?.status}), // Uncomment this line if you need to send data in the request body
         })
         .then(response => response.json())
         .then(data => {
@@ -72,6 +81,8 @@ import {
       });
     }
     
+    console.log(`Got this reservation below:`);
+    console.log(reservation);
   
     return (
       <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', overflow: 'auto'}}}>
@@ -111,9 +122,15 @@ import {
                     {/* Notification Title*/}
                     <Typography className="unselectable" sx={{fontSize: '1.1vw', padding:'0px', paddingTop:'25px', lineHeight: '1.5', display: 'block', color:SCHEME_FONT_GRAY_COLOR, textAlign:'center'}}>
                     The reservation will be disapproved. This action can't be undone.</Typography>
-                  </Paper>
-                </Grid>
-  
+                    <Typography className="unselectable" sx={{fontSize: '1.1vw', padding:'0px', paddingTop:'5px', lineHeight: '1.5', display: 'block', color:SCHEME_FONT_GRAY_COLOR, textAlign:'center', paddingBottom:'24px'}}>
+                    This action can't be undone.</Typography>
+                </Paper>
+
+                {/* Text box area */}
+                <TextField label="Add your reason for the disapproval..." variant="outlined" color="primary" placeholder="Type some text..." 
+                  sx={{ height:'30px !important', borderRadius:'8px !important', width: '100%', paddingTop: '10px'}}
+                  value={note} onChange={handleNoteChange}/>
+              </Grid>  
   
                 {/* Spacer only */}
                 <Grid item xs={40}>

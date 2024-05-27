@@ -3,7 +3,7 @@ import { Users } from "./types";
 import HomeBG from "../assets/room_images/HomeBG.png";
 import LocalPostOfficeIcon from '@mui/icons-material/LocalPostOffice';
 import { useState,useEffect } from "react";
-
+import BackButton from "./BackButton";
 interface AccountCardProps {
   users: Users;
   onClick: () => void;
@@ -38,7 +38,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         })
         .then(response => response.json())
         .then(data => {
-          console.log("Reservations ["+data.totalReservations+"]")
+
           setTotalReservations(data.totalReservations);
         });
       }, []);
@@ -54,7 +54,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         })
         .then(response => response.json())
         .then(data => {
-          console.log(data.email)
+
           setlastLogin(data.email.slice(0,10));
 
         });
@@ -63,14 +63,14 @@ const AccountCard: React.FC<AccountCardProps> = ({
   const BlueTypography = (
     props: any //Bottom three cells
   ) => (
-    <Typography sx={{color:'#183048'}}>
+    <Typography sx={{color:'#183048'}} >
       {props.children}
     </Typography>
   ); 
   const GrayTypography = (
     props: any //Bottom three cells
   ) => (
-    <Typography variant='subtitle2' color='#8A8A8A' align='left' >
+    <Typography variant='subtitle2' color='#8A8A8A' sx={{textAlign:{xs:'center',md:'left'}}} >
       {props.children}
     </Typography>
   ); 
@@ -90,45 +90,85 @@ const AccountCard: React.FC<AccountCardProps> = ({
     sx={{border:'solid',borderWidth:'0.5px', borderColor:"#B9B9B9"}}
   >
     
-    <Grid item xs={1}>{/* Image */}
+    <Grid item xs={12} md={1}>{/* Image */}
       <Grid container style={{ height: "100%"}} justifyContent='space-evenly' >
         <Box
           display="flex"
           justifyContent="center"
           alignItems="center"
+          padding={1}
         >
-          <Avatar  sx={{ width: 75, height: 75 }}>{users.lname[0]}{users.fname[0]}</Avatar>
+          <Avatar  src={users.profilePicUrl} sx={{ width: 75, height: 75 }}>{users.fname.substring(0,1)}.{users.lname.substring(0,1)}</Avatar>
         </Box>
-        <Divider orientation="vertical"   sx={{height:'100%'}}  />
+        <Divider orientation="vertical"   sx={{height:'100%', display:{xs:'none',md:'block'} }}  />
       </Grid>
       
     </Grid>
-      <Grid item xs={11}  > {/* User Details */}
+      <Grid item xs={12} md={11}> {/* User Details */}
         <Grid container  >
           <Grid item xs={12}>{/* 1st Row */}
-            <Stack direction={"row"}  justifyContent='space-evenly' padding={1}>
-              <Box marginRight='auto' minWidth='25%'maxWidth='25%' sx={{ textOverflow:'ellipsis'}}> 
-                <Typography align='left' variant='h6' color='#183048'> {users.lname},&nbsp;{users.fname}</Typography>
+            <Stack sx={{ flexDirection:{xs:'column',lg:'row'} }}  padding={1}  spacing={{ xs: 1, md: 0 }} justifyContent='space-between' >
+              <Box marginRight='auto'  sx={{ display:{xs:'flex',md:'inline'}, 
+                    flexDirection:{xs:'row-reverse',md:'row'},
+                    textOverflow:'ellipsis',
+                    minWidth:{xs:'100%',md:'25%'},
+                    maxWidth:{xs:'100%',md:'25%'},
+                  }}
+                  justifyContent='space-evenly'
+               > 
+                <Typography sx={{textAlign:{xs:'center',md:'left'}}} variant='h6' color='#183048'> {users.lname},&nbsp;{users.fname}</Typography>
                 <GrayTypography>Last name, First name</GrayTypography>
               </Box>
-              <Box marginRight='auto'>
-     
-                <Typography sx={{ display: "flex", alignItems: "center", justifyContent:"space-evenly", color: "#183048"}}>
-                   <LocalPostOfficeIcon  sx={{ fontSize: 16, color: "#183048" }}/>
-                    &nbsp; {users.email}
+              <Box marginRight='auto' sx={{
+                  display:{xs:'flex',md:'inline'}, 
+                  flexDirection:{xs:'row-reverse',md:'row'},
+                  textOverflow:'ellipsis',
+
+                  minWidth:{xs:'100%',md:'30%'},
+                  maxWidth:{xs:'100%',md:'30%'},
+                }}
+                justifyContent='space-evenly'
+              >
+                
+                <Typography sx={{ textAlign:{xs:'center',md:'left'}, display: "flex", alignItems: "center",  color: "#183048",}}>
+        
+                    <LocalPostOfficeIcon  sx={{ fontSize: 16, color: "#183048" }}/>
+                    &nbsp;
+                     {users.email}
                 </Typography>
                 
                 <GrayTypography>Email</GrayTypography>
               </Box>
 
-              <Box marginRight='auto' maxWidth='25%'>
+              <Box marginRight='auto'  sx={{
+                  display:{xs:'flex',md:'inline'}, 
+                  flexDirection:{xs:'row-reverse',md:'row'},
+                  textOverflow:'ellipsis',
+
+                  minWidth:{xs:'100%',md:'20%'},
+                  maxWidth:{xs:'100%',md:'20%'},
+                }} 
+                justifyContent='space-evenly'
+              >
                 <BlueTypography>{totalReservations}</BlueTypography>
-                <GrayTypography>Total Room Reservations</GrayTypography>
+                <Typography variant='subtitle2' color='#8A8A8A' sx={{textAlign:{xs:'left',md:'center'}}} >
+                  Total Room Reservations
+                </Typography>
               </Box>
               
-              <Box marginRight={4}>
+              <Box marginRight={4} sx={{
+                    display:{xs:'flex',md:'inline'}, 
+                    flexDirection:{xs:'row-reverse',md:'row'},
+                    textOverflow:'ellipsis',
+                    minWidth:{xs:'100%',md:'15%'},
+                    maxWidth:{xs:'100%',md:'15%'},
+              }}
+              justifyContent='space-evenly'
+              >
                 <BlueTypography>{lastLogin}</BlueTypography>
-                <GrayTypography>Last log-in</GrayTypography>
+                <Typography variant='subtitle2' color='#8A8A8A' sx={{textAlign:{xs:'left',md:'center'}}} >
+                  Last log-in
+                </Typography>
               </Box>
             </Stack>
             <Divider orientation="horizontal"   flexItem sx={{width:"100%"}}  />
@@ -143,7 +183,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
                   <Typography sx={{fontWeight:500, color: "#183048" }}>{userRole[users.usertype]}</Typography>
                 </Stack>
                 
-                <Button sx={{borderRadius:'15px',backgroundColor:"#FFB532", width:"12%", minHeight: 0, minWidth: 0, padding: 0.3, textTransform: 'capitalize'}} onClick={onClick} >Edit Role</Button>
+                <Button sx={{borderRadius:'15px',backgroundColor:"#FFB532", width:{xs:'30%',xl:"12%"}, minHeight: 0, minWidth: 0, padding: 0.3, textTransform: 'capitalize'}} onClick={onClick} >Edit Role</Button>
             </Grid>
 
           </Grid>

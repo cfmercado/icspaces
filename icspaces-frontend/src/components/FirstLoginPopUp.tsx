@@ -1,230 +1,80 @@
-import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+
 import {
-  Card,
-  Avatar,
-  CardContent,
+  Modal,
+  Box,
   Typography,
   Button,
-  DialogContent,
-  DialogActions,
-  Dialog,
   TextField,
-  DialogTitle,
-  DialogContentText,
-  Stack,
   Autocomplete,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import AuthContext from "../utils/AuthContext";
 
-const userTypeMapping: { [key: number]: string } = {
-  0: "Student",
-  1: "Faculty",
-  2: "Officer In Charge",
-  3: "Director",
-};
-
-interface User {
-  email: string;
-  displayname: string;
-  profilepic: string;
-  usertype: string;
-  student_number?: string;
-  course?: string;
-  org?: string;
-  department?: string;
-  college?: string;
-}
-
-interface UserDetails {
-  student_number: string;
-  course: string;
-  org: string;
-  department: string;
-  college: string;
-}
-
-const UserInfo: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+const FirstLogInPopUp = () => {
+  const [isOpen, setIsOpen] = useState(true);
+  const [userType, setUserType] = useState(null);
+  const [firstName, setFirstName] = useState(null);
+  const [isFirstLogin, setIsFirstLogin] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [studentNumber, setStudentNumber] = useState<string | null>("");
+  const [org, setOrg] = useState<string | null>("");
+  const [course, setCourse] = useState<string | null>("");
+  const [college, setCollege] = useState<string | null>("");
+  const [department, setDepartment] = useState<string | null>("");
   const navigate = useNavigate();
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const { setIsLoggedIn } = useContext(AuthContext);
-  const [isFormValid, setIsFormValid] = useState(true);
-
-  const [open, setOpen] = useState(false);
-  const [studentNumber, setStudentNumber] = useState(
-    user ? user.student_number : ""
-  );
-  const [course, setCourse] = useState(user ? user.course : "");
-  const [org, setOrg] = useState(user ? user.org : "");
-  const [college, setCollege] = useState(user ? user.college : "");
-  const [department, setDepartment] = useState(user ? user.department : "");
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axios.get("https://api.icspaces.online/get-profile", {
-          withCredentials: true,
-        });
-
-        if (response.data.success) {
-          let user = response.data.data;
-          user.usertype = userTypeMapping[user.usertype];
-
-          let detailsResponse;
-          if (user.usertype === "Student") {
-            detailsResponse = await axios.post(
-              "https://api.icspaces.online/get-student-details",
-              { email: user.email },
-              { withCredentials: true }
-            );
-          } else if (user.usertype === "Faculty") {
-            detailsResponse = await axios.post(
-              "https://api.icspaces.online/get-faculty-details",
-              { email: user.email },
-              { withCredentials: true }
-            );
-          }
-
-          setUserDetails(detailsResponse?.data);
-          setUser(user);
-          console.log("USER DETAILS:", userDetails);
-          console.log("USER :", user);
-        } else {
-          throw new Error(response.data.errmsg);
+    // Fetch user type from server when component mounts
+    fetch("https://api.icspaces.online/get-profile", {
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          setUserType(data.data.usertype);
+          setFirstName(data.data.firstName);
+          setEmail(data.data.email);
+          setIsFirstLogin(data.data.isFirstLogin);
         }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-        navigate("/");
-      }
-    };
-
-    // Call fetchUser immediately
-    fetchUser();
-    // Then call fetchUser every 5 seconds
-    const intervalId = setInterval(fetchUser, 5000);
-
-    // Clean up on component unmount
-    return () => clearInterval(intervalId);
-  }, [navigate]);
-
-  if (!user) {
-    return null; // or return a loading spinner, or some placeholder content
-  }
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    // Only close the modal if the form is valid
-    if (isFormValid) {
-      setOpen(false);
-    }
-  };
-
-  const handleUpdate = async () => {
-    // Check if all required fields are filled in
-    if (
-      (user &&
-        user.usertype === "Student" &&
-        (!studentNumber || !course || !college || !org)) ||
-      (user && user.usertype === "Faculty" && (!college || !department))
-    ) {
-      setIsFormValid(false);
-      return;
-    }
-
-    setIsFormValid(true);
-    try {
-      let response;
-      if (user && user.usertype === "Student") {
-        response = await axios.post(
-          "https://api.icspaces.online/update-student-details",
-          {
-            email: user.email,
-            student_number: studentNumber,
-            course: course,
-            college: college,
-            org: org,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-      } else if (user && user.usertype === "Faculty") {
-        response = await axios.post(
-          "https://api.icspaces.online/update-faculty-details",
-          {
-            email: user.email,
-            college: college,
-            department: department,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-      }
-
-      if (response && response.data.success) {
-        // Update was successful, update the user state with the new details
-        setUser((prevState) => {
-          if (prevState) {
-            return {
-              ...prevState,
-              ...(prevState.usertype === "Student"
-                ? {
-                    student_number: studentNumber,
-                    course: course,
-                    college: college,
-                    org: org,
-                  }
-                : { college: college, department: department }),
-            };
-          }
-          return prevState;
-        });
-      } else {
-        if (response && response.data) {
-          throw new Error(response.data.errmsg);
-        } else {
-          throw new Error("Unknown error occurred");
-        }
-      }
-    } catch (error) {
-      console.error("Failed to update user:", error);
-    }
-
-    handleClose();
-  };
-
-  console.log("THIS IS USER", user); // Add this line
-  console.log("USER DETAILS", userDetails);
-  if (!user) {
-    return null; // or return a loading spinner, or some placeholder content
-  }
-
-  console.log("CONTENT", user); // Add this line
-
-  const handleLogout = async () => {
-    try {
-      const response = await fetch("https://api.icspaces.online/logout", {
-        credentials: "include",
-        method: "GET",
       });
+  }, []);
 
-      if (!response.ok) {
-        throw new Error("Logout failed");
-      }
-      // If the response is ok, assume the logout was successful
-      setIsLoggedIn(false);
-      setUser(null);
-      navigate("/");
-    } catch (error) {
-      console.error(error);
+  useEffect(() => {
+    if (isFirstLogin === 1) {
+      navigate("/homepage", { replace: true });
     }
+  }, [isFirstLogin]);
+
+  const closeModal = () => {
+    setIsOpen(false);
   };
+
+  // Update these values when the user inputs data into the form
+  // ...
+
+  //send data to server
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    closeModal();
+
+    const response = await fetch("https://api.icspaces.online/set-uinfo-firstlogin", {
+      credentials: "include",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        usertype: userType,
+        student_number: studentNumber,
+        org: org,
+        course: course,
+        college: college,
+        department: department,
+        email: email,
+      }),
+    });
+  };
+  console.log("ISFIRST LOGIN", isFirstLogin);
 
   const orgs = [
     "ADVENTIST MINISTRY TO COLLEGE AND UNIVERSITY STUDENTS UPLB CHAPTER (AMICUS-UPLB CHAPTER)",
@@ -494,212 +344,156 @@ const UserInfo: React.FC = () => {
   ]; // Replace with your courses
 
   return (
-    <Card
-      sx={{
-        display: "flex",
-        flexDirection: { xs: "column", sm: "column", md: "column" },
-        alignItems: { xs: "center", sm: "center", md: "center" },
-        justifyContent: { xs: "center", sm: "center", md: "center" },
-        p: 2,
-        width: "80%",
-        overflow: "auto",
-      }}
-    >
-      <Avatar
-        src={user.profilepic}
-        alt={user.displayname}
-        sx={{
-          mr: { xs: 0, sm: 0, md: 0 },
-          mb: { xs: 1, sm: 1, md: 1 },
-          width: { xs: "35%", sm: "35%", md: "160px" },
-          height: { xs: "auto", sm: "auto", md: "160px" },
-        }}
-      />
-      <CardContent>
-        <Typography
-          variant="h4"
-          sx={{ textAlign: { xs: "center", sm: "center", md: "center" } }}
+    <div>
+      {/* <Button onClick={() => setIsOpen(true)}>Open modal</Button> */}
+      <Modal
+        open={isOpen}
+        onClose={() => {}}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box
+          bgcolor="background.paper"
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "60%", // Set the width to 80% of the viewport width
+            height: "50%",
+            padding: 5,
+            borderRadius: 10,
+          }}
+          //   alignContent="center"
         >
-          {user.displayname}
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          sx={{ textAlign: { xs: "center", sm: "center", md: "center" } }}
-        >
-          {user.usertype}
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          mb={2}
-          sx={{ textAlign: { xs: "center", sm: "center", md: "center" } }}
-        >
-          {user.email}
-        </Typography>
-
-        {user.usertype === "Student" && (
-          <>
-            <Typography variant="body2">
-              <b>Student Number:</b> {userDetails?.student_number}
-            </Typography>
-            <Typography variant="body2">
-              <b>Course:</b> {userDetails?.course}
-            </Typography>
-            <Typography variant="body2">
-              <b>College:</b> {userDetails?.college}
-            </Typography>
-            <Typography variant="body2">
-              <b>Organization:</b> {userDetails?.org}
-            </Typography>
-          </>
-        )}
-        {user.usertype === "Faculty" && (
-          <>
-            <Typography variant="body2">
-              <b>Department: </b>
-              {userDetails?.department}
-            </Typography>
-            <Typography variant="body2">
-              <b>College:</b> {userDetails?.college}
-            </Typography>
-          </>
-        )}
-
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle color="primary">Update User</DialogTitle>
-          <form>
-            <DialogContent>
-              <DialogContentText>
-                Please enter the new details for the user.
-              </DialogContentText>
-              {user.usertype === "Student" && (
-                <>
-                  <TextField
-                    required
-                    fullWidth
-                    id="student_number"
-                    label="Student Number"
-                    placeholder="xxxx-xxxxx"
-                    sx={{ marginTop: "15px" }}
-                    value={studentNumber}
-                    onChange={(e) => setStudentNumber(e.target.value)}
-                    inputProps={{
-                      pattern: "\\d{4}-\\d{5}",
-                      title: "Student number must be in the format: xxxx-xxxxx",
-                    }}
-                  />
-
-                  <Autocomplete
-                    fullWidth
-                    id="courses"
-                    options={courses}
-                    value={course}
-                    sx={{ marginTop: "15px" }}
-                    onChange={(event, newValue) => {
-                      setCourse(newValue || "");
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} required label="Course" />
-                    )}
-                  />
-
-                  <Autocomplete
-                    fullWidth
-                    id="college"
-                    options={colleges}
-                    value={college}
-                    sx={{ marginTop: "15px" }}
-                    onChange={(event, newValue) => {
-                      setCollege(newValue || "");
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} required label="College" />
-                    )}
-                  />
-                  <Autocomplete
-                    fullWidth
-                    id="organizations"
-                    options={orgs}
-                    value={org}
-                    sx={{ marginTop: "15px" }}
-                    onChange={(event, newValue) => {
-                      setOrg(newValue || ""); // Ensure newValue is always a string
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} required label="Organization" />
-                    )}
-                  />
-                  <Autocomplete
-                    fullWidth
-                    id="department"
-                    options={departments}
-                    value={department}
-                    sx={{ marginTop: "15px" }}
-                    onChange={(event, newValue) => {
-                      setCollege(newValue || "");
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} required label="Department" />
-                    )}
-                  />
-                </>
-              )}
-              {user.usertype === "Faculty" && (
-                <>
-                  <Autocomplete
-                    fullWidth
-                    id="college"
-                    options={colleges}
-                    value={college}
-                    sx={{ marginTop: "15px" }}
-                    onChange={(event, newValue) => {
-                      setCollege(newValue || "");
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} required label="College" />
-                    )}
-                  />
-                </>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button type="button" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button type="submit" onClick={handleUpdate}>
-                Update
-              </Button>
-            </DialogActions>
-          </form>
-        </Dialog>
-        <Stack mt={1}>
-          {user &&
-            (user.usertype === "Student" || user.usertype === "Faculty") && (
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleClickOpen}
-              >
-                UPDATE
-              </Button>
-            )}
-          <Button
-            variant="contained"
-            onClick={handleLogout}
-            style={{
-              backgroundColor: "#e42c2c",
-              color: "white",
-              marginTop: "30px",
-            }}
+          <Typography
+            id="modal-modal-title"
+            color="primary"
+            variant="h4"
+            component="h2"
+            fontWeight="bold"
           >
-            Logout
-          </Button>
-        </Stack>
-      </CardContent>
-    </Card>
+            Welcome to ICSpaces, {""}
+            <Typography
+              color="secondary"
+              component="span"
+              variant="h4"
+              fontWeight="bold"
+            >
+              {firstName}
+            </Typography>
+            !
+          </Typography>
+          <Typography id="modal-modal-description" sx={{ mt: 2, pt: 2 }}>
+            Please fill out the following information to complete your profile:
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            {userType === 0 && (
+              <Box
+                sx={{
+                  display: "flex", // Use Flexbox for layout
+                  flexDirection: "column", // Stack the children vertically
+                  gap: 2, // Add a gap between the children
+                  flexWrap: "wrap", // Allow the children to wrap onto multiple lines
+                  height: "150px",
+                  paddingTop: "20px",
+                }}
+              >
+                <TextField
+                  required
+                  id="student_number"
+                  label="Student Number"
+                  placeholder="xxxx-xxxxx"
+                  sx={{ width: "50%" }}
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
+                  inputProps={{
+                    pattern: "\\d{4}-\\d{5}",
+                    title: "Student number must be in the format: xxxx-xxxxx",
+                  }}
+                />
+                <Autocomplete
+                  id="organizations"
+                  options={orgs}
+                  value={org}
+                  onChange={(event, newValue) => {
+                    setOrg(newValue);
+                  }}
+                  sx={{ width: "50%" }}
+                  renderInput={(params) => (
+                    <TextField {...params} required label="Organization" />
+                  )}
+                />
+
+                <Autocomplete
+                  id="courses"
+                  options={courses}
+                  value={course}
+                  onChange={(event, newValue) => {
+                    setCourse(newValue);
+                  }}
+                  sx={{ width: "50%" }}
+                  renderInput={(params) => (
+                    <TextField {...params} required label="Course" />
+                  )}
+                />
+
+                <Autocomplete
+                  id="college"
+                  options={colleges}
+                  value={college}
+                  onChange={(event, newValue) => {
+                    setCollege(newValue);
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} required label="College" />
+                  )}
+                />
+              </Box>
+            )}
+            {userType === 1 && (
+              <>
+                <Autocomplete
+                  id="college"
+                  options={colleges}
+                  value={college}
+                  onChange={(event, newValue) => {
+                    setCollege(newValue);
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} required label="College" />
+                  )}
+                />
+
+                <Autocomplete
+                  id="department"
+                  options={departments}
+                  value={department}
+                  onChange={(event, newValue) => {
+                    setDepartment(newValue);
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} required label="Department" />
+                  )}
+                />
+              </>
+            )}
+
+            <Button
+              variant="contained"
+              type="submit"
+              // onClick={closeModal}
+              fullWidth
+              sx={{ mt: "10px" }}
+            >
+              Submit
+            </Button>
+          </form>
+          {/* <Button onClick={closeModal}>Close</Button> */}
+        </Box>
+      </Modal>
+    </div>
   );
 };
 
-export default UserInfo;
-function fetchUser() {
-  throw new Error("Function not implemented.");
-}
+export default FirstLogInPopUp;

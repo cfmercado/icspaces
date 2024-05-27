@@ -581,12 +581,42 @@ const addNewRoom = async (req, res) => {
     }
 }
 
+const getAllArchivedRoomsAndUtilities = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        // await pool.beginTransaction();
+        const rooms = await conn.query("SELECT * FROM room WHERE isDeleted = TRUE");
+        const utilities = await conn.query("SELECT * FROM utility");
+
+        // Map utilities to their respective rooms
+        const roomsWithUtilities = rooms.map(room => {
+            room.utilities = utilities.filter(utility => utility.room_id === room.room_id).map(utility => utility);
+            return room;
+        });
+
+        // await conn.commit();
+        res.send(roomsWithUtilities);
+    } catch (err) {
+        // await conn.rollback();
+        console.log(err)
+        res.send({errmsg: "Failed to get rooms and utilities", success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
 const deleteRoom = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
         const { room_id } = req.body
+
+        if (!room_id || !Number.isInteger(parseFloat(room_id))) {
+            throw new Error("Invalid room_id");
+        }
+
         const query =  `UPDATE room SET isDeleted = TRUE WHERE room_id = ?`;
         const values = [room_id];
         await conn.query(query, values);
@@ -602,5 +632,5 @@ const deleteRoom = async (req, res) => {
 
 
 
-export { deleteRoom, searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRoomsAndUtilitiesComplete, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom }
+export { deleteRoom, searchHandler, searchRoomByCapacity, searchRoomByType, searchRoomByName, getRoomInfo, getAllRoomsAndUtilitiesComplete, getAllRooms , getAllRoomsAndUtilities, searchRoomById, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomName, getAllRoomFilters, processUtilities, addNewRoom, getAllArchivedRoomsAndUtilities }
 

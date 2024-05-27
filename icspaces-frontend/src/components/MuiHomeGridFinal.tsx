@@ -24,6 +24,7 @@ const MuiHomeGrid: React.FC = () => {
   }
 
   const [user, setUser] = useState<User | null>(null);
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +51,34 @@ const MuiHomeGrid: React.FC = () => {
     fetchUser();
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch(
+          "https://api.icspaces.online/get-notifications-for-user",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({user_id: 0}),    // replace target_user_id variable with the variable
+          }                                                     // na nag hohold ng id ng user
+        );
+        const data = await response.json();
+
+        // variable "data" now contains yung rows ng notifs for that user
+        // return data;
+        // setNotifications(data);
+        console.log(data);
+
+      } catch (error) {
+        console.error("Failed to fetch reservations:", error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
@@ -66,6 +95,32 @@ const MuiHomeGrid: React.FC = () => {
     day: "numeric",
   });
 
+  const NotifBoxTwo = (props: any) => (
+    <Box
+      sx={{
+        background: "#FFFFFF", // Set background to white
+        color: "#183048",
+        borderRadius: "15px",
+        display: "Center",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Calibri, sans-serif",
+        height: 110,
+        overflow: "auto",
+        fontSize: {
+          xs: 14,
+          sm: 18,
+          lg: 18,
+        },
+        padding: 1,
+        boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.2)",
+        marginTop: 1, // Add marginTop to create space between text and StyledBox
+      }}
+    >
+      {props.children}
+    </Box>
+  );
+
   const StyledBox = (props: any) => (
     <Box
       sx={{
@@ -75,6 +130,7 @@ const MuiHomeGrid: React.FC = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        fontFamily: "Calibri, sans-serif",
         height: 70,
         fontSize: {
           xs: 14,
@@ -175,7 +231,23 @@ const MuiHomeGrid: React.FC = () => {
 
       <Grid container item xs={12} spacing={1}>
         <Grid item xs={7}>
-          <NotifBox>Notification box</NotifBox>
+        <NotifBox>
+            {/* <Typography variant="h6" sx={{ marginBottom: 1 }}>
+              Notification 
+            </Typography> */}
+            <Grid container item xs={12}  direction={"column"}>
+              <Grid item xs={5}>
+                <Typography>Notification Box</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <NotifBoxTwo>
+                      {/* <div>{notification.notification_action}</div>
+                      <div>{notification.notification_body}</div> */}
+                      <div>{notifications}</div>
+                </NotifBoxTwo>
+              </Grid>
+            </Grid>
+          </NotifBox>
         </Grid>
 
         <Grid item xs={5}>

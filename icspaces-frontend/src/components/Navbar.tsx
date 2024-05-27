@@ -27,10 +27,10 @@ const NavBar = () => {
   const { isLoggedIn } = useContext(AuthContext);
   const [anchorNav, setAnchorNav] = useState<null | HTMLElement>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const location = useLocation();
   // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userType, setUserType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
 
   const openMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorNav(event.currentTarget);
@@ -144,7 +144,7 @@ const NavBar = () => {
           { label: "Rooms", link: "/roomspage_admin" },
           { label: "Add Room", link: "/addroom_admin" },
           { label: "Schedules", link: "/schedulepage" },
-          { label: "FAQs", link: "/faqspage" },
+          { label: "Accounts", link: "/accountspage_admin" },
         ]
     : [
         { label: "View Rooms Guest", link: "/viewrooms_guest" },
@@ -196,8 +196,8 @@ const NavBar = () => {
                     setSelectedItem(button.label); // Set the selected item
                   }}
                   color={
-                    selectedItem === button.label ? "secondary" : "inherit"
-                  } // Change color if selected
+                    location.pathname === button.link ? "secondary" : "inherit"
+                  } // Change color if current route
                   sx={{ "&:hover": { color: "#FFB532" } }}
                 >
                   {button.label}

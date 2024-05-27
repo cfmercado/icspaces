@@ -73,7 +73,7 @@ export interface Users{
   fname:string;
   lname:string;
   usertype:number;
-  profilePic:string;
+  profilePicUrl:string;
   email:string;
   college:string;
   department:string;

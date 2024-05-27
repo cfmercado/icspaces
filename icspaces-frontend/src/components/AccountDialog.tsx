@@ -12,6 +12,7 @@ import {
   import { Users } from "./types";
   import { SelectChangeEvent } from "@mui/material/Select";
   import CloseIcon from '@mui/icons-material/Close';
+  import axios from "axios";
   interface AccountDialogProps {
     open: boolean;
     onClose: () => void;
@@ -34,6 +35,27 @@ import {
     // app.post('/get-student-details', getStudentDetails)
     // app.post('/get-faculty-details', getFacultyDetails)
     // app.post('/set-faculty-to-admin',setFacultyToAdmin)
+    const fetchUser = async () => {
+      try {
+
+          const response = await axios.get("https://api.icspaces.online/get-profile", {
+              withCredentials: true,
+          });
+
+          if (response.data.success) {
+              const user = response.data.data;
+              setAdminMail(user.email);
+              console.log("Admin Mail: " +adminMail);
+          } else {
+              throw new Error(response.data.errmsg);
+   
+          }
+          } catch (error) {
+              console.error("Failed to fetch user:", error);
+          }
+        };
+
+    fetchUser();  
 
     function FetchStudentDetails(email:string){
       useEffect(() => {
@@ -94,13 +116,14 @@ import {
       // }
       if(usertype=='Student' && itemsCount=='Faculty'){//student to Faculty
         console.log('Student to Faculty');
+        console.log({email:userMail, college:college,department:department,admin_id:adminMail})
         fetch('https://api.icspaces.online/change-user-type', {
           method: 'POST', // or 'PUT'
           headers: {
           'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            college:college,department:department,email:userMail
+            email:userMail, college:college,department:department,admin_id:adminMail
           }), // Uncomment this line if you need to send data in the request body
         })
         .then(response => response.json())
@@ -138,6 +161,20 @@ import {
           console.log(data);
         });  
       }
+      else if(itemsCount=='Student' && (usertype=='Admin' || usertype=='Faculty' || usertype=='Director')){
+        console.log(userMail);
+        fetch('https://api.icspaces.online/set-users-to-student', {
+          method: 'POST', // or 'PUT'
+          headers: {
+          'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({email:userMail,admin_id:adminMail}), // Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+        });  
+      }
    
     }
 
@@ -161,6 +198,7 @@ import {
     const [org,setOrg]=useState(''); 
     const [userMail,setuserMail]=useState('');
     const [student2Faculty,setstudent2Faculty]=useState(false);
+    const [adminMail,setAdminMail]=useState('');
 
     const handleUserMailChange = (event: { target: { value: string; }; }) => {
       setuserMail(event.target.value);
@@ -225,7 +263,7 @@ import {
                         onChange={handleItemsCountChange}
                         label="Items Count"
                     >             
-                        {user.usertype==0 && <MenuItem value={'Student'}>Student</MenuItem>}
+                        <MenuItem value={'Student'}>Student</MenuItem>
                         {user.usertype<=1 && <MenuItem value={'Faculty'}>Faculty</MenuItem>}
                         {user.usertype>=1 && user.usertype!=3 && <MenuItem value={'Admin'}>Admin</MenuItem>} 
                         {user.usertype===3 && <MenuItem value={'Director'}>Director</MenuItem>}
@@ -235,6 +273,7 @@ import {
                 <Typography variant="body1">
                 Email: &nbsp; {userMail}
                  </Typography>
+        
                  {/* {itemsCount==='Student' && 
                  <>
                   <TextField helperText='Student Number' value={studentNumber} onChange={handleStudentNumberChange}/>
@@ -280,7 +319,7 @@ import {
                 
                 } */}
 
-
+               
             </Stack>
             </>
           )

@@ -1,7 +1,7 @@
 import { generateURL, checkIfLoggedIn, callbackHandler, getProfileData, logout, setUserInfoFirstLogin } from "./auth-controller.js"
 
 
-import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom, getAllRoomsAndUtilitiesComplete, deleteRoom } from "./room-controller.js"
+import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom, getAllRoomsAndUtilitiesComplete, deleteRoom, getAllArchivedRoomsAndUtilities } from "./room-controller.js"
 import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent } from "./user-controller.js"
 import { 
     getReservationIdByEventName, getAdminCommentByID,getNewAccounts, getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getReservationByRoom, 
@@ -63,6 +63,7 @@ const setUpRoutes = (app) => {
     app.post('/get-room-name', getRoomName)
     app.post('/set-utilities', processUtilities)
     app.post('/add-new-room', addNewRoom)
+    app.post('/get-all-rooms-archived', getAllArchivedRoomsAndUtilities)
 
     //reservations
     app.post('/get-all-reservations-by-user', getAllReservationsByUser)

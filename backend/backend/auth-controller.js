@@ -118,6 +118,8 @@ const callbackHandler = async (req,res,next) => {
             req.session.lname = lastName;
             req.session.profilepic = profilepic;
             req.session.usertype = new_rows[0].usertype ; // 0 for student, 1 for faculty, 2 for oic, 3 for director
+            req.session.isFirstLogin = new_rows[0].isFirstTimeLogin
+            console.log(new_rows[0].isFirstTimeLogin, req.session.isFirstLogin)
             // req.session.access_token = user.access_token;
             // console.log(req.session.user)
             // console.log(req.session.id)
@@ -147,6 +149,28 @@ const callbackHandler = async (req,res,next) => {
 
 const getProfileData = async (req, res) => {
     if (req.session.email){
+        await new Promise((resolve, reject) => {
+            req.session.reload((err) => {
+                if (err) {
+                    console.error("Error reloading session:", err);
+                    return reject(err);
+                }
+                console.log("Session reloaded successfully");
+                resolve();
+            });
+        });
+        console.log("Retrived Session Data:",{ 
+            success: true, 
+            data: {
+            email: req.session.email,
+            displayname: req.session.displayname,
+            firstName: req.session.fname,
+            lastName: req.session.lname,
+            profilepic: req.session.profilepic,
+            usertype: req.session.usertype,
+            isFirstLogin: req.session.isFirstLogin
+            }
+        })
         res.send({ 
             success: true, 
             data: {
@@ -155,7 +179,8 @@ const getProfileData = async (req, res) => {
             firstName: req.session.fname,
             lastName: req.session.lname,
             profilepic: req.session.profilepic,
-            usertype: req.session.usertype
+            usertype: req.session.usertype,
+            isFirstLogin: req.session.isFirstLogin
             }
         });
     }else{
@@ -196,8 +221,10 @@ const setUserInfoFirstLogin = async (req, res) => {
     try {
         switch(usertype) {
             case 0:
+                console.log("Student First Login")
                 return await setStudentInfoFirstLogin(req, res);
             case 1:
+                console.log("Faculty First Login")
                 return await setFacultyInfoFirstLogin(req, res);
             case 2:
                 return await setAdminInfoFirstLogin(req, res);
@@ -217,8 +244,39 @@ const setStudentInfoFirstLogin = async (req, res) => {
     try{
         await conn.beginTransaction();
         await conn.query("UPDATE student SET student_number = ?, org = ?, course = ?, college = ? WHERE email = ?", [student_number, org, course, college, email]);
-        await conn.query("UPDATE user SET isFirstTimeLogin = ? WHERE  email = ?", [true, email]);
+        await conn.query("UPDATE user SET isFirstTimeLogin = FALSE WHERE email = ?", [email]);
+        req.session.isFirstLogin = false;
+
+        // Promisify req.session.save
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Error saving session:", err);
+                    return reject(err);
+                }
+                console.log("Session saved successfully");
+                resolve();
+            });
+        });
+
+        console.log("Session before reload:", req.session.isFirstLogin);
+
+        // Promisify req.session.reload
+        await new Promise((resolve, reject) => {
+            req.session.reload((err) => {
+                if (err) {
+                    console.error("Error reloading session:", err);
+                    return reject(err);
+                }
+                console.log("Session reloaded successfully");
+                resolve();
+            });
+        });
+
+        console.log("Session after reload:", req.session.isFirstLogin);
+        // console.log(req.session.isFirstLogin);
         await conn.commit();
+        res.send("Student info and login status updated successfully.");
     } catch(err) {
         await conn.rollback();
         console.error("Error in setStudentInfoOnFirstLogin:", err);
@@ -234,11 +292,41 @@ const setFacultyInfoFirstLogin = async (req, res) => {
     try{
         await conn.beginTransaction();
         await conn.query("UPDATE student SET college = ?, department = ? WHERE email = ?", [college, department, email]);
-        await conn.query("UPDATE user SET isFirstTimeLogin = ? WHERE email = ?", [true, email]);
+        await conn.query("UPDATE user SET isFirstTimeLogin = FALSE WHERE email = ?", [email]);
+        req.session.isFirstLogin = false;
+
+        // Promisify req.session.save
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Error saving session:", err);
+                    return reject(err);
+                }
+                console.log("Session saved successfully");
+                resolve();
+            });
+        });
+
+        console.log("Session before reload:", req.session.isFirstLogin);
+
+        // Promisify req.session.reload
+        await new Promise((resolve, reject) => {
+            req.session.reload((err) => {
+                if (err) {
+                    console.error("Error reloading session:", err);
+                    return reject(err);
+                }
+                console.log("Session reloaded successfully");
+                resolve();
+            });
+        });
+
+        console.log("Session after reload:", req.session.isFirstLogin);
         await conn.commit();
+        res.send("Faculty info and login status updated successfully.");
     } catch(err) {
         await conn.rollback();
-        console.error("Error in setStudentInfoOnFirstLogin:", err);
+        console.error("Error in setFacultyInfoOnFirstLogin:", err);
     } finally {
         if (conn) conn.release();
     }

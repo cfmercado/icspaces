@@ -4,132 +4,20 @@ import { Grid, Stack } from "@mui/material";
 import tempRoomPhoto from "../assets/room_images/ICS.jpg"; // Import your room images
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useRoomFilter } from './RoomFilterContext'; // Import the hook
+
 
 interface Room {
   image: string;
   room_id: number;
   room_name: string;
-  room_capacity: string;
+  room_capacity: number;
   fee: string;
   room_type: string;
-  floor_number: string;
+  floor_number: number;
   additional_fee_per_hour: string;
   utilities: string[];
 }
-
-// const rooms: Room[] = [
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   // Add more room objects as needed
-// ];
 
 const RoomList: React.FC = () => {
   const theme = useTheme();
@@ -144,58 +32,53 @@ const RoomList: React.FC = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      // body: JSON.stringify(data), // Uncomment this line if you need to send data in the request body
     })
       .then((response) => response.json())
-      .then(async (data: Room[]) => {
+      .then((data: Room[]) => {
+        console.log("Fetched rooms data:", data); // Log all rooms info here
         setRooms(data);
-
-        data.forEach(async (room: Room) => {
-          console.log("THIS", room.room_id);
-
-          try {
-            const response = await fetch(
-              "https://api.icspaces.online/get-room-image",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ room_id: room.room_id }),
-              }
-            );
-
-            const imagesData = await response.json();
-
-            if (imagesData.images.length > 0) {
-              setRoomImages((prevState) => ({
-                ...prevState,
-                [room.room_id]: imagesData.images[0],
-              }));
-            } else {
-              console.error(imagesData.msg);
-            }
-          } catch (error) {
-            console.error(`Failed to get room images: ${error}`);
-          }
-        });
       })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+      .catch((error) => console.error("Error:", error));
   }, []);
+
+  const { selectedRoomTypes, selectedCapacities, selectedUtility, selectedFeeRange } = useRoomFilter();
+
+  const feeRangeFilter = (fee: string) => {
+    const feeNum = parseFloat(fee);
+    if (selectedFeeRange.length === 0) return true; // No filter selected, show all
+    return selectedFeeRange.some(range => {
+      switch (range) {
+        case "Below 1000":
+          return feeNum < 1000;
+        case "1001 - 3000":
+          return feeNum >= 1001 && feeNum <= 3000;
+        case "3000 Above":
+          return feeNum > 3000;
+        default:
+          return true;
+      }
+    });
+  };
+  
+
+  const filteredRooms = rooms.filter(room =>
+    (selectedRoomTypes.length === 0 || selectedRoomTypes.includes(room.room_type)) &&
+    (selectedCapacities.length === 0 || selectedCapacities.map(capacity => parseInt(capacity)).includes(room.room_capacity)) &&
+    (selectedUtility === "" || room.utilities.some(utility => utility.toLowerCase() === selectedUtility.toLowerCase())) &&
+    feeRangeFilter(room.fee)
+  );
 
   return (
     <Stack>
-      {rooms.map((room, index) => (
+      {filteredRooms.map((room, index) => (
         <Grid item key={index}>
           <RoomCard
-            image={roomImages[room.room_id]}
+            image={roomImages[room.room_id] || tempRoomPhoto}
             room_name={room.room_name}
-            floor_number={room.floor_number}
+            floor_number={room.floor_number.toString()}
             room_type={room.room_type}
             room_id={room.room_id.toString()}
-            room_capacity={room.room_capacity}
+            room_capacity={room.room_capacity.toString()}
             fee={room.fee}
             additional_fee_per_hour={room.additional_fee_per_hour}
             utilities={room.utilities}

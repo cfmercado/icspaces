@@ -6,11 +6,12 @@ import {Link } from "react-router-dom";
 interface HourButtonsProps {
     availableTimes?: any;
     dateTime?: any;
+    roomID?: any;
   }
+
 const HourButtons : React.FC<HourButtonsProps> = ({
-    availableTimes, dateTime
+    availableTimes, dateTime, roomID
   }) => {
-    const { room_id } = useParams<{ room_id: string }>();
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const [isSwitchOn, setIsSwitchOn] = useState(false);
@@ -22,7 +23,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
     const valuesToSend = {
         start_dateTime: data1,
         end_dateTime: data2,
-        room_id: room_id,
+        room_id: roomID,
         date: dateTime.format("dddd DD MMM YYYY")
     }
     const handleClicked = (text:string) => {

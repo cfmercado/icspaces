@@ -6,13 +6,15 @@ import {
   Button,
   Typography,
   Grid, Paper, Divider,
-  IconButton, Box
+  IconButton, Box,
+  TextField
 } from "@mui/material";
 import { Reservation, ReservationDataForModal } from "./types";
 import React, { useState, useEffect, useRef } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import Circle from './Circle';
 import './ReservationDialogConfig.css';
+import ReservationDialogPopupCancel from "./ReservationDialogPopupCancel";
 
 // Constant values for theme
 const SCHEME_FONT_DEFAULT_COLOR = '#204365';
@@ -30,11 +32,27 @@ interface ReservationDialogProps {
   reservation: ReservationDataForModal | null;
 }
 
-const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
+const ReservationDialogBookedUser: React.FC<ReservationDialogProps> = ({
   open,
   onClose,
   reservation,
 }) => {
+
+  const [actionTaken, setActionTaken] = useState<string | null>(null); // State variable for tracking action (approve/disapprove)
+  const [cancelledDialogOpen, setCancelledDialogOpen] = useState(false);
+  const [note, setNote] = useState<string>(''); // State to store the value of the TextField
+
+  // Function to handle changes in the TextField value
+  const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setNote(event.target.value); // Update the state with the new value
+    console.log(`note is now '${note}'`);
+  };
+
+  // Handler for the "Cancel" button click
+  const handleCancel = () => {
+    setActionTaken("cancel"); // Update the state to indicate approval
+    setCancelledDialogOpen(true); // Open the booked dialog
+  };
   
   // Handler for the "Approve" button click
   const handleCalendarButton = () => {
@@ -258,6 +276,13 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
                   </Button>
             </Grid>   
 
+
+            {/* Note from staff */}
+            <Box border={1} paddingTop={3} style={{ width: '100%', border:'none'}}>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.8vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+              {reservation.note_from_admin}</Typography>
+            </Box>
+
             {/* Spacer line */}
             <Grid item xs={40} sx={{paddingBottom:'12px'}}>
               <Divider  sx={{ py: '10px' }}/>
@@ -270,6 +295,15 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
                   Booked
                 </Typography>
               </Paper>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                Requested on {reservation.reservation_date}
+              </Typography>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                Approved on {reservation.approved_date}
+              </Typography>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                Paid on {reservation.payment_date}
+              </Typography>
             </Grid>
 
             {/* Restrict area for where event description text is displayed */}
@@ -281,7 +315,43 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
                 The event has been successfully booked.
               </Typography>
             </Box>
+                
+            {/* Reservation Paid button*/}
+            <Button variant="contained" style={{ backgroundColor: '#d9d9d9', color: '#33485d', borderRadius: '25px', width: '100%', 
+              fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleCancel}>
+                Cancel reservation
+            </Button>
             </Grid>
+            
+            {/* Render appropriate modal based on the action taken */}
+            {actionTaken === "cancel" && (
+              <ReservationDialogPopupCancel open={cancelledDialogOpen} onClose={() => setCancelledDialogOpen(false)} reservation={
+                {
+                  reservation_id:           reservation.reservation_id,
+                  status:                   reservation.status,
+                  reservation_date:         reservation.reservation_date,
+                  room_name:                reservation.room_name,
+                  event_name:               reservation.event_name,
+                  event_description:        reservation.event_description,
+                  user_name:                reservation.user_name,
+                  user_id:                  reservation.user_id,
+                  reserve_day_day_string:   reservation.reserve_day_day_string,
+                  reserve_day_number:       reservation.reserve_day_number,
+                  reserve_month:            reservation.reserve_month,
+                  reserve_year:             reservation.reserve_year,
+                  reserve_timeslot:         reservation.reserve_timeslot,
+                  duration:                 reservation.duration,
+                  hourly_fee:               reservation.hourly_fee,
+                  overall_fee:              reservation.overall_fee,
+                  verified_date:            reservation.verified_date,
+                  payment_date:             reservation.payment_date,
+                  verification_date:        reservation.verification_date,
+                  disapproved_date:         reservation.disapproved_date,
+                  approved_date:            reservation.approved_date,
+                  cancellation_date:        reservation.cancellation_date,
+                  note_from_admin:          "User has cancelled their slot.",
+              }} />
+            )}
           </>
         )}
       </DialogContent>
@@ -293,4 +363,4 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
 
 
 
-export default ReservationDialogBooked;
+export default ReservationDialogBookedUser;

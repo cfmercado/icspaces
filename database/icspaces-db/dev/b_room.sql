@@ -7,6 +7,7 @@ CREATE TABLE room(
     fee DECIMAL(10,2),
     room_type VARCHAR(50),
     floor_number INT, -- 0 for ground and so on
+    isDeleted BOOLEAN DEFAULT FALSE,
     additional_fee_per_hour DECIMAL(10,2) DEFAULT 0    
 );
 
@@ -16,6 +17,7 @@ CREATE TABLE utility(
     item_name VARCHAR(50), -- example: chair, PC, fan, aircon
     item_qty INT,
     fee DECIMAL(10,2),
+    isDeleted BOOLEAN DEFAULT FALSE,
     CONSTRAINT room_utility_fk FOREIGN KEY(room_id) REFERENCES room(room_id) ON DELETE CASCADE
 );
 

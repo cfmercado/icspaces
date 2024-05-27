@@ -89,7 +89,11 @@ function App() {
                   path="/reservationspage"
                   element={<PrivateRoute component={ReservationsPage} />}
                 />
-                <Route path="/faqspage" element={<FAQsPage />} />
+                <Route
+                  path="//faqspage"
+                  element={<PrivateRoute component={FAQsPage} />}
+                />
+                {/* <Route path="/faqspage" element={<FAQsPage />} /> */}
 
                 <Route
                   path="/homepage_admin"

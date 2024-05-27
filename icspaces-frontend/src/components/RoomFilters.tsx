@@ -1,3 +1,4 @@
+import React, { useState, MouseEvent } from "react";
 import {
   Paper,
   Typography,
@@ -12,15 +13,8 @@ import {
   Box,
   Divider,
 } from "@mui/material";
-import React, { useEffect, MouseEvent, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-
-interface RoomFiltersProps {
-  roomTypes: string[];
-  floors: string[];
-  capacities: string[];
-
-}
+import { useRoomFilter } from './RoomFilterContext'; // Import the hook from context
 
 const FilterButton = ({
   label,
@@ -66,14 +60,12 @@ const FilterPopover = ({
   </Popover>
 );
 
-
-
-const Filters = ({ items }: { items: string[] }) => (
+const Filters = ({ items, onChange }: { items: string[]; onChange: (item: string) => void }) => (
   <Stack>
     {items.map((item, index) => (
       <FormControlLabel
         key={index}
-        control={<Checkbox color="secondary" />}
+        control={<Checkbox color="secondary" onChange={() => onChange(item)} />}
         label={item}
       />
     ))}
@@ -81,14 +73,13 @@ const Filters = ({ items }: { items: string[] }) => (
 );
 
 const RoomFilters = () => {
-  const roomTypes = ["Mega Hall", "Lecture Hall", "Lab Rooms"];
-  const floors = ["Ground", "First", "Second"];
-  const capacities = ["0-25", "30-50", "More than 50"];
+  const { setSelectedRoomTypes, setSelectedCapacities, setSelectedUtility, setSelectedFeeRange } = useRoomFilter();
 
   const theme = useTheme();
   const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [utilitySearch, setUtilitySearch] = useState("");
 
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -100,28 +91,30 @@ const RoomFilters = () => {
 
   const open = Boolean(anchorEl);
 
+  const handleRoomTypeChange = (type: string) => {
+    setSelectedRoomTypes((prev: string[]) =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
 
-  const [filters, setfilters] = useState<RoomFiltersProps>({
-    roomTypes: [],
-    floors: [],
-    capacities: [],
-  });
+  const handleCapacityChange = (capacity: string) => {
+    setSelectedCapacities((prev: string[]) =>
+        prev.includes(capacity) ? prev.filter(c => c !== capacity) : [...prev, capacity]
+    );
+};
 
-  useEffect(() => {
-    fetch('https://api.icspaces.online/get-all-room-filters', {
-      method: 'POST', // or 'PUT'
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // body: JSON.stringify(data), // Uncomment this line if you need to send data in the request body
-    })
-    .then(response => response.json())
-    .then(data => {
-      setfilters(data);
-      console.log(data);
+  const handleUtilitySearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUtilitySearch(event.target.value);
+    setSelectedUtility(event.target.value);  // Assuming you will add this in the context
+  };
+
+
+  const handleFeeRangeChange = (range: string) => {
+    setSelectedFeeRange((prev: string[]) => {  
+      return prev.includes(range) ? prev.filter(r => r !== range) : [...prev, range];
     });
-  }, []);
-
+  };
+  
 
   return smallScreen ? (
     <Box
@@ -148,7 +141,13 @@ const RoomFilters = () => {
           mx: 1,
         }}
       >
-        <TextField label="Search" variant="outlined" size="small" />
+      <TextField
+        label="Search for a utility:"
+        variant="outlined"
+        size="small"
+        value={utilitySearch}
+        onChange={handleUtilitySearchChange} // Bind the handler
+      />
         <FilterButton label="Filter" handleClick={handleClick} />
         <FilterPopover
           id="filter-popover"
@@ -156,14 +155,16 @@ const RoomFilters = () => {
           anchorEl={anchorEl}
           handleClose={handleClose}
         >
-          <Typography variant="h6">Room Type</Typography>
-          <Filters items={filters.roomTypes} />
-          <Divider />
-          <Typography variant="h6">Floor</Typography>
-          <Filters items={filters.floors} />
+        <Box mt={2}>
+        <Typography variant="h6" align="left">Room Type:</Typography>
+        </Box>
+          <Filters items={["Lecture Hall", "Conference Room", "Computer Lab"]} onChange={handleRoomTypeChange} />
           <Divider />
           <Typography variant="h6">Capacity</Typography>
-          <Filters items={filters.capacities} />
+          <Filters items={["100", "50", "30"]} onChange={handleCapacityChange} />
+          <Divider />
+          <Typography variant="h6">Cost:</Typography>
+          <Filters items={["Below 1000", "1001 - 3000", "3000 Above"]} onChange={handleFeeRangeChange} />
         </FilterPopover>
       </Box>
     </Box>
@@ -176,23 +177,24 @@ const RoomFilters = () => {
       }}
     >
       <TextField
-        label="Search"
+        label="Search for a utility:"
         variant="outlined"
-        style={{ marginBottom: "1rem" }}
+        value={utilitySearch}
+        onChange={handleUtilitySearchChange} // Bind the handler
       />
-      <Typography variant="h6" textAlign="start" color="primary">
-        Room Type
-      </Typography>
-      <Filters items={filters.roomTypes} />
+        <Box mt={2}>
+        <Typography variant="h6" align="left">Room Type:</Typography>
+        </Box>
+      <Filters items={["Lecture Hall", "Conference Room", "Computer Lab"]} onChange={handleRoomTypeChange} />
       <Divider />
       <Stack marginTop="1rem" textAlign="start" color="primary">
-        <Typography variant="h6">Floor</Typography>
-        <Filters items={filters.floors} />
-      </Stack>
-      <Divider />
-      <Stack marginTop="1rem" textAlign="start" color="primary">
-        <Typography variant="h6">Capacity:</Typography>
-        <Filters items={filters.capacities} />
+        <Typography variant="h6">Capacity</Typography>
+        <Filters items={["100", "50", "30"]} onChange={handleCapacityChange} />
+        <Divider />
+        <Box mt={2}>
+        <Typography variant="h6">Cost:</Typography>
+        </Box>
+        <Filters items={["Below 1000", "1001 - 3000", "3000 Above"]} onChange={handleFeeRangeChange} />
       </Stack>
     </Paper>
   );

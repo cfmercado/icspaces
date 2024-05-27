@@ -1,9 +1,11 @@
-import React, { useEffect,useState } from 'react';
-import RoomCardGuest from "./RoomCard_Guest"; // Make sure to import the RoomCard component
+import React, { useEffect, useState } from 'react';
+import RoomCardGuest from "./RoomCard_Guest";
 import { Grid, Stack } from "@mui/material";
-import tempRoomPhoto from "../assets/room_images/ICS.jpg"; // Import your room images
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+
+// Default image URL
+const DEFAULT_IMAGE_URL = "../path/to/default/image.jpg"; // Update this path
 
 interface Room {
   image: string;
@@ -15,122 +17,7 @@ interface Room {
   floor_number: string;
   additional_fee_per_hour: string;
   utilities: string[];
-
 }
-
-// const rooms: Room[] = [
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   {
-//     image: tempRoomPhoto,
-//     name: "ICS Room",
-//     description: {
-//       floor: "Ground",
-//       type: "Mega Hall",
-//       capacity: "30-50",
-//       amenities: ["Projector", "Whiteboard", "Sound System"],
-//     },
-//   },
-//   // Add more room objects as needed
-// ];
 
 const RoomList: React.FC = () => {
   const theme = useTheme();
@@ -140,19 +27,44 @@ const RoomList: React.FC = () => {
 
   useEffect(() => {
     fetch('https://api.icspaces.online/get-all-rooms', {
-      method: 'POST', // or 'PUT'
+      method: 'POST', 
       headers: {
         'Content-Type': 'application/json',
       },
-      // body: JSON.stringify(data), // Uncomment this line if you need to send data in the request body
     })
     .then(response => response.json())
     .then(data => {
-      setRooms(data);
-      console.log(data);
+      console.log("Rooms data fetched:", data); // Log rooms data
+      const updatedRooms = data.map(async (room: Room) => { // Specify type here
+        const imageResponse = await fetch('https://api.icspaces.online/get-room-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ room_id: room.room_id }),
+        });
+
+        if (imageResponse.ok) {
+          const imageData = await imageResponse.json();
+          console.log(`Image data for room ${room.room_id}:`, imageData); // Log image data
+          if (imageData && imageData.images && imageData.images.length > 0) {
+            room.image = imageData.images[0]; // Using the first image
+          } else {
+            room.image = DEFAULT_IMAGE_URL; // No image found, use default
+          }
+        } else {
+          room.image = DEFAULT_IMAGE_URL; // Fetch failed, use default
+        }
+
+        return room;
+      });
+
+      Promise.all(updatedRooms).then(roomsWithImages => {
+        console.log("Rooms with images:", roomsWithImages); // Log final rooms data with images
+        setRooms(roomsWithImages);
+      });
     });
   }, []);
-
 
   return (
     <Stack>
@@ -168,7 +80,7 @@ const RoomList: React.FC = () => {
             fee={room.fee} 
             additional_fee_per_hour={room.additional_fee_per_hour}  
             utilities={room.utilities}
-            />
+          />
         </Grid>
       ))}
     </Stack>

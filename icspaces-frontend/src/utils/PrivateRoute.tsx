@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { RoomFilterProvider } from "../components/RoomFilterContext";
+import { CircularProgress } from "@mui/material";
 
 interface PrivateRouteProps {
   component: React.ComponentType<any>;
@@ -68,80 +70,156 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   component: Component,
 }) => {
   const [userType, setUserType] = useState<number | null>(null);
+  const [isFirstLogin, setIsFirstLogin] = useState<null>(null);
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      const response = await fetch("https://api.icspaces.online/is-logged-in", {
+  const checkLoginStatus = async () => {
+    const response = await fetch("https://api.icspaces.online/is-logged-in", {
+      credentials: "include",
+    });
+    const data = await response.json();
+    setIsLoggedIn(data.isLoggedIn);
+  };
+
+  checkLoginStatus();
+
+  const fetchProfileData = async () => {
+    try {
+      const response = await fetch("https://api.icspaces.online/get-profile", {
         credentials: "include",
       });
-      const data = await response.json();
-      setIsLoggedIn(data.isLoggedIn);
-    };
-
-    checkLoginStatus();
-  }, []);
-
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const response = await fetch("https://api.icspaces.online/get-profile", {
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log("User Type:", data);
-
-        if (data.success) {
-          setUserType(data.data.usertype);
-          setIsLoggedIn(true);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch profile data:", error);
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      console.log("User Type:", data);
 
-    fetchProfileData();
-  }, []);
+      if (data.success) {
+        setUserType(data.data.usertype);
+        setIsFirstLogin(data.data.isFirstLogin);
+        setIsLoggedIn(true);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch profile data:", error);
+      setIsLoading(false);
+    }
+  };
+
+  fetchProfileData();
+
+  // useEffect(() => {
+  //   checkLoginStatus();
+  //   if (!isLoading) {
+  //     if (
+  //       isFirstLogin === 1 &&
+  //       location.pathname !== "/homepage" &&
+  //       isLoggedIn
+  //     ) {
+  //       navigate("/homepage");
+  //       console.log("YOU'RE REPEATING 1");
+  //       return;
+  //     } else if (isLoggedIn && userType !== null) {
+  //       console.log("A", isLoggedIn);
+  //       const accessibleRoutes = userTypeRoutes[userType];
+  //       if (
+  //         !accessibleRoutes.includes(location.pathname) ||
+  //         notLoggedInRoutes.includes(location.pathname)
+  //       ) {
+  //         console.log("B");
+  //         if (userType === 0 || userType === 1) {
+  //           console.log("C");
+  //           if (!accessibleRoutes.includes(location.pathname)) {
+  //             navigate("/homepage");
+  //             return;
+  //           }
+  //         } else if (userType === 2 || userType === 3) {
+  //           if (!accessibleRoutes.includes(location.pathname)) {
+  //             navigate("/homepage_admin");
+  //             return;
+  //           }
+  //         }
+  //       }
+  //     } else if (!isLoggedIn) {
+  //       console.log("YOU'RE REPEATING 1");
+
+  //       if (!notLoggedInRoutes.includes(location.pathname)) {
+  //         navigate("/");
+  //       }
+  //     }
+  //   }
+  // }, [
+  //   isLoading,
+  //   userType,
+  //   navigate,
+  //   location.pathname,
+  //   isLoggedIn,
+  //   isFirstLogin,
+  // ]);
 
   useEffect(() => {
+    checkLoginStatus();
     if (!isLoading) {
-      if (isLoggedIn && userType !== null) {
+      if (
+        isFirstLogin === 1 &&
+        location.pathname !== "/homepage" &&
+        (userType === 0 || userType === 1) &&
+        isLoggedIn
+      ) {
+        navigate("/homepage");
+        console.log("YOU'RE REPEATING 1");
+        return;
+      } else if (isLoggedIn && userType !== null) {
+        console.log("A", isLoggedIn);
         const accessibleRoutes = userTypeRoutes[userType];
+        console.log("ROUTES", accessibleRoutes);
+        console.log("YOU'RE IN", location.pathname);
         if (
           !accessibleRoutes.includes(location.pathname) ||
           notLoggedInRoutes.includes(location.pathname)
         ) {
+          console.log("B");
           if (userType === 0 || userType === 1) {
-            if (!notLoggedInRoutes.includes(location.pathname)) {
+            console.log("C");
+            if (!accessibleRoutes.includes(location.pathname)) {
               navigate("/homepage");
+              return;
             }
           } else if (userType === 2 || userType === 3) {
-            if (!notLoggedInRoutes.includes(location.pathname)) {
+            console.log("D");
+            if (!accessibleRoutes.includes(location.pathname)) {
+              console.log("HERE");
               navigate("/homepage_admin");
+              return;
             }
           }
         }
       } else if (!isLoggedIn) {
+        console.log("YOU'RE REPEATING 1");
+
         if (!notLoggedInRoutes.includes(location.pathname)) {
-          console.log("NOT SUPPOSED TO BE HERE");
           navigate("/");
         }
       }
     }
-  }, [isLoading, userType, navigate, location.pathname, isLoggedIn]);
-
+  }, [
+    isLoading,
+    userType,
+    navigate,
+    location.pathname,
+    isLoggedIn,
+    isFirstLogin,
+  ]);
   return isLoading ? (
-    <p>Loading...</p>
+    <CircularProgress /> // Show loading spinner when isLoading is true
   ) : isLoggedIn ? (
-    <Component />
+    <RoomFilterProvider>
+      <Component />
+    </RoomFilterProvider>
   ) : notLoggedInRoutes.includes(location.pathname) ? (
     <Component />
   ) : null;

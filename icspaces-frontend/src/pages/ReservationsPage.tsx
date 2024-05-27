@@ -29,8 +29,7 @@ import ReservationDialogForVerification from "../components/ReservationDialogFor
 import ReservationDialogForPayment from "../components/ReservationDialogForPayment";
 import ReservationDialogCancelled from "../components/ReservationDialogCancelled";
 import ReservationDialogDisapproved from "../components/ReservationDialogDisapproved";
-import ReservationDialogBooked from "../components/ReservationDialogBooked";
-import ReservationDialogForVerificationAdmin from "../components/ReservationDialogForVerificationAdmin";
+import ReservationDialogBookedUser from "../components/ReservationDialogBookedUser";
 
 interface ReservationDialogForVerificationProps {
   open: boolean;
@@ -58,8 +57,16 @@ const statusMapping: Record<string, string> = {
   "0": "Pending",
   "1": "For Payment",
   "2": "Booked",
-  "3": "Rejected",
+  "3": "Disapproved",
   "4": "Cancelled",
+  // add other status codes as needed
+};
+const statusColorMapping: Record<string, string> = {
+  "0": "#eca517", // light yellow
+  "1": "#57b5d4", // light blue
+  "2": "#18bd8e", // light green
+  "3": "#fb0606", // light red
+  "4": "#828282", // light grey
   // add other status codes as needed
 };
 
@@ -322,13 +329,14 @@ const ReservationsPage = () => {
                 // compose reservation data to send
                 const reservationDataForModal: ReservationDataForModal = {
                   reservation_id: row.reservation_id,
-                  status: statusMapping[row.status_code],
+                  status: row.status_code,
 
                   // first partition in left
                   reservation_date: formatDateTime(row.date_created),
                   room_name: row.room_name,
                   event_name: row.activity_name,
-                  event_description: otherReservationInfo.activity_desc,
+                  event_description:
+                    otherReservationInfo.reservations.activity_desc,
                   user_name: nameData.name,
                   user_id: row.user_id,
 
@@ -350,35 +358,40 @@ const ReservationsPage = () => {
                     row.start_datetime,
                     row.end_datetime
                   ),
-                  hourly_fee: otherReservationInfo.fee,
+                  hourly_fee: otherReservationInfo.reservations.fee,
                   overall_fee: row.total_amount_due,
 
                   // dates
                   verified_date: formatDateTime(
-                    `${otherReservationInfo.booked_date}`
+                    `${otherReservationInfo.reservations.booked_date}`
                   ),
                   payment_date: formatDateTime(
-                    `${otherReservationInfo.paid_date}`
+                    `${otherReservationInfo.reservations.paid_date}`
                   ),
                   verification_date: formatDateTime(
-                    `${otherReservationInfo.disapproved_date}`
+                    `${otherReservationInfo.reservations.disapproved_date}`
                   ),
                   disapproved_date: formatDateTime(
-                    `${otherReservationInfo.disapproved_date}`
+                    `${otherReservationInfo.reservations.disapproved_date}`
                   ),
                   approved_date: formatDateTime(
-                    `${otherReservationInfo.booked_date}`
+                    `${otherReservationInfo.reservations.booked_date}`
                   ),
                   cancellation_date: formatDateTime(
-                    `${otherReservationInfo.cancelled_date}`
+                    `${otherReservationInfo.reservations.cancelled_date}`
                   ),
 
                   // note
                   note_from_admin:
-                    otherReservationInfo.comment_text == ""
-                      ? "(no note provided)"
-                      : otherReservationInfo.comment_text,
+                    otherReservationInfo.reservations.comment_text == ""
+                      ? "(no note provided by staff)"
+                      : `"${otherReservationInfo.reservations.comment_text}"`,
                 };
+
+                console.log("Computed cancellation_date below: ");
+                console.log(reservationDataForModal.cancellation_date);
+                console.log("From:");
+                console.log(otherReservationInfo.reservations.cancelled_date);
 
                 handleOpen(reservationDataForModal);
               });
@@ -480,8 +493,8 @@ const ReservationsPage = () => {
               <MenuItem value="all">All Reservations</MenuItem>
               <MenuItem value="Pending">Pending</MenuItem>
               <MenuItem value="For Payment">For Payment</MenuItem>
-              <MenuItem value="Approved">Approved</MenuItem>
-              <MenuItem value="Rejected">Rejected</MenuItem>
+              <MenuItem value="Booked">Booked</MenuItem>
+              <MenuItem value="Disapproved">Disapproved</MenuItem>
               <MenuItem value="Cancelled">Cancelled</MenuItem>
             </Select>
           </FormControl>
@@ -545,9 +558,13 @@ const ReservationsPage = () => {
                     </TableCell>
                     <TableCell
                       align="center"
-                      style={{ wordWrap: "break-word", maxWidth: "150px" }}
+                      style={{
+                        wordWrap: "break-word",
+                        maxWidth: "150px",
+                        color: statusColorMapping[row.status_code],
+                      }}
                     >
-                      {statusMapping[row.status_code]}
+                      <b>{statusMapping[row.status_code]}</b>
                     </TableCell>
                     <TableCell
                       align="center"
@@ -586,7 +603,7 @@ const ReservationsPage = () => {
               // return <ReservationDialogDisapproved open={open} onClose={() => setSelectedReservation(null)} reservation={selectedReservation}/>
               // return <ReservationDialogBooked open={open} onClose={() => setSelectedReservation(null)} reservation={selectedReservation}/>
               // })()
-              switch (selectedReservation.status) {
+              switch (statusMapping[selectedReservation.status]) {
                 case "Pending":
                   return (
                     <ReservationDialogForVerification
@@ -621,7 +638,7 @@ const ReservationsPage = () => {
                   );
                 default:
                   return (
-                    <ReservationDialogBooked
+                    <ReservationDialogBookedUser
                       open={open}
                       onClose={() => setSelectedReservation(null)}
                       reservation={selectedReservation}

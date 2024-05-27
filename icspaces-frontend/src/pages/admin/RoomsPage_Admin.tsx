@@ -7,8 +7,6 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useParams } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -22,6 +20,7 @@ import { Link } from "react-router-dom";
 import roomImages from "../../assets/room_images/RoomImages";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import BackButton from "../../components/BackButton";
 import RoomPhotos from "../../components/RoomPhotos";
 
 const cell = {
@@ -53,23 +52,18 @@ const styles = {
 };
 
 const RoomsPage_Admin = () => {
-  const { room_id } = useParams<{ room_id: string }>();
-
-  // State to keep track of the current image index
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Handler to go to the next image
-  const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % roomImages.length);
+  const [currentRoom, setCurrentRoom] = useState(0);
+  const [rooms, setRooms] = useState<RoomInfo[]>([]);
+  const [image, setImage] = useState<{ [key: number]: string }>({});
+  
+  const nextRoom = () => {
+    setCurrentRoom((prevIndex) => (prevIndex + 1) % rooms.length);
   };
-
-  // Handler to go to the previous image
-  const prevImage = () => {
-    setCurrentImageIndex(
-      (prevIndex) => (prevIndex - 1 + roomImages.length) % roomImages.length
+  const prevRoom = () => {
+    setCurrentRoom(
+      (prevIndex) => (prevIndex - 1 + rooms.length) % rooms.length
     );
   };
-
   const statusMapping: Record<string, string> = {
     "0": "Ground Floor",
     "1": "Second Floor",
@@ -91,17 +85,39 @@ const RoomsPage_Admin = () => {
     capacity: number;
     fee: string;
     type: string;
+    isDeleted: boolean;
     floor_number: number;
     additional_fee_per_hour: string;
+    utilityData: Utility[];
   }
-
-  const [rooms, setRooms] = useState<RoomInfo[]>([]);
-  const [utility, setUtility] = useState<Utility[]>([]);
-
+  
+  const deleteRoom = () => {
+    const confirmed = window.confirm("Are you sure you want to delete this page?");
+    if (confirmed){
+      try {
+        fetch("https://api.icspaces.online/delete-room", {
+          method: "POST",
+          headers: {'Content-Type': 'application/json',},
+          body: JSON.stringify({room_id: rooms[currentRoom]?.id}),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {console.log(data);console.log(rooms)})
+      } catch (error) {
+        console.error("Error deleting room:", error);
+      }
+      window.location.reload();
+    }
+  };
+  
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch("https://api.icspaces.online/get-all-rooms", {
+        const response = await fetch("https://api.icspaces.online/get-all-rooms-complete", {
           method: "POST",
         });
         const data = await response.json();
@@ -112,18 +128,17 @@ const RoomsPage_Admin = () => {
           fee: room.fee,
           type: room.room_type,
           floor_number: room.floor_number,
+          isDeleted: room.isDeleted,
           additional_fee_per_hour: room.additional_fee_per_hour,
-        }));
-        const utilityData = data.map((utility: any) => ({
-          fee: utility.fee,
-          item_name: utility.item_name,
-          item_qty: utility.item_qty,
-          room_id: utility.room_id,
+          utilityData: room.utilities.map((utility:any) => ({
+            fee: utility.fee,
+            item_name: utility.item_name,
+            item_qty: utility.item_qty,
+          })),
         }));
         setRooms(roomData);
-        setUtility(utilityData);
         console.log(roomData);
-        console.log(utilityData);
+        
       } catch (error) {
         console.error("Failed to fetch rooms and utilities:", error);
       }
@@ -132,6 +147,40 @@ const RoomsPage_Admin = () => {
     fetchRooms();
   }, []);
 
+  useEffect(() => {
+    const getPhotos = async () => {
+      try {
+        const photos = await fetch(
+          "https://api.icspaces.online/get-room-image",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ room_id: rooms[currentRoom]?.id }),
+          }
+        );
+        if (!photos.ok) {
+          throw new Error("Failed to fetch room images");
+        }
+
+        const imagesData = await photos.json();
+
+        if (imagesData && imagesData.images && imagesData.images.length > 0) {
+          const latestImage = imagesData.images[0].url;
+          setImage((img:any)=>({
+            ...img,
+            [rooms[currentRoom]?.id]: latestImage,
+          }));
+          console.log("setting images successful");
+        } 
+      }catch (error) {
+        console.error("Failed to fetch rooms and utilities:", error);
+      }
+    }
+    getPhotos();
+  }, [rooms, currentRoom]);
+  
   return (
     <Box
       sx={{
@@ -153,32 +202,22 @@ const RoomsPage_Admin = () => {
           height: 300,
         }}
       >
-        <RoomPhotos />
+        <RoomPhotos roomID = {rooms[currentRoom]?.id}  />
       </Box>
 
-      <Button
-        startIcon={<ArrowBackIcon />}
-        sx={{
+      <Box
+        style={{
           position: "absolute",
           top: 80,
-          left: 20,
-          backgroundColor: "#CFCFCF",
-          color: "black",
-          "&:hover": {
-            backgroundColor: "lightgrey",
-          },
+          left: 40,
         }}
-        variant="contained"
-        onClick={() =>
-          (window.location.href = "https://app.icspaces.online/viewroomspage")
-        }
       >
-        Back to ICS Rooms
-      </Button>
+        <BackButton />
+      </Box>
       <Box
         component="img"
-        src={roomImages[currentImageIndex]}
-        alt={`Room Image ${currentImageIndex + 1}`}
+        src={`${image[currentRoom+1]}`}
+        alt={`Room Image ${currentRoom + 1}`}
         sx={{
           maxHeight: 400,
           borderRadius: 4,
@@ -189,21 +228,21 @@ const RoomsPage_Admin = () => {
       />
       <Button
         sx={{ position: "absolute", top: "320px", left: "200px" }}
-        onClick={prevImage}
-        disabled={currentImageIndex === 0}
+        onClick={prevRoom}
+        disabled={currentRoom === 0}
       >
         <ArrowBackIosIcon />
       </Button>
       <Button
         sx={{ position: "absolute", top: "320px", left: "1250px" }}
-        onClick={nextImage}
-        disabled={currentImageIndex === roomImages.length - 1}
+        onClick={nextRoom}
+        disabled={currentRoom === rooms.length - 1}
       >
         <ArrowForwardIosIcon />
       </Button>
       <Card
         sx={{
-          width: 300,
+          width: 320,
           height: 370,
           position: "absolute",
           top: "340px",
@@ -212,6 +251,7 @@ const RoomsPage_Admin = () => {
           p: 2,
           backgroundColor: "#183048",
           borderRadius: 4,
+          overflowY: "auto",
         }}
       >
         <CardContent>
@@ -224,7 +264,7 @@ const RoomsPage_Admin = () => {
               textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
             }}
           >
-            {rooms[currentImageIndex]?.name}
+            {rooms[currentRoom]?.name}
           </Typography>
           <Stack spacing={1} mt={2}>
             <TableContainer component={Paper} sx={{ border: "none", mb: 16 }}>
@@ -233,7 +273,7 @@ const RoomsPage_Admin = () => {
                   <TableRow>
                     <TableCell style={styles.boldCell}>Room type:</TableCell>
                     <TableCell style={styles.cell}>
-                      {rooms[currentImageIndex]?.type}
+                      {rooms[currentRoom]?.type}
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -241,7 +281,7 @@ const RoomsPage_Admin = () => {
                     <TableCell style={styles.cell}>
                       {
                         statusMapping[
-                          rooms[currentImageIndex]?.floor_number ?? 3
+                          rooms[currentRoom]?.floor_number ?? 3
                         ]
                       }
                     </TableCell>
@@ -249,7 +289,7 @@ const RoomsPage_Admin = () => {
                   <TableRow>
                     <TableCell style={styles.boldCell}>Capacity:</TableCell>
                     <TableCell style={styles.cell}>
-                      {rooms[currentImageIndex]?.capacity}
+                      {rooms[currentRoom]?.capacity}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -264,24 +304,20 @@ const RoomsPage_Admin = () => {
               <span style={{ color: "white" }}>Available equipment:</span>
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {utility?.map(
-                (utilityItem) =>
-                  utilityItem.item_name &&
-                  utilityItem.item_qty && (
-                    <li key={utilityItem.item_name}>
-                      <Typography
-                        style={{
-                          color: "white",
-                          fontWeight: "bold",
-                          fontSize: "0.8rem",
-                        }}
-                        align="left"
-                      >
-                        {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
-                      </Typography>
-                    </li>
-                  )
-              )}
+              {rooms[currentRoom]?.utilityData?.map((utilityItem) => (
+                <li key={utilityItem.item_name}>
+                  <Typography
+                    style={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "0.8rem",
+                    }}
+                    align="left"
+                  >
+                    - {utilityItem.item_name}
+                  </Typography>
+                </li>
+              ))}
             </ul>
             <Typography
               color="text.secondary"
@@ -293,9 +329,9 @@ const RoomsPage_Admin = () => {
             </Typography>
             <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
               {[
-                `P ${parseInt(rooms[currentImageIndex]?.fee ?? "")} / hour`,
+                `P ${parseInt(rooms[currentRoom]?.fee ?? "")} / hour`,
                 `P ${parseInt(
-                  rooms[currentImageIndex]?.additional_fee_per_hour ?? ""
+                  rooms[currentRoom]?.additional_fee_per_hour ?? ""
                 )} / hour overtime`,
               ].map((fee) => (
                 <li key={fee}>
@@ -312,28 +348,48 @@ const RoomsPage_Admin = () => {
                 </li>
               ))}
             </ul>
-            <Button
-              variant="contained"
-              style={{ alignSelf: "center" }}
-              component={Link}
-              to={`/editroominfopage_admin/${rooms[currentImageIndex]?.id}`}
-              sx={{
-                textTransform: "none",
-                backgroundColor: "#FFB532",
-                height: "23px",
-                width: "40%",
-                color: "black",
-                borderRadius: "20px",
+            <Stack direction="row" spacing={2} alignContent="center">
+              <Button
+                variant="contained"
+                component={Link}
+                to={`/editroominfopage_admin/${rooms[currentRoom]?.id}`}
+                sx={{
+                  textTransform: "none",
+                  backgroundColor: "#FFB532",
+                  height: "23px",
+                  width: "40%",
+                  color: "black",
+                  borderRadius: "20px",
 
-                fontSize: "13px",
-                "&:hover": {
-                  backgroundColor: "#FFC532",
-                },
-              }}
-            >
-              {" "}
-              Edit{" "}
-            </Button>
+                  fontSize: "13px",
+                  "&:hover": {
+                    backgroundColor: "#FFC532",
+                  },
+                }}
+              >
+                {" "}
+                Edit{" "}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={deleteRoom}
+                sx={{
+                  textTransform: "none",
+                  backgroundColor: "#FFB532",
+                  height: "23px",
+                  width: "40%",
+                  color: "black",
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  "&:hover": {
+                    backgroundColor: "#FFC532",
+                  },
+                }}
+              >
+                {" "}
+                Delete{" "}
+              </Button>
+            </Stack>
           </Stack>
         </CardContent>
       </Card>

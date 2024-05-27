@@ -195,7 +195,7 @@ const RoomPage = () => {
           height: 700,
         }}
       >
-        <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} />
+        <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} roomID={room_id}/>
       </Box>
       <Button
         startIcon={<ArrowBackIcon />}

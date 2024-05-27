@@ -221,7 +221,7 @@ const BookReservationPage_Admin = () => {
           height: 700,
         }}
       >
-        <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} />
+        <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} roomID={selectedRoomId}/>
       </Box>
       <Button
         startIcon={<ArrowBackIcon />}

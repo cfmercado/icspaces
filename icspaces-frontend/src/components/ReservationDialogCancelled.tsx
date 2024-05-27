@@ -37,6 +37,56 @@ const ReservationDialogCancelled: React.FC<ReservationDialogProps> = ({
   onClose,
   reservation,
 }) => {
+  
+  // Handler for the "Approve" button click
+  const handleCalendarButton = () => {
+    window.location.href = "https://app.icspaces.online/schedulepage";
+  };
+
+  // Handler for the "Approve" button click
+  const handlePermitButton = () => {
+
+    // Fetch value from database
+    fetch("https://api.icspaces.online/get-reservation-document", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reservation_id: reservation?.reservation_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data1) => {
+        if (data1.permit == "" || data1.permit == null) {
+          alert("There is no permit uploaded at this time!");
+        } else {
+          window.location.href = data1.permit;
+        }
+      }
+    )
+  };
+
+  // Handler for the "Approve" button click
+  const handleLetterButton = () => {
+
+    // Fetch value from database
+    fetch("https://api.icspaces.online/get-reservation-document", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reservation_id: reservation?.reservation_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data1) => {
+        if (data1.letter == "" || data1.letter == null) {
+          alert("There is no letter uploaded at this time!");
+        } else {
+          window.location.href = data1.permit;
+        }
+      }
+    )
+  };
+
   return (
     <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', overflow: 'auto', transform: 'scale(0.85)'}}}>
         <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -137,13 +187,14 @@ const ReservationDialogCancelled: React.FC<ReservationDialogProps> = ({
                     </Typography>
                   </Grid>
 
-                  {/* View Calendar Button */}
-                  <Grid item xs={20}>
-                    <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                      fontSize:'0.65vw', textTransform: 'none', height:'36px', boxShadow: 'none', paddingTop: '5px'}}>
-                        View Calendar
-                    </Button>
-                  </Grid>
+                {/* View Calendar Button */}
+                <Grid item xs={20}>
+                  <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%',
+                    fontSize:'0.65vw', textTransform: 'none', height:'36px', boxShadow: 'none', paddingTop: '5px'}}
+                    onClick={handleCalendarButton}>
+                      View Calendar
+                  </Button>
+                </Grid>
                 </Grid>
               </Grid>
 
@@ -190,19 +241,21 @@ const ReservationDialogCancelled: React.FC<ReservationDialogProps> = ({
               {/* View Letter and View Permit area */}
               <Grid item xs= {10} sx={{ paddingTop:'25px'}}>
 
-                {/* View Letter Button*/}
-                <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                  fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}>
-                    View Letter
-                </Button>
+              {/* View Letter Button*/}
+              <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+                fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                onClick={handleLetterButton}>
+                  View Letter
+              </Button>
 
                 {/* A simple spacer */}
                 <Typography className="unselectable" sx={{lineHeight:'10px'}}>{'\u00A0'}</Typography>
 
                 {/* View permit */}
                 <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                      fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}>
-                        View Calendar
+                      fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                      onClick={handlePermitButton}>
+                        View Permit
                     </Button>
               </Grid>   
 
@@ -225,7 +278,23 @@ const ReservationDialogCancelled: React.FC<ReservationDialogProps> = ({
                     Cancelled
                   </Typography>
                 </Paper>
-                <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.5vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                  Requested on {reservation.reservation_date}
+                </Typography>
+                
+                {reservation.approved_date != "" ? 
+                  <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                    Approved on {reservation.approved_date}
+                  </Typography> : <Typography/>
+                }
+                
+                {reservation.payment_date != "" ? 
+                <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                  Paid on {reservation.payment_date}
+                </Typography> : <Typography/>
+                }
+
+                <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
                   Cancelled on {reservation.cancellation_date}
                 </Typography>
               </Grid>
@@ -233,7 +302,7 @@ const ReservationDialogCancelled: React.FC<ReservationDialogProps> = ({
               {/* Restrict area for where event description text is displayed */}
               <Box border={1} paddingTop={3} style={{ width: '100%', border:'none'}}>
                 <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.8vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR}}>
-                  The reservation holder has cancelled their reservation.
+                  {reservation.note_from_admin == '(no note provided by staff)' ? 'The reservation holder has cancelled their reservation with no given note.' : `Reason from reservation holder: ${reservation.note_from_admin}`}
                 </Typography>
               </Box>
             </Grid>

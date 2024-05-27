@@ -8,6 +8,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  IconButton,
 } from "@mui/material";
 import {
   DatePicker,
@@ -17,6 +22,7 @@ import {
 import dayjs from "dayjs";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import BackButton from "../../components/BackButton";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface Room {
   // image: string;
@@ -30,8 +36,10 @@ interface Room {
   // utilities: string[];
 }
 function GuestBookingForm_Page() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [formValid, setFormValid] = useState(false);
 
   const [emailInfo, setEmailInfo] = useState({
     name: "",
@@ -88,6 +96,23 @@ function GuestBookingForm_Page() {
     }
   };
 
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    // Create a copy of emailInfo and delete the 'other_details' key
+    const emailInfoCopy: { [key: string]: any } = { ...emailInfo };
+    delete emailInfoCopy.other_details;
+
+    // Check if any required fields are empty
+    if (Object.values(emailInfoCopy).some((value) => value === "")) {
+      // If any required field is empty, don't continue with submit
+      alert("Please fill all required fields.");
+    } else {
+      // If all required fields are filled, continue with submit
+      window.open(generateMailtoLink(), "_blank");
+    }
+  };
+
   const generateMailtoLink = () => {
     const {
       name,
@@ -114,9 +139,24 @@ function GuestBookingForm_Page() {
       Additional Details: ${other_details}
     `;
 
-    return `mailto:${recipient}?subject=${encodeURIComponent(
+    const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(
       templateSubject
     )}&body=${encodeURIComponent(templateEmail)}`;
+
+    // Once the mailto link is generated, open the dialog
+    setIsDialogOpen(true);
+
+    // Delay the opening of the dialog by 5 seconds
+    setTimeout(() => {
+      setIsDialogOpen(true);
+    }, 6000);
+
+    // Automatically close the dialog after 5 seconds
+    setTimeout(() => {
+      setIsDialogOpen(false);
+    }, 10000);
+
+    return mailtoLink;
   };
 
   useEffect(() => {
@@ -145,6 +185,16 @@ function GuestBookingForm_Page() {
           height: "100vh", // Set the height to the full viewport height
         }}
       >
+        <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+          <DialogTitle color="primary">Reservation Request Sent</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Please wait for the the Administrators response regarding your
+              request. Once reservation is accepted, a Tracking ID will be
+              emailed to you for tracking your reservation progress!
+            </DialogContentText>
+          </DialogContent>
+        </Dialog>
         <Grid container spacing={3} mt={12} xs={10} mb={3}>
           <Grid item>
             <Box
@@ -217,7 +267,9 @@ function GuestBookingForm_Page() {
               onChange={(newValue) => handleDateChange("date", newValue)}
               label="Date"
               format="MM/DD/YYYY"
-              shouldDisableDate={(date) => date.isBefore(dayjs())}
+              shouldDisableDate={(date) =>
+                date.isBefore(dayjs().startOf("day"))
+              }
             />
           </Grid>
           <Grid item xs={4}>
@@ -269,7 +321,7 @@ function GuestBookingForm_Page() {
               color="primary"
               onClick={(e) => {
                 e.preventDefault();
-                window.open(generateMailtoLink(), "_blank");
+                handleSubmit(e);
               }}
             >
               Submit via Email

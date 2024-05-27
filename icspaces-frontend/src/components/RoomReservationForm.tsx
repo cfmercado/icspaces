@@ -1,4 +1,4 @@
-import { Box, Stack, Grid,Typography,Button,TextField, Card, FormControlLabel, Checkbox, FormGroup, FormControl, Dialog} from '@mui/material';
+import { Box, Stack, Grid,Typography,Button,TextField, Card, FormControlLabel, Checkbox, FormGroup, FormControl, Dialog, Input, DialogTitle, DialogContent, DialogActions, InputLabel, MenuItem} from '@mui/material';
 import { Link } from 'react-router-dom';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import HomeBG from "../assets/room_images/HomeBG.png";
@@ -10,12 +10,15 @@ import { styled } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 import axios from "axios";
 import dayjs, { Dayjs } from "dayjs";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { Axios } from 'axios';
+import BackButton from "./BackButton";
 const RoomReservationForm = () => {
 
 
     const location=useLocation();
 
-    useEffect(() => {
+    useEffect(() => {// SET START TIME AND END TIME OF RESERVATION
         const costCalculator = async () => {
             let start=startTime.slice(0,2);
             let end=endTime.slice(0,2);
@@ -27,7 +30,7 @@ const RoomReservationForm = () => {
             setsumCost(cost1);
         }
         const fetchRoomInfo = async () => {
-            fetch('https://api.icspaces.online/get-room-info', {
+            fetch('https://api.icspaces.online/get-room-info', {// ROOM INFO
         method: 'POST', // or 'PUT'
         headers: {
         'Content-Type': 'application/json',
@@ -36,7 +39,6 @@ const RoomReservationForm = () => {
     })
     .then(response => response.json())
     .then(data => {
-        // console.log(data)
         setRoomName(data.room.room_name);
         sethourlyFee(data.room.fee);
 
@@ -47,44 +49,85 @@ const RoomReservationForm = () => {
     costCalculator()
     },);
 
+    const handleOSA = (event:any) => {
 
-    useEffect(() => {
-    const receivedValues=location.state;
-    console.log("Received this")
-    console.log(receivedValues);
-    setroom_id(receivedValues.room_id);
-    console.log(receivedValues.date)
-    setstartTime(receivedValues.start_dateTime)
-    setendTime(receivedValues.end_dateTime)
-    console.log(receivedValues.date.substr(receivedValues.date.indexOf(" ") + 1))
-    let tempDate= dayjs(receivedValues.date).format('YYYY-MM-DD HH:mm:ss').toString().slice(0,10)
-    setDate(tempDate);
-    let newDate = dayjs().format("YYYY-MM-DD HH:mm:ss")
-    console.log("newDate " +newDate)
-    setcreationDate(newDate);
-
-    const fetchUser = async () => {
-        try {
-            const response = await axios.get("https://api.icspaces.online/get-profile", {
-                withCredentials: true,
-            });
-
-            if (response.data.success) {
-                const user = response.data.data;
-                setEmail(user.email);
-                setName(user.displayname)
-                setloggedIn(true);
-            } else {
-                throw new Error(response.data.errmsg);
-                setloggedIn(false);
-            }
-        } catch (error) {
-            console.error("Failed to fetch user:", error);
-            setloggedIn(false);
-        }
     };
 
-    fetchUser();  
+    const handleLetter = (event:any) => {
+       
+    }; 
+    useEffect(() => {
+
+        const receivedValues=location.state; //RECEIVE VALUES FROM THE ROOM PAGE ABOUT RESERVATION DETAILS
+        console.log("Received this")
+        console.log(receivedValues);
+        setroom_id(Number(receivedValues.room_id));
+        console.log(receivedValues.date)
+        setstartTime(receivedValues.start_dateTime)
+        setendTime(receivedValues.end_dateTime)
+
+        console.log(receivedValues.date.substr(receivedValues.date.indexOf(" ") + 1))
+        let tempDate= dayjs(receivedValues.date).format('YYYY-MM-DD HH:mm:ss').toString().slice(0,10)
+        setDate(tempDate);
+        let newDate = dayjs().format("YYYY-MM-DD HH:mm:ss")
+        console.log("newDate " +newDate)
+        setcreationDate(newDate);
+
+        const fetchUser = async () => {
+            try {
+                const response = await axios.get("https://api.icspaces.online/get-profile", {
+                    withCredentials: true,
+                });
+
+                if (response.data.success) {
+                    const user = response.data.data;
+                    console.log(user)
+                    setEmail(user.email);
+               
+                    setName(user.displayname)
+                    setloggedIn(true);
+                    console.log("User type[",user.usertype,"]")
+                    if(user.usertype==2){
+                        setisAdmin(true)
+                    }
+                    else if(user.usertype==0){
+                        setIsStudent(true)
+                        setisAdmin(false)
+                    }else{
+                        setisAdmin(false)
+                    }
+                    return(user.email)
+                } else {
+                    throw new Error(response.data.errmsg);
+                    setloggedIn(false);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user:", error);
+                setloggedIn(false);
+            }
+    };
+
+    fetchUser().then( (val) =>
+     {
+        console.log("Email1 "+typeof(val))
+        fetch('https://api.icspaces.online/get-student-details', {//GET STUDENT DETAILS BUT IT DOESNT WORK WTF
+            method: 'POST', // or 'PUT'
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({val}), // Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Fetch student details", JSON.stringify({data}.data))
+            const org1 = JSON.stringify({data}.data.org);
+            // if (org1==null && !isAdmin){
+            //     window.alert("You need an organization to book as a student")
+            //     window.location.href = "https://app.icspaces.online/accountpage"
+            // }
+        });
+     }
+    );  
     // app.post('/get-room-info', getRoomInfo)
 
         if(receivedValues.start_dateTime===undefined ||receivedValues.start_dateTime===""  ){
@@ -94,6 +137,8 @@ const RoomReservationForm = () => {
 
 
     }, []);
+
+
 
     const VisuallyHiddenInput = styled('input')({
         clip: 'rect(0 0 0 0)',
@@ -112,20 +157,67 @@ const RoomReservationForm = () => {
         console.log("name: "+name);
         
     };
+    function OnInputClick(event:any){
+        event.target.value = ''
+        console.log("Event1 "+event)
+    };
+    function LetterSubmit(event:any){
+            if (event.target.value===''){
+                return
+            }
+            console.log("Event "+event.target.value)
+            setletterDean(event.target.files[0])
+            console.log("Files "+event.target.files[0])
+            setLetterName(event.target.files[0].name)
+    };       
 
-    function LetterSubmit(){
-
+    function PermitSubmit(event:any){
+        if (event.target.value===''){
+            return
+        }
+        console.log("Event "+event.target.value)
+        setpermitOSA(event.target.files[0])
+    
+        setPermitName(event.target.files[0].name)
     };        
 
-  
-      
+    const isEmail = (email:string) =>
+        /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
+
+   const handleBlurContactFormat = () => {
+
+    const value = contact || '';
+    if(value === ''){
+        setcontactFormat(value === '');
+    }else{
+        if(Number(value)<0){
+            setcontactFormat(true);
+        }else{
+            setcontactFormat(false);
+        }
+    }
+   }    
+
+   const handleBlurEmailError = (email1:string) => {
+
+    if (!isEmail(email1)) {
+        setemailError(true);
+    }else{
+        setemailError(false);
+    }
+
+
+   }          
+    const [isStudent,setIsStudent]=useState(false);
     const [name,setName]=useState('');
     const [email,setEmail]=useState('');
+    const [otherEmail,setOtherEmail]=useState('')
     const [contact,setContact]=useState('');
     const [roomName,setRoomName]=useState('');
     const [eventName,seteventName]=useState('');
     const [date,setDate]=useState('');
     const [startTime,setstartTime]=useState('');
+    const [org,setOrg]=useState('');
     const [endTime,setendTime]=useState('');
     const [hourlyFee,sethourlyFee]=useState('');
     const [sumCost,setsumCost]=useState(0);
@@ -133,40 +225,88 @@ const RoomReservationForm = () => {
     const [eventDetails,seteventDetails]=useState('');
     const [submitFail,setsubmitFail]=useState(false);
     const zero=0;
-    const [letterUploaded,setletterUploaded]=useState();
-    const [permitUploaded,setpermitUploaded]=useState();
+    const [letterDean,setletterDean]=useState();
+    const [permitName,setPermitName]=useState('No file chosen');
+    const [letterName,setLetterName]=useState('No file chosen');
+    const [permitOSA,setpermitOSA]=useState();
     const [room_id,setroom_id]=useState(1);
     const [loggedIn,setloggedIn]=useState(false);
     const [open, setOpen] = useState(false);
-
+    const [timeError,setTimeError]=useState(false);
+    const [contactFormat,setcontactFormat]=useState(false);
+    const [emailError,setemailError]=useState(false);
+    const [isAdmin,setisAdmin]=useState(false);
+    const [guestBooking,setGuestBooking]=useState(false);
+    const [reservationID,setReservationID]=useState();
+    const [fname,setFname]=useState('');
+    const [lname,setLname]=useState('');
+    const [guestEmail,setGuestEmail]=useState('');
+    const [successIDreservation,setSuccessIDreservation]=useState('');
     
+    const handleContactChange = (event: { target: { value: string; }; }) => {
+        setContact(event.target.value);
+      };
+
+    const preventMinus = (e:any) => {
+        if (e.code === 'Minus') {
+            e.preventDefault();
+        }
+    };
+    const handleOpen = (e:any) => {
+        e.preventDefault();
+        setOpen(true);
+        console.log("Booking Confirm")
+    }
+
+    const handleGuestReservation = (event:any) => {
+       setGuestBooking(event.target.checked)
+       console.log("User Type ",guestBooking)
+    }
+
     const HandleSubmit = (e:any) => {
         e.preventDefault();
-        console.log("Submitting")
         const startDateTime= date+" "+startTime
         const endDateTime= date+" "+endTime
         
         console.log({startDateTime,endDateTime, date, creationDate})
         console.log({room_id,eventName,eventDetails,email,sumCost})
-            fetch('https://api.icspaces.online/get-available-room-time', {
-                method: 'POST', // or 'PUT'
-                headers: {
-                'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({room_id,date}), // Uncomment this line if you need to send data in the request body
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-            });
- 
-        
-        fetch('https://api.icspaces.online/add-reservation', {
+
+        const result = fetch('https://api.icspaces.online/get-available-room-time', { //CHECK FOR TIME CONFLICT, SIMPLE IF CHECKING
             method: 'POST', // or 'PUT'
             headers: {
             'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                room_id: room_id,
+                date:date,
+
+            }), // Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            //Check if timeslot is taken and redirect to roompage 
+            if(data.availableTimes.indexOf(startTime) > -1 && data.availableTimes.indexOf(endTime) > -1 ){
+                console.log('time is available')
+                return false
+            }else{
+                setTimeError(true);
+                
+                console.log("Time error is "+ timeError)
+                console.log('time is not available')
+                window.alert("Time is not available, please choose another timeslot")
+                return true
+            }
+
+        })
+        .catch(err => {
+            console.log(err)
+        }
+        )
+
+       
+        const reservationSuccess = result.then(r=>{//ADD RESERVATION
+            console.log({
                 activity_name:eventName, 
                 activity_desc:eventDetails,
                 room_id: room_id,
@@ -178,37 +318,142 @@ const RoomReservationForm = () => {
                 additional_fee:zero,
                 total_amount_due:sumCost,
                 status_code:zero,
-                utilities:'',
-            }), // Uncomment this line if you need to send data in the request body
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data)
-            // window.location.href = "https://app.icspaces.online/homepage"
-        })
-        .catch(err => {
-            console.log(err)
-            setsubmitFail(true);
-        }
-    )
+                utilities:zero,
+            })
+            if(r==false){
+                if(guestBooking){//GUEST BOOKING
+                    console.log('Guest Booking is Added')
+                    //  const { fname, lname, email, admin_id, activity_name, activity_desc, room_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code, utilities } = req.body
+                    fetch('https://api.icspaces.online/add-guest-reservation', {
+                        method: 'POST', // or 'PUT'
+                        headers: {
+                        'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            fname:fname, 
+                            lname:lname,
+                            email:otherEmail,
+                            admin_id:email,
+                            activity_name:eventName, 
+                            activity_desc:eventDetails,
+                            room_id: room_id,
+                            date_created:creationDate,
+                            start_datetime: startDateTime,
+                            end_datetime: endDateTime,
+                            discount:zero,
+                            additional_fee:zero,
+                            total_amount_due:sumCost,
+                            status_code:zero,
+                            utilities:zero,
+                        }), // Uncomment this line if you need to send data in the request body
+                    })
+                    .then(response => {
+                        console.log(response.json())
+                    })
+                    .then(data => {
+                        console.log(data)
+                        window.alert("You've successfully booked for Guest!")
+                        window.location.href = "https://app.icspaces.online/homepage"
+                        return true
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        setsubmitFail(true);
+                        return false
+                    }
+                    )
+                } 
+                else{//REGULAR BOOKING
 
-   
+                    fetch('https://api.icspaces.online/add-reservation', {
+                        method: 'POST', // or 'PUT'
+                        headers: {
+                        'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            activity_name:eventName, 
+                            activity_desc:eventDetails,
+                            room_id: room_id,
+                            user_id:email,
+                            date_created:creationDate,
+                            start_datetime: startDateTime,
+                            end_datetime: endDateTime,
+                            discount:zero,
+                            additional_fee:zero,
+                            total_amount_due:sumCost,
+                            status_code:zero,
+                            utilities:zero,
+                        }), // Uncomment this line if you need to send data in the request body
+                    })
+                    .then(response => {
+                        console.log(response.json())
+                    })
+                    .then(data => {
+                        console.log(data)
+              
+                        window.alert("You've successfully booked!")
+                        window.location.href = "https://app.icspaces.online/homepage"
+                        return true
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        setsubmitFail(true);
+                        return false
+                    }
+                    )
+                }
+            }else{
+                console.log("Nothing")
+                window.location.href = "https://app.icspaces.online/roompage/"+room_id
+                return false
+            }
+ 
+        })
+
+        
+
     }
+
+    const uploadDocument = async () => {
+        // app.post('/upload-reservation-document', upload.single('document'), multerVerify, uploadReservationDocument) // type: payment or letter
+
+            console.log('submitting')
+            fetch('https://api.icspaces.online/upload-reservation-document', {
+                method: 'POST', // or 'PUT'
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    room_id: room_id,
+                }), // Uncomment this line if you need to send data in the request body
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                window.alert("You've successfully uploaded!")
+            })
+            .catch(err => {
+                console.log(err)
+                setsubmitFail(true);
+            }
+            )
+    }
+
+
+
     return (
         <>
-            <form  className="loginform"  onSubmit={HandleSubmit}>
+            <form  className="loginform" onSubmit={handleOpen}  >
+
             <FormGroup>
-            
+  
             <Grid container height='40%' mt={5} alignSelf={'center'}  overflow='auto' mb={'4em'}   sx={{ direction: { xs: 'row', sm: 'column' }   }}>
 
                 {/* Back Button */}
                 <Grid item xs={12} justifyContent='flex-end'  > 
                     <Stack direction='row' spacing={3} alignItems="center" >
                         <Link to={'/roompage/'+room_id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <Button variant='contained' size='small' sx={{backgroundColor:'#D9D9D9', color:'#183048',textTransform: 'none'}}>
-                            <ArrowBackIosNewIcon  sx={{ fontSize: {xs:20}, color: '#183048' }}/>
-                            <Typography variant='h5' sx={{fontSize: {xs:20}}}>Back</Typography>
-                        </Button>
+                            <BackButton/>
                         </Link>
                         <Typography variant='h4'  sx={{  fontSize: {xs:20},color:'#183048'}}>Room Reservation Form</Typography>
                     </Stack>
@@ -221,38 +466,126 @@ const RoomReservationForm = () => {
                
                <Grid item xs={12} md={4} bgcolor='#EEEEEE' padding={2} >
                     <Stack spacing={2} textAlign='left' >
-                        <Typography  >Name*</Typography>
-                        <TextField size='small' value={name} variant="outlined" required type='text' onChange={(e) => setName(e.target.value)}/>
-                        <Typography >Email*</Typography>
-                        <TextField size='small' value={email} variant="outlined" required type='text' onChange={(e) => setEmail(e.target.value)}/>
+                        {isAdmin && 
+                            <>              
+                                    <FormControlLabel  onClick={handleGuestReservation} control={<Checkbox />} sx={{ fontSize:10}} label="Check for Guest reservation" /> 
+                                
+                            </>
+                        }         
+                        {guestBooking && isAdmin &&
+                            <>
+                                <Stack direction='row' spacing={1}>
+                                    <Stack>
+                                        <Typography  >First name</Typography>
+                                        <TextField size='small'  variant="outlined" required type='text' onChange={(e) => setFname(e.target.value)}/>
+                                    </Stack>
+                                    <Stack>
+                                        <Typography  >Last Name</Typography>
+                                        <TextField sx={{textAlign:'center'}} size='small'  variant="outlined" required type='text' onChange={(e) => setLname(e.target.value)} />
+                                    </Stack>
+                                    <Stack>
+                   
+                                    </Stack>
+          
+                             
+                                </Stack>
+                                <Typography >User Email*</Typography>
+                                <TextField size='small' 
+                                    error={emailError} 
+                                    value={otherEmail}
+                                    InputLabelProps={{shrink:true}}
+                                    onBlur={(e) => handleBlurEmailError(e.target.value)}
+                                    variant="outlined" required type='email'
+                                    onChange={(e) => setOtherEmail(e.target.value)} 
+                                    helperText={emailError ? 'Add a valid email e.g. aliceguo@up.edu.ph': ''}
+                                />    
+                                
+                            </>
+                        }
+                        {!guestBooking &&
+                             <>
+                                <Typography  >Name*</Typography>
+                                <TextField size='small' value={name} variant="outlined" required type='text' onChange={(e) => setName(e.target.value)} /> 
+                                <Typography >Email*</Typography>
+                                <TextField size='small' 
+                                    error={emailError} 
+                                    value={email}
+                                    InputLabelProps={{shrink:true}}
+                                    onBlur={(e) => handleBlurEmailError(e.target.value)}
+                                    variant="outlined" required type='email'
+                                    onChange={(e) => setEmail(e.target.value)} 
+                                    helperText={emailError ? 'Add a valid email e.g. aliceguo@up.edu.ph': ''}
+                                />    
+                            </>
+                  
+                        }
+            
+
                         <Typography >Contact*</Typography>
-                        <TextField size='small' variant="outlined" required type='text' onChange={(e) => setContact(e.target.value)}/>
+                        <TextField size='small'
+                            error={contactFormat} 
+                            InputLabelProps={{shrink:true}}
+                            onBlur={handleBlurContactFormat}
+                            variant="outlined" required type='number'
+                            onChange={(e) => setContact(e.target.value)} 
+                            helperText={contactFormat ? 'Please add valid integer inputs': ''}
+                            
+                            onKeyDown={preventMinus}
+                            InputProps={{ inputProps: { min: 0 } }}
+                        />
 
                         <Card sx={{ backgroundColor:'#D9D9D9', borderRadius:'15px', padding:3}} >
-                                <Box >
+                                <Box  >
                                     <Stack spacing={2} >
                                         <Box>
                                             <Typography variant='h6' align='left'>Letter addressed to dean</Typography>
                                             <Typography variant='subtitle2'>Must be signed by junior or senior faculty adviser</Typography>
                                         </Box>
-                                    
-                                        <Button component="label" onClick={LetterSubmit} sx={{backgroundColor:'#F1F1F1', minWidth:'100px',maxWidth: "100px"}} size='small' aria-required>
-                                            Choose file
-                                            <VisuallyHiddenInput id='letterfile' type="file" />
-                                        </Button>
-                                        <Typography>OSA activity permit</Typography>
-                                 
-                                        <Stack direction={{xs:"column", md:"row"}} justifyContent='space-between'  >
-                                            <Button  component="label" onClick={OSASubmit} sx={{backgroundColor:'#F1F1F1', minWidth:'100px',maxWidth: "100px", padding:'0'}} size='small'aria-required>
-                                                Choose file
-                                                <VisuallyHiddenInput id='osafile' type="file" />
-                                            </Button>
-                                           
-                                                <FormControlLabel control={<Checkbox defaultChecked />} label="Check if N/A" />
-                                                
-                                          
-                                        </Stack>
+                                        <Stack direction='row'  spacing={3} height={30}>
 
+                                        <Button component="label" sx={{backgroundColor:'#F1F1F1', minWidth:'100px',maxWidth: "100px"}} size='small' aria-required>
+                                            Choose file
+                                            {/* <VisuallyHiddenInput id='letterfile' type="file" /> */}
+                                            <Input onChange={LetterSubmit}  type="file" inputProps={{accept:"application/pdf"}} sx={{border:0,
+                                                        clip: 'rect(0 0 0 0)',
+                                                        clipPath: 'inset(50%)',
+                                                        height: 1,
+                                                        overflow: 'hidden',
+                                                        position: 'absolute',
+                                                        bottom: 0,
+                                                        left: 0,
+                                                        whiteSpace: 'nowrap',
+                                                        width: 1,
+                                            }} disableUnderline
+                                    
+                                             />
+                                         
+                                        </Button>
+                                        <Typography noWrap >{letterName}</Typography>
+                                        </Stack>
+ 
+                  
+                                        {/* <TextField type={"file"} inputProps={{accept:"application/pdf"}}/> */}
+                                        <Typography variant='h6'>OSA activity permit</Typography>
+                                 
+                                        <Stack  direction='row' spacing={3} height={30} >
+
+                                            <Button component="label" sx={{backgroundColor:'#F1F1F1', minWidth:'100px',maxWidth: "100px"}} size='small' aria-required>
+                                                Choose file
+                                                {/* <VisuallyHiddenInput id='letterfile' type="file" /> */}
+                                                <Input type="file" inputProps={{accept:"application/pdf"}} sx={{border:0,clip: 'rect(0 0 0 0)',
+                                                            clipPath: 'inset(50%)',height: 1, overflow: 'hidden', position: 'absolute',
+                                                            bottom: 0,left: 0, whiteSpace: 'nowrap',width: 1,
+                                                }} disableUnderline
+                                                onChange={PermitSubmit}
+                                                onClick={OnInputClick}
+                                            />
+                                            
+                                            </Button>
+                                            <Typography noWrap>{permitName}</Typography>  
+                                             
+                                        </Stack>
+                                        <FormControlLabel control={<Checkbox defaultChecked />} sx={{marginTop:-3}}label="Check if Permit is N/A" /> 
                                     </Stack>
                             
                                 </Box>
@@ -301,6 +634,7 @@ const RoomReservationForm = () => {
                   </Grid>
                   <Grid item xs={12} md={4} padding={2} sx={{backgroundColor:'#E9E9E9'}} >
                     <Stack spacing={2}  >
+   
                         <Typography align='left' >Event Name</Typography>
                         <TextField size='small' variant="outlined" required type='text' onChange={(e) => seteventName(e.target.value)} />
                         <Typography align='left'>Event Details</Typography>
@@ -315,9 +649,11 @@ const RoomReservationForm = () => {
                             required
                         />    
                         <Box justifyContent={'center'} >
-                            <Button type='submit'  sx={{backgroundColor:'#FFB532', maxWidth:'100%' }} size='large' >Submit</Button>   
+                            <Button type="submit" sx={{backgroundColor:'#FFB532', maxWidth:'100%' }} size='large' >Submit</Button>   
                         </Box>   
-                                                 
+
+        
+                                     
                     </Stack>
                   </Grid>
                    {/* Event information and Submit */}
@@ -327,7 +663,51 @@ const RoomReservationForm = () => {
                 
                           
           </Grid>
+            <Dialog open={open}  onClose={() => setOpen(false)}>
+                <DialogTitle>Confirm Booking</DialogTitle>
+                <DialogContent>
+                    <Stack sx={{  backgroundColor:'#D9D9D9',borderRadius:'15px'}} padding={2}>
+{/* 
+                    const startDateTime= date+" "+startTime
+        const endDateTime= date+" "+endTime
+        console.log({startDateTime,endDateTime, date, creationDate})
+        console.log({room_id,eventName,eventDetails,email,sumCost}) */}
+                        <Stack direction='row' spacing={2}>   
+                                <Typography variant='subtitle2'>Email</Typography>
+                                <Typography>{guestBooking? otherEmail:email}</Typography>   
+                        </Stack>
+                        <Stack direction='row' spacing={2}>   
+                                <Typography variant='subtitle2'>Event Name:</Typography>
+                                <Typography>{eventName}</Typography>   
+                        </Stack>
+
+                        <Stack direction='row' spacing={2}>   
+                                <Typography variant='subtitle2'>Room:</Typography>
+                                <Typography>{roomName}</Typography>   
+                        </Stack>
+                        <Stack direction='row' spacing={2}>   
+                                <Typography variant='subtitle2'>Date: </Typography>
+                                <Typography>{date}</Typography>    
+                        </Stack>
+                        <Stack direction='row' spacing={2}>   
+                                <Typography variant='subtitle2'>Time: </Typography>
+                                <Typography>{startTime} - {endTime}</Typography>   
+                        </Stack>
+                        
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button type="submit" onClick={HandleSubmit}>
+                        Book
+                    </Button>
+                    <Button onClick={() => setOpen(false)}>
+                        Return
+                    </Button>
+                </DialogActions>
+      
+            </Dialog>
           </FormGroup>
+
           </form>
         </>
 

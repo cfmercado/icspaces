@@ -48,6 +48,15 @@ const statusMapping: Record<string, string> = {
   // add other status codes as needed
 };
 
+const statusColorMapping: Record<string, string> = {
+  "0": "#eca517", // light yellow
+  "1": "#57b5d4", // light blue
+  "2": "#18bd8e", // light green
+  "3": "#fb0606", // light red
+  "4": "#828282", // light grey
+  // add other status codes as needed
+};
+
 const ReservationsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dataTable, setDataTable] = useState<Reservation[]>([]);
@@ -221,7 +230,16 @@ const ReservationsPage = () => {
                     <TableCell align="center">{format(new Date(row.start_datetime), "hh:mm a")}</TableCell>
                     <RoomNameCell roomId={parseInt(row.room_id)} />
                     <TableCell align="center">{row.activity_name}</TableCell>
-                    <TableCell align="center">{statusMapping[row.status_code]}</TableCell>
+                    <TableCell
+                      align="center"
+                      style={{
+                        wordWrap: "break-word",
+                        maxWidth: "150px",
+                        color: statusColorMapping[row.status_code],
+                      }}
+                    >
+                      <b>{statusMapping[row.status_code]}</b>
+                    </TableCell>
                     <TableCell align="center">
                       <Button variant="contained">View</Button>
                     </TableCell>

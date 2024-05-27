@@ -40,7 +40,55 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
   onClose,
   reservation,
 }) => {
+  
+  // Handler for the "Approve" button click
+  const handleCalendarButton = () => {
+    window.location.href = "https://app.icspaces.online/schedulepage";
+  };
 
+  // Handler for the "Approve" button click
+  const handlePermitButton = () => {
+
+    // Fetch value from database
+    fetch("https://api.icspaces.online/get-reservation-document", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reservation_id: reservation?.reservation_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data1) => {
+        if (data1.permit == "" || data1.permit == null) {
+          alert("There is no permit uploaded at this time!");
+        } else {
+          window.location.href = data1.permit;
+        }
+      }
+    )
+  };
+
+  // Handler for the "Approve" button click
+  const handleLetterButton = () => {
+
+    // Fetch value from database
+    fetch("https://api.icspaces.online/get-reservation-document", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reservation_id: reservation?.reservation_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data1) => {
+        if (data1.letter == "" || data1.letter == null) {
+          alert("There is no letter uploaded at this time!");
+        } else {
+          window.location.href = data1.permit;
+        }
+      }
+    )
+  };
 
   const [actionTaken, setActionTaken] = useState<string | null>(null); // State variable for tracking action (approve/disapprove)
   const [bookedDialogOpen, setBookedDialogOpen] = useState(false);
@@ -58,79 +106,15 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
   // Function to handle changes in the TextField value
   const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNote(event.target.value); // Update the state with the new value
+    console.log(`note is now '${note}'`);
   };
-
-
-
-    const getUpdatedReservationData: ReservationDataForModal = {
-      reservation_id:           reservation.reservation_id,
-      status:                   reservation.status,
-      reservation_date:         reservation.reservation_date,
-      room_name:                reservation.room_name,
-      event_name:               reservation.event_name,
-      event_description:        reservation.event_description,
-      user_name:                reservation.user_name,
-      user_id:                  reservation.user_id,
-      reserve_day_day_string:   reservation.reserve_day_day_string,
-      reserve_day_number:       reservation.reserve_day_number,
-      reserve_month:            reservation.reserve_month,
-      reserve_year:             reservation.reserve_year,
-      reserve_timeslot:         reservation.reserve_timeslot,
-      duration:                 reservation.duration,
-      hourly_fee:               reservation.hourly_fee,
-      overall_fee:              reservation.overall_fee,
-      verified_date:            reservation.verified_date,
-      payment_date:             reservation.payment_date,
-      verification_date:        reservation.verification_date,
-      disapproved_date:         reservation.disapproved_date,
-      approved_date:            reservation.approved_date,
-      cancellation_date:        reservation.cancellation_date,
-      note_from_admin:          note,
-    };
 
 
   // Handler for the "Approve" button click
   const handleApprove = () => {
     setActionTaken("approve"); // Update the state to indicate approval
     setBookedDialogOpen(true); // Open the booked dialog  
-  };
-
-
-  // const [responseData, setResponseData] = useState<string>('');
-
-  // // Posts dataw
-  // const postData = async () => {
-  //   try {
-  //     const response = await fetch('https://api.icspaces.online/get-all-reservation', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         // Add any additional headers if needed
-  //       },
-  //       body: JSON.stringify({ /* Your request body */ }),
-  //     });
-
-  //     if (!response.ok) {
-  //       console.log("Okay there's an error.");
-  //       throw new Error('Network response was not ok');
-  //     }
-
-  //     if (response.ok) {
-  //       console.log("Okay no error.");
-  //       console.log(response);
-  //     }
-
-  //     const data = await response.json();
-  //     setResponseData(data); // Assuming your server returns some data
-  //   } catch (error) {
-  //     console.error('Error posting data:', error);
-  //   }
-  // };
-
-  
-
-
-  
+  };  
 
   // Handler for the "Disapprove" button click
   const handleDisapprove = () => {
@@ -233,7 +217,8 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
                   {/* View Calendar Button */}
                   <Grid item xs={20}>
                     <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                      fontSize:'0.65vw', textTransform: 'none', height:'36px', boxShadow: 'none', paddingTop: '5px'}}>
+                      fontSize:'0.65vw', textTransform: 'none', height:'36px', boxShadow: 'none', paddingTop: '5px'}}
+                      onClick={handleCalendarButton}>
                         View Calendar
                     </Button>
                   </Grid>
@@ -285,7 +270,8 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
 
                 {/* View Letter Button*/}
                 <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                  fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}>
+                  fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                  onClick={handleLetterButton}>
                     View Letter
                 </Button>
 
@@ -294,8 +280,9 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
 
                 {/* View permit */}
                 <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                      fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}>
-                        View Calendar
+                      fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                      onClick={handlePermitButton}>
+                        View Permit
                     </Button>
               </Grid>   
 
@@ -312,25 +299,27 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
               </Grid>     
 
               {/* Modular space for the date and time */}
-              <Grid item xs= {20} sx={{ height: '100%', paddingBottom:'0px', paddingTop:'9px'}}>
+              <Grid item xs= {20} sx={{ height: '100%', paddingBottom:'2px', paddingTop:'9px'}}>
                 <Paper elevation={0} sx={{ height: '100%', borderRadius: 2, padding: 1, paddingBottom: '0px', backgroundColor: FOR_VERIFICATION_BG_COLOR, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography className="unselectable" sx={{fontWeight: 'bold', fontSize: '1.3vw', color: FOR_VERIFICATION_FONT_COLOR}}>
+                  <Typography className="unselectable" sx={{fontWeight: 'bold', fontSize: '1.3vw', color: FOR_VERIFICATION_FONT_COLOR, paddingBottom:'8px'}}>
                     For verification
                   </Typography>
                 </Paper>
+                <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                  Requested on {reservation.reservation_date}
+                </Typography>
               </Grid>
 
               {/* Restrict area for where event description text is displayed */}
               <Box border={1} paddingTop={1.2} paddingBottom={0.2} style={{ width: '100%', border:'none'}}>
-                <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingBottom: '13px', paddingTop: '0px'}}>
-                  Approving this reservation moves it to <span style={{ color: '#8eafc1' }}>for payment</span> status. If you choose to disapprove, kindly provide anote explaining the reason/s for rejection to the reservation holder.
+                <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingBottom: '0px', paddingTop: '0px'}}>
+                  Approving this reservation moves it to <span style={{ color: '#8eafc1' }}>for payment</span> status. If you choose to disapprove, kindly provide a note explaining the reason/s for rejection to the reservation holder.
                 </Typography>
               </Box>
 
-              {/* Text box area */}
-              <TextField label="Note to reservation holder" variant="outlined" color="primary" placeholder="Type some text..." 
+              {/* <TextField label="Note to reservation holder" variant="outlined" color="primary" placeholder="Type some text..." 
                 sx={{ height:'30px !important', borderRadius:'8px !important', width: '100%', paddingTop: '10px'}}
-                value={note} onChange={handleNoteChange}/>
+                value={note} onChange={handleNoteChange}/> */}
 
               {/* Disapproved button */}
               <Grid item xs={20} sx={{paddingTop:'40px'}}>
@@ -351,11 +340,62 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
 
             {/* Render appropriate modal based on the action taken */}
             {actionTaken === "approve" && (
-              <ReservationDialogPopupApproved open={bookedDialogOpen} onClose={() => setBookedDialogOpen(false)} reservation={getUpdatedReservationData} />
+              <ReservationDialogPopupApproved open={bookedDialogOpen} onClose={() => setBookedDialogOpen(false)} reservation={
+                {
+                  reservation_id:           reservation.reservation_id,
+                  status:                   reservation.status,
+                  reservation_date:         reservation.reservation_date,
+                  room_name:                reservation.room_name,
+                  event_name:               reservation.event_name,
+                  event_description:        reservation.event_description,
+                  user_name:                reservation.user_name,
+                  user_id:                  reservation.user_id,
+                  reserve_day_day_string:   reservation.reserve_day_day_string,
+                  reserve_day_number:       reservation.reserve_day_number,
+                  reserve_month:            reservation.reserve_month,
+                  reserve_year:             reservation.reserve_year,
+                  reserve_timeslot:         reservation.reserve_timeslot,
+                  duration:                 reservation.duration,
+                  hourly_fee:               reservation.hourly_fee,
+                  overall_fee:              reservation.overall_fee,
+                  verified_date:            reservation.verified_date,
+                  payment_date:             reservation.payment_date,
+                  verification_date:        reservation.verification_date,
+                  disapproved_date:         reservation.disapproved_date,
+                  approved_date:            reservation.approved_date,
+                  cancellation_date:        reservation.cancellation_date,
+                  note_from_admin:          note,
+              }} />
             )}
 
             {actionTaken === "disapprove" && (
-              <ReservationDialogPopupDisapproved open={disapprovedDialogOpen} onClose={() => setDisapprovedDialogOpen(false)} reservation={getUpdatedReservationData} />
+              <ReservationDialogPopupDisapproved open={disapprovedDialogOpen} onClose={() => setDisapprovedDialogOpen(false)} reservation={
+                {
+                  reservation_id:           reservation.reservation_id,
+                  status:                   reservation.status,
+                  reservation_date:         reservation.reservation_date,
+                  room_name:                reservation.room_name,
+                  event_name:               reservation.event_name,
+                  event_description:        reservation.event_description,
+                  user_name:                reservation.user_name,
+                  user_id:                  reservation.user_id,
+                  reserve_day_day_string:   reservation.reserve_day_day_string,
+                  reserve_day_number:       reservation.reserve_day_number,
+                  reserve_month:            reservation.reserve_month,
+                  reserve_year:             reservation.reserve_year,
+                  reserve_timeslot:         reservation.reserve_timeslot,
+                  duration:                 reservation.duration,
+                  hourly_fee:               reservation.hourly_fee,
+                  overall_fee:              reservation.overall_fee,
+                  verified_date:            reservation.verified_date,
+                  payment_date:             reservation.payment_date,
+                  verification_date:        reservation.verification_date,
+                  disapproved_date:         reservation.disapproved_date,
+                  approved_date:            reservation.approved_date,
+                  cancellation_date:        reservation.cancellation_date,
+                  note_from_admin:          note,
+                }
+              } />
             )}
           </>
         )}
