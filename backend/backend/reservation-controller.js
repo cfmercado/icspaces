@@ -317,7 +317,7 @@ const addReservation = async (req, res) => {
         // Execute query
         const result = await conn.query(query, values);
 
-        const res_id = result.insertId;
+        const res_id = typeof(result.insertId) === "bigint" ? result.insertId.toString() : result.insertId;
 
         //insert utilities if there is any
         if (utilities && utilities.length !== 0) {
@@ -328,6 +328,8 @@ const addReservation = async (req, res) => {
                 await conn.query(utilityInsertQuery, utilityInsertValues);
             }
         }
+
+        console.log(res_id, typeof(res_id))
 
         // Insert into reservation_notification table and get the reservation_id from previous query
         const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,?,?)`;

@@ -46,14 +46,13 @@ const RoomPhotos  : React.FC<RoomPhotosProps> = ({
           }
         }
         getPhotos();
-      }, [roomID]);
+      }, [roomID, image]);
 
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedImage = e.target.files?.[0];
     if (selectedImage) {
         setImage(selectedImage);
         setPhotoName(selectedImage.name);
-        window.location.reload();
     }
     };
     const deletePhoto = (image_id:number) => {
@@ -88,7 +87,7 @@ const RoomPhotos  : React.FC<RoomPhotosProps> = ({
                     formData.append("image", image);
                     formData.append("room_id", roomID);
                 }
-                fetch("https://api.icspaces.online/upload-room-image", {
+                await fetch("https://api.icspaces.online/upload-room-image", {
                 method: "POST",
                 body: formData,
             })
@@ -99,9 +98,11 @@ const RoomPhotos  : React.FC<RoomPhotosProps> = ({
                 return response.json();
                 })
                 .then((data) => console.log(data))
+                .then(() => {
+                  window.location.reload();
+                })
                 .catch((error) => console.error("Error:", error));
-            }catch (error) {
-                
+            }catch (error) {                
                 console.error("Error adding room image:", error);
             }
         }

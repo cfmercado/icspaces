@@ -186,11 +186,13 @@ function GuestBookingForm_Page() {
         }}
       >
         <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-          <DialogTitle color="primary">Reservation Request Sent</DialogTitle>
+          <DialogTitle color="primary">
+            Send Your Reservation Request
+          </DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Please wait for the the Administrators response regarding your
-              request. Once reservation is accepted, a Tracking ID will be
+              Please wait for the the Administrator's response regarding your
+              request. Once your reservation is accepted, a Tracking ID will be
               emailed to you for tracking your reservation progress!
             </DialogContentText>
           </DialogContent>
