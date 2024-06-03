@@ -359,7 +359,9 @@ const ReservationsPage = () => {
                     row.end_datetime
                   ),
                   hourly_fee: otherReservationInfo.reservations.fee,
-                  overall_fee: row.total_amount_due,
+                  overall_fee:
+                    otherReservationInfo.reservations.total_amount_due,
+                  // overall_fee: `${(parseFloat(calculateHoursUsed(row.start_datetime, row.end_datetime)) * parseFloat(otherReservationInfo.reservations.fee)).toFixed(2)}`,
 
                   // dates
                   verified_date: formatDateTime(
@@ -386,6 +388,7 @@ const ReservationsPage = () => {
                     otherReservationInfo.reservations.comment_text == ""
                       ? "(no note provided by staff)"
                       : `"${otherReservationInfo.reservations.comment_text}"`,
+                  utilities: otherReservationInfo.utilities.join(", "),
                 };
 
                 console.log("Computed cancellation_date below: ");
@@ -579,7 +582,7 @@ const ReservationsPage = () => {
                           borderRadius: 5,
                         }}
                       >
-                        View
+                        UPDATE STATUS
                       </Button>
                     </TableCell>
                   </TableRow>

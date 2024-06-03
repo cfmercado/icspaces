@@ -1,4 +1,12 @@
-import { Box, Grid, Stack, Typography } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import BookmarksOutlinedIcon from "@mui/icons-material/BookmarksOutlined";
@@ -7,6 +15,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const MuiHomeGrid: React.FC = () => {
   const userTypeMapping: { [key: number]: string } = {
@@ -24,7 +33,9 @@ const MuiHomeGrid: React.FC = () => {
   }
 
   const [user, setUser] = useState<User | null>(null);
+  const [email, setEmail] = useState("");
   const [notifications, setNotifications] = useState([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,21 +50,26 @@ const MuiHomeGrid: React.FC = () => {
           // Map the usertype number to its corresponding string
           user.usertype = userTypeMapping[user.usertype];
           setUser(user);
+          setEmail(user.email);
         } else {
           throw new Error(response.data.errmsg);
         }
       } catch (error) {
         console.error("Failed to fetch user:", error);
-        navigate("/");
+        navigate("/homepage");
       }
     };
 
     fetchUser();
   }, [navigate]);
 
+  console.log("THIS EMAIL", email);
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
+        console.log("EMAIL", email);
+
         const response = await fetch(
           "https://api.icspaces.online/get-notifications-for-user",
           {
@@ -61,33 +77,50 @@ const MuiHomeGrid: React.FC = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({user_id: 0}),    // replace target_user_id variable with the variable
-          }                                                     // na nag hohold ng id ng user
+            body: JSON.stringify({ user_id: email }), // replace target_user_id variable with the variable
+          } // na nag hohold ng id ng user
         );
-        const data = await response.json();
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("NOTIF", data);
+          setNotifications(data);
+        } else {
+          console.log("NOT FETCHING");
+        }
 
         // variable "data" now contains yung rows ng notifs for that user
         // return data;
         // setNotifications(data);
-        console.log(data);
-
       } catch (error) {
         console.error("Failed to fetch reservations:", error);
       }
     };
 
     fetchNotifications();
-  }, []);
+  }, [email]);
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 1000); // Update every second
-    return () => clearInterval(interval);
-  }, []);
+  //   NOTIF
+  // (2) [{…}, {…}]
+  // 0
+  // :
+  // {notification_type: 0, notification_action: 'Reservation Added', notification_body: "Added Jaymart Latigay's reservation for activity fvjfvvv (Pending)", notification_date: '2024-06-01T08:11:58.000Z', actor_id: 'jglatigay@up.edu.ph', …}
+  // 1
+  // :
+  // {notification_type: 0, notification_action: 'Reservation Added', notification_body: "Added Jaymart Latigay's reservation for activity dfjdfsd (Pending)", notification_date: '2024-06-01T08:01:48.000Z', actor_id: 'jglatigay@up.edu.ph', …}
+  // length
+  // :
+  // 2
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setCurrentDate(new Date());
+  //   }, 1000); // Update every second
+  //   return () => clearInterval(interval);
+  // }, []);
 
+  console.log("NOTIFICATIONS", notifications);
   const formattedDate = currentDate.toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
@@ -100,13 +133,14 @@ const MuiHomeGrid: React.FC = () => {
       sx={{
         background: "#FFFFFF", // Set background to white
         color: "#183048",
-        borderRadius: "15px",
-        display: "Center",
+        borderRadius: "5px",
+        display: "flex",
         justifyContent: "center",
         alignItems: "center",
         fontFamily: "Calibri, sans-serif",
         height: 110,
         overflow: "auto",
+        flexDirection: "column",
         fontSize: {
           xs: 14,
           sm: 18,
@@ -117,7 +151,47 @@ const MuiHomeGrid: React.FC = () => {
         marginTop: 1, // Add marginTop to create space between text and StyledBox
       }}
     >
-      {props.children}
+      <Box
+        sx={{
+          width: "100%", // Make the inner box take up the full width of the outer box
+          overflowY: "auto", // Add a vertical scrollbar to the inner box
+        }}
+      >
+        {props.notifications && props.notifications.length > 0 ? (
+          props.notifications.map((notif: any, index: number) => {
+            const dateTime = new Date(notif.notification_date).toLocaleString();
+            const isLatest = index === 0;
+            return (
+              <Accordion key={index} style={{ width: "100%" }}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls={`panel${index}-content`}
+                  id={`panel${index}-header`}
+                >
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    width="100%"
+                  >
+                    <Typography
+                      color={isLatest ? "secondary" : "primary"}
+                      fontWeight={isLatest ? "medium" : "regular"}
+                    >
+                      {notif.notification_action}
+                    </Typography>
+                    <Typography color="light grey">{dateTime}</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails style={{ overflow: "auto" }}>
+                  <Typography>{notif.notification_body}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })
+        ) : (
+          <Typography>No notifications, right now.</Typography>
+        )}
+      </Box>
     </Box>
   );
 
@@ -231,20 +305,22 @@ const MuiHomeGrid: React.FC = () => {
 
       <Grid container item xs={12} spacing={1}>
         <Grid item xs={7}>
-        <NotifBox>
+          <NotifBox>
             {/* <Typography variant="h6" sx={{ marginBottom: 1 }}>
               Notification 
             </Typography> */}
-            <Grid container item xs={12}  direction={"column"}>
+            <Grid container item xs={12} direction={"column"}>
               <Grid item xs={5}>
                 <Typography>Notification Box</Typography>
               </Grid>
               <Grid item xs={12}>
-                <NotifBoxTwo>
-                      {/* <div>{notification.notification_action}</div>
+                <NotifBoxTwo notifications={notifications} />
+                {/* <div>{notification.notification_action}</div>
                       <div>{notification.notification_body}</div> */}
-                      <div>{notifications}</div>
-                </NotifBoxTwo>
+                {/* <NotifBoxTwo notifications={notifications} /> */}
+
+                {/* <div>{notifications}</div> */}
+                {/* </NotifBoxTwo> */}
               </Grid>
             </Grid>
           </NotifBox>
@@ -263,7 +339,7 @@ const MuiHomeGrid: React.FC = () => {
                       sx={{ fontSize: 40, color: "#183048" }}
                       className="AnyIcon"
                     />
-                    <div>Accounts</div>
+                    <div>Account</div>
                   </Stack>
                 </StyledBox>
               </Link>
@@ -295,7 +371,7 @@ const MuiHomeGrid: React.FC = () => {
                       sx={{ fontSize: 40, color: "#183048" }}
                       className="AnyIcon"
                     />
-                    <div>Reservation Status</div>
+                    <div>Reservations</div>
                   </Stack>
                 </StyledBox>
               </Link>

@@ -117,7 +117,10 @@ const AccountCard: React.FC<AccountCardProps> = ({
                   justifyContent='space-evenly'
                > 
                 <Typography sx={{textAlign:{xs:'center',md:'left'}}} variant='h6' color='#183048'> {users.lname},&nbsp;{users.fname}</Typography>
-                <GrayTypography>Last name, First name</GrayTypography>
+                {/* <GrayTypography>Last name, First name</GrayTypography> */}
+                <Typography variant='subtitle2' color='#8A8A8A' sx={{textAlign:{xs:'center',md:'left'},  display:{xs:'none',md:'block'}, }} >
+                  Last name, First name
+                </Typography>
               </Box>
               <Box marginRight='auto' sx={{
                   display:{xs:'flex',md:'inline'}, 

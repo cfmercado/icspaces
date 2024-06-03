@@ -80,4 +80,10 @@ INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALU
 INSERT INTO reservation(activity_name, activity_desc, room_id, user_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code) VALUES('Freshie Orientation', 'Orientation for ICS Freshmen', 1, 'ajsantiago@up.edu.ph', '2021-08-31 15:00:00', '2021-08-31 16:00:00', 0.00, 0.00, 5000.00, 0);
 INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(7, 'ajsantiago@up.edu.ph', 0);
 
+-- confirmed/approved status
+INSERT INTO reservation(activity_name, activity_desc, room_id, user_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code) VALUES('ICS 180', 'Subject of ICS', 1, 'ajsantiago@up.edu.ph', '2023-12-02 08:00:00', '2023-12-02 10:00:00', 0.00, 0.00, 5000.00, 2);
+INSERT INTO reservation(activity_name, activity_desc, room_id, user_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code) VALUES('ICS 173', 'Subject of ICS', 2, 'ddoffemaria@up.edu.ph', '2023-12-02 08:00:00', '2023-12-02 10:00:00', 0.00, 0.00, 3000.00, 2);
+INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(8, 'ajsantiago@up.edu.ph', 0);
+INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(9, 'ddoffemaria@up.edu.ph', 0);
+
 

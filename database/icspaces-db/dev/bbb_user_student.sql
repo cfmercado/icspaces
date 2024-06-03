@@ -3,7 +3,7 @@ USE icspaces;
 CREATE TABLE student(
     email VARCHAR(50) PRIMARY KEY,
     student_number VARCHAR(50),
-    org VARCHAR(50),
+    org VARCHAR(150),
     course VARCHAR(50), -- full name
     college VARCHAR(50), -- full name
     department VARCHAR(50), -- full name

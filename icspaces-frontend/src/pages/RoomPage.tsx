@@ -2,29 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Typography,
-  Button,
   Stack,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import roomImage from "../assets/room_images/ICS.jpg";
-import {
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   Paper,
 } from "@mui/material";
-import {
-  BorderBottom,
-  PaddingOutlined,
-  PaddingRounded,
-} from "@mui/icons-material";
-import roomImages from "../assets/room_images/RoomImages";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import Calendar from "../components/Calendar";
@@ -59,22 +49,34 @@ const styles = {
   },
 };
 
+const styles_capacity = {
+  cell: {
+    color: "white",
+    backgroundColor: "#183048",
+    border: "none",
+    padding: "1px 15px",
+    fontWeight: "bold",
+    marginBottom: '20px',
+  },
+};
+
 const RoomPage = () => {
   const { room_id } = useParams<{ room_id: string }>();
 
-  // State to keep track of the current image index
+  // State to keep track of the current image index and images
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [roomImages, setRoomImages] = useState<{ [key: string]: string }>({});
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
   // Handler to go to the next image
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % roomImages.length);
+    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % Object.keys(roomImages).length);
   };
 
   // Handler to go to the previous image
   const prevImage = () => {
     setCurrentImageIndex(
-      (prevIndex) => (prevIndex - 1 + roomImages.length) % roomImages.length
+      (prevIndex) => (prevIndex - 1 + Object.keys(roomImages).length) % Object.keys(roomImages).length
     );
   };
 
@@ -108,7 +110,6 @@ const RoomPage = () => {
     item_name: string;
     item_qty: number;
     room_id: number;
-    // add properties here based on the structure of utility objects
   }
 
   interface RoomInfo {
@@ -148,11 +149,11 @@ const RoomPage = () => {
 
   useEffect(() => {
     fetch("https://api.icspaces.online/get-room-info", {
-      method: "POST", // or 'PUT'
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ room_id: room_id }), // Uncomment this line if you need to send data in the request body
+      body: JSON.stringify({ room_id: room_id }),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -160,6 +161,40 @@ const RoomPage = () => {
         console.log(data);
       });
   }, [selectedDate]);
+
+  useEffect(() => {
+    const getPhotos = async () => {
+      try {
+        const photos = await fetch(
+          "https://api.icspaces.online/get-room-image",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ room_id }),
+          }
+        );
+        if (!photos.ok) {
+          throw new Error("Failed to fetch room images");
+        }
+
+        const imagesData = await photos.json();
+
+        if (imagesData && imagesData.images && imagesData.images.length > 0) {
+          const latestImage = imagesData.images[0].url;
+          setRoomImages((prevImages) => ({
+            ...prevImages,
+            [room_id as string]: latestImage,
+          }));
+          console.log("Setting images successful");
+        } 
+      } catch (error) {
+        console.error("Failed to fetch rooms and utilities:", error);
+      }
+    };
+    getPhotos();
+  }, [room_id]);
 
   return (
     <Box
@@ -169,7 +204,7 @@ const RoomPage = () => {
         justifyContent: "flex-start", // Aligns content to the top
         alignItems: "center", // Centers content horizontally
         height: "100vh", // Maintains full viewport height
-        width: "184vh",
+        width: "200vh",
         overflowX: "hidden", // Prevents horizontal scrolling
         overflowY: "auto", // Allows scrolling
         position: "relative", // Allows positioning of children
@@ -178,9 +213,9 @@ const RoomPage = () => {
       <Box
         sx={{
           position: "absolute",
-          top: 560, // Adjust these values as needed
+          top: 560, 
           left: 230,
-          width: 300, // Specify width and height if necessary
+          width: 300, 
           height: 300,
         }}
       >
@@ -189,14 +224,15 @@ const RoomPage = () => {
       <Box
         sx={{
           position: "absolute",
-          top: 560, // Adjust these values as needed
-          left: 620,
-          width: 1700, // Specify width and height if necessary
+          top: 560, 
+          left: 680,
+          width: 1700, 
           height: 700,
         }}
       >
         <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} roomID={room_id}/>
       </Box>
+
       <Button
         startIcon={<ArrowBackIcon />}
         sx={{ position: "absolute", top: 80, left: 20 }}
@@ -207,138 +243,154 @@ const RoomPage = () => {
       >
         Back to ICS Rooms
       </Button>
-      <Box
-        component="img"
-        src={roomImages[currentImageIndex]}
-        alt={`Room Image ${currentImageIndex + 1}`}
-        sx={{
-          maxHeight: 400,
-          borderRadius: 4,
-          position: "absolute",
-          top: "140px",
-          left: "250px",
-        }}
-      />
-      <Button
-        sx={{ position: "absolute", top: "320px", left: "200px" }}
-        onClick={prevImage}
-        disabled={currentImageIndex === 0}
-      >
-        <ArrowBackIosIcon />
-      </Button>
-      <Button
-        sx={{ position: "absolute", top: "320px", left: "1250px" }}
-        onClick={nextImage}
-        disabled={currentImageIndex === roomImages.length - 1}
-      >
-        <ArrowForwardIosIcon />
-      </Button>
-      <Card
-        sx={{
-          width: 300,
-          height: 370,
-          position: "absolute",
-          top: "340px",
-          right: "120px",
-          transform: "translate(-50%, -50%)",
-          p: 2,
-          backgroundColor: "#183048",
-          borderRadius: 4,
-        }}
-      >
-        <CardContent>
-          <Typography
-            variant="h4"
-            component="div"
-            sx={{
-              fontWeight: "bold",
-              color: "#FFB532",
-              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            {room?.room.room_name}
-          </Typography>
-          <Stack spacing={1} mt={2}>
-            <TableContainer component={Paper} sx={{ border: "none", mb: 16 }}>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell style={styles.boldCell}>Room type:</TableCell>
-                    <TableCell style={styles.cell}>
-                      {room?.room.room_type}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell style={styles.boldCell}>Location:</TableCell>
-                    <TableCell style={styles.cell}>
-                      {statusMapping[room?.room.floor_number ?? 3]}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell style={styles.boldCell}>Capacity:</TableCell>
-                    <TableCell style={styles.cell}>
-                      {room?.room.room_capacity}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Typography
-              color="text.secondary"
-              gutterBottom
-              align="left"
-              style={{ fontSize: "1rem" }}
-            >
-              <span style={{ color: "white" }}>Available equipment:</span>
-            </Typography>
-            <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {room?.utility?.map((utilityItem) => (
-                <li key={utilityItem.item_name}>
-                  <Typography
-                    style={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                    }}
-                    align="left"
-                  >
-                    {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
-                  </Typography>
-                </li>
-              ))}
-            </ul>
-            <Typography
-              color="text.secondary"
-              gutterBottom
-              align="left"
-              style={{ fontSize: "1rem" }}
-            >
-              <span style={{ color: "white" }}>Hourly Fee:</span>
-            </Typography>
-            <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
-              {[
-                `P ${parseInt(room?.room.fee ?? "")} / hour`,
-                `P ${parseInt(
-                  room?.room.additional_fee_per_hour ?? ""
-                )} / hour overtime`,
-              ].map((fee) => (
-                <li key={fee}>
-                  <Typography
-                    style={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                    }}
-                    align="left"
-                  >
-                    {fee}
-                  </Typography>
-                </li>
-              ))}
-            </ul>
-          </Stack>
-        </CardContent>
-      </Card>
+
+      <Box sx={{ 
+        position: 'relative', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        width: '70%', 
+        marginRight: 4, 
+        marginTop: 15,
+      }}>
+        <Button 
+          sx={(theme) => ({
+            position: "absolute", 
+            left: `calc(-${theme.spacing(6)})`, 
+            zIndex: 10,
+            color: 'primary.main'
+          })} 
+          onClick={prevImage} 
+          disabled={currentImageIndex === 0}
+        >
+          <ArrowBackIosIcon />
+        </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'start', gap: 2, p: 2 }}>
+          {roomImages[room_id as string] ? (
+            <Box component="img"
+              src={roomImages[room_id as string]}
+              alt={`Room Image`}
+              sx={{
+                maxHeight: 400,
+                borderRadius: 4,
+                width: 'auto',
+              }}
+            />
+          ) : (
+            <Typography variant="h6" color="textSecondary">No images available</Typography>
+          )}
+
+          <Card sx={{
+            width: 350,
+            height: 400,
+            backgroundColor: "#183048",
+            borderRadius: 4,
+          }}>
+            <CardContent>
+              <Typography variant="h4" component="div" sx={{
+                fontWeight: "bold",
+                color: "#FFB532",
+                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+              }}>
+                {room?.room.room_name}
+              </Typography>
+              <Stack spacing={1} mt={2}>
+                {/* Room details */}
+                <TableContainer component={Paper} sx={{ border: "none", mb: 16 }}>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell style={styles.boldCell}>Room type:</TableCell>
+                        <TableCell style={styles.cell}>
+                          {room?.room.room_type}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell style={styles.boldCell}>Location:</TableCell>
+                        <TableCell style={styles.cell}>
+                          {statusMapping[room?.room.floor_number ?? 3]}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell style={styles.boldCell}>Capacity:</TableCell>
+                        <TableCell style={styles_capacity.cell}>
+                          {room?.room.room_capacity}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                
+                <Typography
+                  color="text.secondary"
+                  gutterBottom
+                  align="left"
+                  style={{ fontSize: "1rem" }}
+                >
+                  <span style={{ color: "white" }}>Available equipment:</span>
+                </Typography>
+                <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
+                  {room?.utility?.map((utilityItem) => (
+                    <li key={utilityItem.item_name}>
+                      <Typography
+                        style={{
+                          color: "white",
+                          fontWeight: "bold",
+                          fontSize: "0.8rem",
+                        }}
+                        align="left"
+                      >
+                        {`${utilityItem.item_name} (Qty: ${utilityItem.item_qty})`}
+                      </Typography>
+                    </li>
+                  ))}
+                </ul>
+                <Typography
+                  color="text.secondary"
+                  gutterBottom
+                  align="left"
+                  style={{ fontSize: "1rem" }}
+                >
+                  <span style={{ color: "white" }}>Hourly Fee:</span>
+                </Typography>
+                <ul style={{ listStyleType: "none", paddingLeft: "20px" }}>
+                  {[
+                    `P ${parseInt(room?.room.fee ?? "")} / hour`,
+                    `P ${parseInt(
+                      room?.room.additional_fee_per_hour ?? ""
+                    )} / hour overtime`,
+                  ].map((fee) => (
+                    <li key={fee}>
+                      <Typography
+                        style={{
+                          color: "white",
+                          fontWeight: "bold",
+                          fontSize: "0.8rem",
+                        }}
+                        align="left"
+                      >
+                        {fee}
+                      </Typography>
+                    </li>
+                  ))}
+                </ul>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+        <Button 
+          sx={(theme) => ({
+            position: "absolute", 
+            right: `calc(-${theme.spacing(6)})`, 
+            zIndex: 10,
+            color: 'primary.main'
+          })} 
+          onClick={nextImage} 
+          disabled={currentImageIndex === Object.keys(roomImages).length - 1}
+        >
+          <ArrowForwardIosIcon />
+        </Button>
+      </Box>
     </Box>
   );
 };

@@ -55,7 +55,7 @@ const RoomsPage_Admin = () => {
   const [currentRoom, setCurrentRoom] = useState(0);
   const [rooms, setRooms] = useState<RoomInfo[]>([]);
   const [image, setImage] = useState<{ [key: number]: string }>({});
-  
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const nextRoom = () => {
     setCurrentRoom((prevIndex) => (prevIndex + 1) % rooms.length);
   };
@@ -98,7 +98,7 @@ const RoomsPage_Admin = () => {
         fetch("https://api.icspaces.online/delete-room", {
           method: "POST",
           headers: {'Content-Type': 'application/json',},
-          body: JSON.stringify({room_id: rooms[currentRoom]?.id}),
+          body: JSON.stringify({room_id: rooms[currentRoom]?.id, admin_id: userEmail}),
         })
           .then((response) => {
             if (!response.ok) {
@@ -106,14 +106,37 @@ const RoomsPage_Admin = () => {
             }
             return response.json();
           })
-          .then((data) => {console.log(data);console.log(rooms)})
+          .then((data) => {console.log(data);window.location.reload();})
       } catch (error) {
         console.error("Error deleting room:", error);
       }
-      window.location.reload();
+      
     }
   };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("https://api.icspaces.online/get-profile", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
   
+        if (data.success) {
+          setUserEmail(data.data.email);
+          console.log(userEmail);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      }
+    }
+    fetchUserProfile();
+  }, [])
+
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -185,73 +208,87 @@ const RoomsPage_Admin = () => {
     <Box
       sx={{
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start", // Aligns content to the top
-        alignItems: "center", // Centers content horizontally
-        height: "100vh", // Maintains full viewport height
-        overflowY: "auto", // Allows scrolling
-        position: "relative", // Allows positioning of children
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        height: "100vh",
+        overflowY: "auto",
+        position: "relative",
       }}
     >
       <Box
         sx={{
           position: "absolute",
-          top: 560, // Adjust these values as needed
-          left: 230,
-          width: "66%", // Specify width and height if necessary
+          top: { xs: 560, md: 560 },
+          left: { xs: 10, md: 230 },
+          width: "66%",
           height: 300,
         }}
       >
-        <RoomPhotos roomID = {rooms[currentRoom]?.id}  />
+        <RoomPhotos roomID={rooms[currentRoom]?.id} />
       </Box>
-
+  
       <Box
-        style={{
+        sx={{
           position: "absolute",
-          top: 80,
-          left: 40,
+          top: { xs: 20, md: 80 },
+          left: { xs: 10, md: 40 },
         }}
       >
         <BackButton />
       </Box>
+  
       <Box
         component="img"
-        src={`${image[currentRoom+1]}`}
+        src={`${image[rooms[currentRoom]?.id]}`}
         alt={`Room Image ${currentRoom + 1}`}
         sx={{
           maxHeight: 400,
           borderRadius: 4,
           position: "absolute",
-          top: "140px",
-          left: "250px",
+          top: { xs: 100, sm: 100, md: 140 },
+          left: { xs: 20, sm: 40, md: 250 },
+          width: { xs: "80%", md: "auto" }, 
+          height: { xs: "auto", md: 400 },
         }}
       />
+  
       <Button
-        sx={{ position: "absolute", top: "320px", left: "200px" }}
+        sx={{
+          position: "absolute",
+          top: { xs: 520, sm: 270, md: 320 },
+          left: { xs: 90, sm: 0, md: 200 },
+        }}
         onClick={prevRoom}
         disabled={currentRoom === 0}
       >
         <ArrowBackIosIcon />
       </Button>
+  
       <Button
-        sx={{ position: "absolute", top: "320px", left: "1250px" }}
+        sx={{
+          position: "absolute",
+          top: { xs: 520, sm: 270, md: 320 },
+          left: { xs: 130, sm: 670, md: 1180 },
+        }}
         onClick={nextRoom}
         disabled={currentRoom === rooms.length - 1}
       >
         <ArrowForwardIosIcon />
       </Button>
+  
       <Card
         sx={{
-          width: 320,
-          height: 370,
+          width: { xs: "72%", sm: 250, md: 320 },
+          height: { xs: "40%", sm: 317, md: 370 },
           position: "absolute",
-          top: "340px",
-          right: "120px",
+          top: { xs: 350, sm: 273, md: 340 },
+          left: { xs: 190, sm: 550,  md: 1000 },
           transform: "translate(-50%, -50%)",
           p: 2,
           backgroundColor: "#183048",
           borderRadius: 4,
-          overflowY: "auto",
+          overflowY: "auto",    
         }}
       >
         <CardContent>
@@ -279,11 +316,7 @@ const RoomsPage_Admin = () => {
                   <TableRow>
                     <TableCell style={styles.boldCell}>Location:</TableCell>
                     <TableCell style={styles.cell}>
-                      {
-                        statusMapping[
-                          rooms[currentRoom]?.floor_number ?? 3
-                        ]
-                      }
+                      {statusMapping[rooms[currentRoom]?.floor_number ?? 3]}
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -360,7 +393,6 @@ const RoomsPage_Admin = () => {
                   width: "40%",
                   color: "black",
                   borderRadius: "20px",
-
                   fontSize: "13px",
                   "&:hover": {
                     backgroundColor: "#FFC532",
@@ -374,16 +406,17 @@ const RoomsPage_Admin = () => {
                 variant="contained"
                 onClick={deleteRoom}
                 sx={{
+                  backgroundColor: "red",
                   textTransform: "none",
-                  backgroundColor: "#FFB532",
                   height: "23px",
                   width: "40%",
                   color: "black",
                   borderRadius: "20px",
-                  fontSize: "13px",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
                   "&:hover": {
-                    backgroundColor: "#FFC532",
+                    backgroundColor: "#aa0000",
                   },
+                  ml: 2,
                 }}
               >
                 {" "}
@@ -395,6 +428,7 @@ const RoomsPage_Admin = () => {
       </Card>
     </Box>
   );
+  
 };
 
 export default RoomsPage_Admin;

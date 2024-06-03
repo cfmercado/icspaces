@@ -136,6 +136,7 @@ const ReservationsPage = () => {
     }
     setDataTable(filteredData);
   };
+
   const formatDateTime = (dateTimeString: string): string => {
     if (dateTimeString == "") return "";
 
@@ -252,9 +253,19 @@ const ReservationsPage = () => {
       body: JSON.stringify({ reservation_id: row.reservation_id }), // Uncomment this line if you need to send data in the request body
     })
       .then((response) => response.json())
-      .then((data1) => {
+      .then((xx) => {
         console.log("FETCH IS BELOW:");
-        console.log(data1);
+        console.log(xx);
+
+        // // Fetch name values
+        // fetch("https://api.icspaces.online/get-user-information", {
+        //   method: "POST", // or 'PUT'
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({ email: user_id }), // Uncomment this line if you need to send data in the request body
+        // })
+        //   .then((response) => response.json())
 
         // Fetch name values
         fetch("https://api.icspaces.online/get-user-information", {
@@ -314,7 +325,8 @@ const ReservationsPage = () => {
                     row.end_datetime
                   ),
                   hourly_fee: otherReservationInfo.reservations.fee,
-                  overall_fee: row.total_amount_due,
+                  overall_fee: otherReservationInfo.reservations.total_amount_due,
+                  // overall_fee: `${(parseFloat(calculateHoursUsed(row.start_datetime, row.end_datetime)) * parseFloat(otherReservationInfo.reservations.fee)).toFixed(2)}`,
 
                   // dates
                   verified_date: formatDateTime(
@@ -340,7 +352,10 @@ const ReservationsPage = () => {
                   note_from_admin:
                     otherReservationInfo.reservations.comment_text == ""
                       ? "(no note provided by staff)"
-                      : `"${otherReservationInfo.reservations.comment_text}"`,
+                      : `"${otherReservationInfo.reservations.comment_text}"`
+                  ,
+
+                  utilities: otherReservationInfo.utilities.join(", ")
                 };
 
                 handleOpen(reservationDataForModal);
@@ -529,7 +544,7 @@ const ReservationsPage = () => {
                           borderRadius: 5,
                         }}
                       >
-                        View
+                        Update
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -80,6 +80,9 @@ const UserInfo: React.FC = () => {
               { withCredentials: true }
             );
           } else if (user.usertype === "Faculty") {
+            console.log("GETTING FACULTY DETAILS");
+            console.log("EMAIL", user.email);
+
             detailsResponse = await axios.post(
               "https://api.icspaces.online/get-faculty-details",
               { email: user.email },
@@ -89,7 +92,7 @@ const UserInfo: React.FC = () => {
 
           setUserDetails(detailsResponse?.data);
           setUser(user);
-          console.log("USER DETAILS:", userDetails);
+          console.log("USER DETAILS:", detailsResponse?.data);
           console.log("USER :", user);
         } else {
           throw new Error(response.data.errmsg);
@@ -154,6 +157,7 @@ const UserInfo: React.FC = () => {
           }
         );
       } else if (user && user.usertype === "Faculty") {
+        console.log("UPDATING FACULTY DETAILS");
         response = await axios.post(
           "https://api.icspaces.online/update-faculty-details",
           {
@@ -201,6 +205,7 @@ const UserInfo: React.FC = () => {
 
   console.log("THIS IS USER", user); // Add this line
   console.log("USER DETAILS", userDetails);
+  console.log("College and Dept:", college, department);
   if (!user) {
     return null; // or return a loading spinner, or some placeholder content
   }
@@ -433,7 +438,113 @@ const UserInfo: React.FC = () => {
     "ZOOLOGICAL SOCIETY (OZOOMS)",
     "Others",
   ]; // Replace with orgs
-  const courses = ["Course 1", "Course 2"]; // Replace with  courses
+  const courses = [
+    "BS Agricultural Biotechnology",
+    "BS Agricultural Chemistry",
+    "BS Agriculture",
+    "BS Food Science and Technology",
+    "Master in Animal Nutrition",
+    "Master in Food Engineering",
+    "Master of Agriculture major in Agronomy",
+    "Master of Agriculture major in Horticulture",
+    "Master of Science in Agricultural Chemistry",
+    "Master of Science in Agricultural Education",
+    "Master of Science in Agronomy",
+    "Master of Science in Animal Science",
+    "Master of Science in Botany",
+    "Master of Science in Food Science",
+    "Master of Science in Holticulture",
+    "Master of Science in Plant Breeding",
+    "Master of Science in Plant Genetics Resources Conservation and Management",
+    "Master of Science in Plant Pathology",
+    "Master of Science in Rural Sociology",
+    "Master of Science in Soil Science",
+    "PhD by Research in Food Science",
+    "BA Communication Arts",
+    "BA Philosophy",
+    "BA Sociology",
+    "BS Applied Mathematics",
+    "BS Applied Physics",
+    "BS Biology",
+    "BS Chemistry",
+    "BS Computer Science",
+    "BS Mathematics",
+    "BS Mathematics and Science Teaching",
+    "BS Statistics",
+    "Master in Communication Arts",
+    "Master in Science in Physics",
+    "Master of Arts in Communication Arts",
+    "Master of Arts in Sociology",
+    "Master of Information Technology",
+    "Master of Science in Biochemistry",
+    "Master of Science in Chemistry",
+    "Master of Science in Computer Science",
+    "Master of Science in Genetics",
+    "Master of Science in Mathematics",
+    "Master of Science in Microbiology",
+    "Master of Science in Molecular Biology and Biotechnology",
+    "Master of Science in Statistics",
+    "Master of Science in Wildlife Studies",
+    "Master of Science in Zoology",
+    "PhD by Research in Agricultural Chemistry",
+    "PhD by Research in Biochemistry",
+    "PhD by Research in Wildlife Science",
+    "PhD by Research in Zoology",
+    "Associate of Science in Development Communication",
+    "BS Development Communication",
+    "Master of Science in Development Communication",
+    "Associate in Arts in Entrepreneurship",
+    "Bachelor of Science in Accountancy",
+    "BS Agribusiness Management and Entrepreneurship",
+    "BS Agricultural and Applied Economics",
+    "BS Economics",
+    "Master of Management major in Agribusiness Management and Entrepreneurship",
+    "Master of Management major in Business Management",
+    "Master of Management major in Cooperative Management",
+    "Master of Science in Agricultural Economics",
+    "Master of Science in Economics",
+    "Bachelor of Science in Materials Engineering",
+    "Bachelor of Science in Mechanical Engineering",
+    "BS Agricultural and Biosystems Engineering",
+    "BS Chemical Engineering",
+    "BS Civil Engineering",
+    "BS Electrical Engineering",
+    "BS Industrial Engineering",
+    "BS Materials Engineering",
+    "BS Mechanical Engineering",
+    "Master in Food Engineering",
+    "Master of Science in Agricultural Engineering",
+    "Master of Science in Agrometeorology",
+    "Master of Science in Chemical Engineering",
+    "PhD by Research in Chemical Engineering",
+    "Associate of Science in Forestry",
+    "BS Forestry",
+    "Master of Forestry",
+    "Master of Science in Forestry",
+    "Master of Science in Natural Resources Conservation",
+    "BS Human Ecology",
+    "BS Nutrition",
+    "Graduate Diploma in Environmental Planning",
+    "Master in Clinical Nutrition",
+    "Master of Professional Studies in Food and Nutrition Planning",
+    "Master of Science in Applied Nutrition",
+    "Master of Science in Clinical Nutrition",
+    "Master of Science in Family Resource Management",
+    "PhD by Research in Human Development",
+    "Doctor of Veterinary Medicine",
+    "Master in Veterinary Epidemiology",
+    "Master of Science in Veterinary Medicine",
+    "PhD by Research in Veterinary Medicine",
+    "PhD in Veterinary Medicine (Residential Mode)",
+    "Master in Public Affairs",
+    "Master of Development Management and Governance",
+    "Master of Science in Community Development",
+    "Master of Science in Development Management and Governance",
+    "Master of Science in Extension Education",
+    "Master of Science in Environmental Science",
+    "PhD in Environmental Diplomacy and Negotiations",
+    "Professional Masters in Tropical Marine Ecosystems Management",
+  ];
   const colleges = [
     "College of Agriculture and Food Science (CAFS)",
     "College of Arts and Sciences (CAS)",
@@ -628,19 +739,6 @@ const UserInfo: React.FC = () => {
                       <TextField {...params} required label="Organization" />
                     )}
                   />
-                  <Autocomplete
-                    fullWidth
-                    id="department"
-                    options={departments}
-                    value={department}
-                    sx={{ marginTop: "15px" }}
-                    onChange={(event, newValue) => {
-                      setCollege(newValue || "");
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} required label="Department" />
-                    )}
-                  />
                 </>
               )}
               {user.usertype === "Faculty" && (
@@ -656,6 +754,19 @@ const UserInfo: React.FC = () => {
                     }}
                     renderInput={(params) => (
                       <TextField {...params} required label="College" />
+                    )}
+                  />
+                  <Autocomplete
+                    fullWidth
+                    id="department"
+                    options={departments}
+                    value={department}
+                    sx={{ marginTop: "15px" }}
+                    onChange={(event, newValue) => {
+                      setDepartment(newValue || "");
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} required label="Department" />
                     )}
                   />
                 </>

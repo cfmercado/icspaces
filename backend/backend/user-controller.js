@@ -93,14 +93,16 @@ const changeUserType = async (req, res) => {
         // create a new query to set isFirstTimeLogin to true
         var queryFirstLogin = "UPDATE user SET isFirstTimeLogin = true WHERE email = ?";
         await conn.query(queryFirstLogin, [email]);
+        await addUserStatusChangeNotification(admin_id, email, conn);
         await conn.commit();
         // return the results
 
-        await addUserStatusChangeNotification(admin_id, email, conn);
+        
 
         res.send({ message: 'User type updated, student data deleted, user added to faculty, and isFirstTimeLogin set to true.' });
     } catch (err) {
         await conn.rollback();
+        console.log(err);
         res.send({errmsg: "Failed to change faculty type", success: false });
     } finally {
         if (conn) return conn.release();
@@ -225,14 +227,17 @@ const getStudentDetails = async (req, res) => {
             JOIN 
                 student ON user.email = student.email 
             WHERE 
-                user.email = ?`;
+                user.email = ? AND user.usertype = 0`;
         const rows = await conn.query(query, email);
+        if(rows.length === 0) {
+            throw new Error("User is not a student");
+        }
         await conn.commit();
         // return the results
         res.send(rows[0]);
     } catch (err) {
-        await conn.rollback();
-        res.send({errmsg: "Failed to get user information", success: false });
+        if (conn) await conn.rollback();
+        res.send({errmsg: err.message, success: false });
     } finally {
         if (conn) return conn.release();
     }
@@ -259,14 +264,17 @@ const getFacultyDetails = async (req, res) => {
             JOIN 
                 faculty_member ON user.email = faculty_member.email 
             WHERE 
-                user.email = ?`; 
+                user.email = ? AND user.usertype = 1`; 
         const rows = await conn.query(query, email);
+        if(rows.length === 0) {
+            throw new Error("User is not a faculty member");
+        }
         await conn.commit();
         // return the results
         res.send(rows[0]);
     } catch (err) {
-        await conn.rollback();
-        res.send({errmsg: "Failed to get user information", success: false });
+        if (conn) await conn.rollback();
+        res.send({errmsg: err.message, success: false });
     } finally {
         if (conn) return conn.release();
     }
@@ -398,5 +406,73 @@ const setUsersToStudent = async (req, res) => {
     }
 }
 
+const setNewUserStatus = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const { email, admin_id, newUserType } = req.body;
+        await conn.beginTransaction();
+        
+        // Get the current usertype of the user
+        let query = "SELECT usertype FROM user WHERE email = ?";
+        let rows = await conn.query(query, [email]);
+        const oldUserType = rows[0].usertype;
 
-export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent }
+        
+
+        // Update the usertype and isFirstTimeLogin in the user table
+        query = "UPDATE user SET usertype = ?, isFirstTimeLogin = true WHERE email = ?";
+        await conn.query(query, [newUserType, email]);
+
+        // Conditionally delete the user from the respective table based on their old usertype
+        if (oldUserType === 0) {
+            query = "DELETE FROM student WHERE email = ?";
+            await conn.query(query, [email]);
+        } else if (oldUserType === 1) {
+            query = "DELETE FROM faculty_member WHERE email = ?";
+            await conn.query(query, [email]);
+        } else if (oldUserType === 2) {
+            query = "DELETE FROM ics_rc_oic WHERE email = ?";
+            await conn.query(query, [email]);
+        } else if (oldUserType === 3) {
+            query = "DELETE FROM director WHERE email = ?";
+            await conn.query(query, [email]);
+        }
+
+        let student_number = "";
+        let org = "";
+        let course = "";
+        let college = "";
+        let department = "";
+
+        // Conditionally insert the user into the respective table based on their new usertype
+        if (newUserType === 0) {
+            query = "INSERT INTO student(email, student_number, org, course, college, department) VALUES(?, ?, ?, ?, ?, ?)";
+            await conn.query(query, [email, student_number, org, course, college, department]);
+        } else if (newUserType === 1) {
+            query = "INSERT INTO faculty_member(email, college, department) VALUES(?, ?, ?)";
+            await conn.query(query, [email, college, department]);
+        } else if (newUserType === 2) {
+            query = "INSERT INTO ics_rc_oic(email) VALUES(?)";
+            await conn.query(query, [email]);
+        } else if (newUserType === 3) {
+            query = "INSERT INTO director(email) VALUES(?)";
+            await conn.query(query, [email]);
+        }
+        
+        await addUserStatusChangeNotification(admin_id, email, conn);
+
+        await conn.commit();
+        
+        // return the results
+        res.send({message: "Successfully edited user type"});
+    } catch (err) {
+        await conn.rollback();
+        res.send({errmsg: "Failed to edit user type", success: false });
+    } finally {
+        if (conn) return conn.release();
+    }
+}
+
+
+export { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent, setNewUserStatus }

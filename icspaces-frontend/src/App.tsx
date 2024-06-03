@@ -27,6 +27,8 @@ import Room_GuestPage from "./pages/guest/Room_GuestPage";
 import GuestBookingForm_Page from "./pages/guest/GuestBookingForm_Page";
 import PrivateRoute from "./utils/PrivateRoute";
 import AuthProvider from "./utils/AuthProvider";
+import UserLogsPage_Admin from "./pages/admin/UserLogsPage_Admin";
+import RevenueReport_Admin from "./pages/admin/RevenueReport_Admin";
 
 //Changes the default theme of the app
 const theme = createTheme({
@@ -128,6 +130,16 @@ function App() {
                 <Route
                   path="/addroom_admin"
                   element={<PrivateRoute component={AddRoom_Admin} />}
+                />
+
+                <Route
+                  path="/userlogspage_admin"
+                  element={<PrivateRoute component={UserLogsPage_Admin} />}
+                />
+
+                <Route
+                  path="/revenuereport_admin"
+                  element={<PrivateRoute component={RevenueReport_Admin} />}
                 />
 
                 <Route

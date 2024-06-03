@@ -37,8 +37,7 @@ const HomePage = () => {
         backgroundSize: "cover",
       }}
     >
-      {isFirstLogin && <FirstLogInPopUp />}
-
+      {isFirstLogin ? <FirstLogInPopUp /> : null}
       {/* <Box sx={{ marginTop: 10 }}> Previous
         <MuiBox />
       </Box> */}

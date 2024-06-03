@@ -170,7 +170,7 @@ const AccountManage = () => {
     >
       <Grid item xs={12} sm={6} md={5}  style={{display:"flex",justifyContent:"flex-start"}}>
         <TextField
-          label="Search account name"
+          label="Search by last name"
           value={searchTerm}
           onChange={handleSearchChange}
           variant="outlined"

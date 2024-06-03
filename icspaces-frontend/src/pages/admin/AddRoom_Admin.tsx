@@ -67,6 +67,8 @@ const AddRoom_Admin = () => {
   const [selectedRoomType, setSelectedRoomType] = useState('');
   const initialQuantities = items.map(item => item.item_qty);
   const initialPrices = items.map(item => item.fee);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
 
 
   // Set initial state using useState
@@ -156,6 +158,30 @@ const AddRoom_Admin = () => {
     setOrientation(isVertical ? 'vertical' : 'horizontal');
   }, [isVertical]);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("https://api.icspaces.online/get-profile", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.success) {
+          setUserEmail(data.data.email);
+        } else {
+          console.error("Error: ", data.message || "Unknown error occurred");
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []); // Empty dependency array ensures this runs once on mount
+
   //function to save to database
 
   const saveEdit = async () => {
@@ -176,6 +202,7 @@ const AddRoom_Admin = () => {
       console.error("Please fill out all fields with valid inputs.");
       return; // Exit early if any required field is empty
     }
+
   
     // Prepare the payload to send to the backend
     const roomDetails = {
@@ -186,6 +213,8 @@ const AddRoom_Admin = () => {
       fee: parseFloat(fee), // Convert fee to float
       additional_fee_per_hour: parseFloat(overtimeFee), // Convert overtimeFee to float
       utilities: items,
+      admin_id: userEmail,
+
     };
   
     try {
@@ -241,6 +270,7 @@ const AddRoom_Admin = () => {
       console.log("Image Type: ", typeof(image));
       console.log('Room Details')
       console.log("New Room Created Successfully.");
+      console.log("Room Details:", roomDetails);
       setSnackbarMessage("New room created successfully.");
       setSnackbarOpen(true);
 

@@ -8,6 +8,7 @@ import {
   Grid,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 interface RoomCardProps {
   image: string;
@@ -19,18 +20,48 @@ interface RoomCardProps {
   floor_number: string;
   additional_fee_per_hour: string;
   utilities: string[];
-  
 }
 
-const statusMapping: Record<string, string> = { 
-  '0': 'Ground',
-  '1': 'First',
-  '2': 'Second'
-  // add other status codes as needed
-};
+const RoomCard: React.FC<RoomCardProps> = ({
+  image,
+  room_id,
+  room_name,
+  room_capacity,
+  fee,
+  room_type,
+  floor_number,
+  additional_fee_per_hour,
+  utilities
+}) => {
+  const [latestImage, setRoomImage] = useState(image); // Initialize with the default image
 
-const RoomCard: React.FC<RoomCardProps> = ({ image, room_id, room_name, room_capacity, fee, room_type,floor_number, additional_fee_per_hour, utilities   }) => {
-  
+  useEffect(() => {
+    const getPhotos = async () => {
+      try {
+        const response = await fetch("https://api.icspaces.online/get-room-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ room_id }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch room images");
+        }
+
+        const imagesData = await response.json();
+        if (imagesData.images && imagesData.images.length > 0) {
+          const latestImage = imagesData.images[0].url; // Get the URL of the first image
+          setRoomImage(latestImage); // Update the state to reflect the new image
+        }
+      } catch (error) {
+        console.error("Failed to fetch rooms and utilities:", error);
+      }
+    };
+
+    getPhotos();
+  }, [room_id]); // Effect dependency on room_id
 
   return (
     <Grid
@@ -54,7 +85,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ image, room_id, room_name, room_cap
             <Grid item xs={12} sm={12} md={5}>
               <CardMedia
                 component="img"
-                image={image}
+                image={latestImage}
                 alt="Room Image"
                 style={{ width: "100%", height: 200, objectFit: "cover" }}
               />

@@ -1,4 +1,4 @@
-import { Box, Stack, Grid,Typography,Button,TextField, Card, FormControlLabel, Checkbox, FormGroup, FormControl, Dialog, Input, DialogTitle, DialogContent, DialogActions, InputLabel, MenuItem} from '@mui/material';
+import { Box, Stack, Grid,Typography,Button,TextField, Card, FormControlLabel, Checkbox, FormGroup,  Dialog, Input, DialogTitle, DialogContent, DialogActions} from '@mui/material';
 import { Link } from 'react-router-dom';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import HomeBG from "../assets/room_images/HomeBG.png";
@@ -10,13 +10,55 @@ import { styled } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 import axios from "axios";
 import dayjs, { Dayjs } from "dayjs";
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import { Axios } from 'axios';
 import BackButton from "./BackButton";
+import { WindowSharp } from '@mui/icons-material';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault("Asia/Singapore")
+
+
 const RoomReservationForm = () => {
 
-
+    const [room_id,setroom_id]=useState(1);
     const location=useLocation();
+    const [roomImages, setRoomImages] = useState<{ [key: string]: string }>({});
+    useEffect(() => {
+        const getPhotos = async () => {
+          try {
+            const photos = await fetch(
+              "https://api.icspaces.online/get-room-image",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ room_id }),
+              }
+            );
+            if (!photos.ok) {
+              throw new Error("Failed to fetch room images");
+            }
+    
+            const imagesData = await photos.json();
+    
+            if (imagesData && imagesData.images && imagesData.images.length > 0) {
+              const latestImage = imagesData.images[0].url;
+              setRoomImages((prevImages) => ({
+                ...prevImages,
+                [room_id.toString()]: latestImage,
+              }));
+              console.log("Setting images successful");
+            } 
+          } catch (error) {
+            console.error("Failed to fetch rooms and utilities:", error);
+          }
+        };
+        getPhotos();
+      }, [room_id]);
 
     useEffect(() => {// SET START TIME AND END TIME OF RESERVATION
         const costCalculator = async () => {
@@ -68,8 +110,9 @@ const RoomReservationForm = () => {
 
         console.log(receivedValues.date.substr(receivedValues.date.indexOf(" ") + 1))
         let tempDate= dayjs(receivedValues.date).format('YYYY-MM-DD HH:mm:ss').toString().slice(0,10)
+        console.log("tempdate ",tempDate)
         setDate(tempDate);
-        let newDate = dayjs().format("YYYY-MM-DD HH:mm:ss")
+        let newDate = dayjs.tz().format("YYYY-MM-DD HH:mm:ss")
         console.log("newDate " +newDate)
         setcreationDate(newDate);
 
@@ -105,30 +148,29 @@ const RoomReservationForm = () => {
                 console.error("Failed to fetch user:", error);
                 setloggedIn(false);
             }
-    };
+        };
+        fetchUser().then( (val) =>
+            {
+               console.log("Email1 "+typeof(val))
+               fetch('https://api.icspaces.online/get-student-details', {//GET STUDENT DETAILS BUT IT DOESNT WORK WTF
+                   method: 'POST', // or 'PUT'
+                   headers: {
+                   'Content-Type': 'application/json',
+                   },
+                   body: JSON.stringify({val}), // Uncomment this line if you need to send data in the request body
+               })
+               .then(response => response.json())
+               .then(data => {
+                   console.log("Fetch student details", JSON.stringify({data}.data))
+                   const org1 = JSON.stringify({data}.data.org);
+                   // if (org1==null && !isAdmin){
+                   //     window.alert("You need an organization to book as a student")
+                   //     window.location.href = "https://app.icspaces.online/accountpage"
+                   // }
+               });
+            }
+        );  
 
-    fetchUser().then( (val) =>
-     {
-        console.log("Email1 "+typeof(val))
-        fetch('https://api.icspaces.online/get-student-details', {//GET STUDENT DETAILS BUT IT DOESNT WORK WTF
-            method: 'POST', // or 'PUT'
-            headers: {
-            'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({val}), // Uncomment this line if you need to send data in the request body
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Fetch student details", JSON.stringify({data}.data))
-            const org1 = JSON.stringify({data}.data.org);
-            // if (org1==null && !isAdmin){
-            //     window.alert("You need an organization to book as a student")
-            //     window.location.href = "https://app.icspaces.online/accountpage"
-            // }
-        });
-     }
-    );  
-    // app.post('/get-room-info', getRoomInfo)
 
         if(receivedValues.start_dateTime===undefined ||receivedValues.start_dateTime===""  ){
             alert("Select Time First");
@@ -176,8 +218,8 @@ const RoomReservationForm = () => {
             return
         }
         console.log("Event "+event.target.value)
-        setpermitOSA(event.target.files[0])
-    
+        setProofofPayment(event.target.files[0])
+        console.log("Files "+event.target.files[0])
         setPermitName(event.target.files[0].name)
     };        
 
@@ -223,13 +265,13 @@ const RoomReservationForm = () => {
     const [sumCost,setsumCost]=useState(0);
     const [creationDate,setcreationDate]=useState('');
     const [eventDetails,seteventDetails]=useState('');
-    const [submitFail,setsubmitFail]=useState(false);
+    const [submitFail,setsubmitFail]=useState<boolean | null>(null)
     const zero=0;
-    const [letterDean,setletterDean]=useState();
+    const [letterDean,setletterDean]= useState<File | null>(null);
     const [permitName,setPermitName]=useState('No file chosen');
     const [letterName,setLetterName]=useState('No file chosen');
-    const [permitOSA,setpermitOSA]=useState();
-    const [room_id,setroom_id]=useState(1);
+    const [proofofPayment,setProofofPayment]= useState<File | null>(null);
+    
     const [loggedIn,setloggedIn]=useState(false);
     const [open, setOpen] = useState(false);
     const [timeError,setTimeError]=useState(false);
@@ -237,12 +279,13 @@ const RoomReservationForm = () => {
     const [emailError,setemailError]=useState(false);
     const [isAdmin,setisAdmin]=useState(false);
     const [guestBooking,setGuestBooking]=useState(false);
-    const [reservationID,setReservationID]=useState();
+    const [reservationID,setReservationID]=useState<string | null>(null);
     const [fname,setFname]=useState('');
     const [lname,setLname]=useState('');
-    const [guestEmail,setGuestEmail]=useState('');
-    const [successIDreservation,setSuccessIDreservation]=useState('');
+
+    const [utilities1,setUtilities]=useState([]);
     
+
     const handleContactChange = (event: { target: { value: string; }; }) => {
         setContact(event.target.value);
       };
@@ -267,7 +310,10 @@ const RoomReservationForm = () => {
         e.preventDefault();
         const startDateTime= date+" "+startTime
         const endDateTime= date+" "+endTime
-        
+        const startDateTime1 = dayjs.tz(startDateTime).format("YYYY-MM-DD HH:mm:ss")
+        const endDateTime1 = dayjs.tz(endDateTime).format("YYYY-MM-DD HH:mm:ss")
+        console.log("start ",startDateTime1)
+        console.log("end ", endDateTime1)
         console.log({startDateTime,endDateTime, date, creationDate})
         console.log({room_id,eventName,eventDetails,email,sumCost})
 
@@ -295,6 +341,7 @@ const RoomReservationForm = () => {
                 console.log("Time error is "+ timeError)
                 console.log('time is not available')
                 window.alert("Time is not available, please choose another timeslot")
+                window.location.href = "https://app.icspaces.online/roompage/"+room_id
                 return true
             }
 
@@ -306,22 +353,9 @@ const RoomReservationForm = () => {
 
        
         const reservationSuccess = result.then(r=>{//ADD RESERVATION
-            console.log({
-                activity_name:eventName, 
-                activity_desc:eventDetails,
-                room_id: room_id,
-                user_id:email,
-                date_created:creationDate,
-                start_datetime: startDateTime,
-                end_datetime: endDateTime,
-                discount:zero,
-                additional_fee:zero,
-                total_amount_due:sumCost,
-                status_code:zero,
-                utilities:zero,
-            })
+    
             if(r==false){
-                if(guestBooking){//GUEST BOOKING
+                if(guestBooking){//GUEST BOOKING DONE BY ADMIN
                     console.log('Guest Booking is Added')
                     //  const { fname, lname, email, admin_id, activity_name, activity_desc, room_id, start_datetime, end_datetime, discount, additional_fee, total_amount_due, status_code, utilities } = req.body
                     fetch('https://api.icspaces.online/add-guest-reservation', {
@@ -330,38 +364,35 @@ const RoomReservationForm = () => {
                         'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            fname:fname, 
-                            lname:lname,
-                            email:otherEmail,
-                            admin_id:email,
-                            activity_name:eventName, 
-                            activity_desc:eventDetails,
-                            room_id: room_id,
-                            date_created:creationDate,
+                            fname:fname,  lname:lname,
+                            email:otherEmail,admin_id:email,
+                            activity_name:eventName,  activity_desc:eventDetails,
+                            room_id: room_id, date_created:creationDate,
                             start_datetime: startDateTime,
                             end_datetime: endDateTime,
                             discount:zero,
                             additional_fee:zero,
                             total_amount_due:sumCost,
                             status_code:zero,
-                            utilities:zero,
+                            utilities:utilities1,
                         }), // Uncomment this line if you need to send data in the request body
                     })
-                    .then(response => {
-                        console.log(response.json())
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         console.log(data)
-                        window.alert("You've successfully booked for Guest!")
-                        window.location.href = "https://app.icspaces.online/homepage"
-                        return true
+                        console.log(data.reservation_id)
+                        setReservationID(data.reservation_id)
+                        // window.alert("You've booked for Guest successfully")
+                        setsubmitFail(false)
+          
                     })
                     .catch(err => {
                         console.log(err)
                         setsubmitFail(true);
-                        return false
+      
                     }
                     )
+                   return submitFail
                 } 
                 else{//REGULAR BOOKING
 
@@ -376,68 +407,113 @@ const RoomReservationForm = () => {
                             room_id: room_id,
                             user_id:email,
                             date_created:creationDate,
-                            start_datetime: startDateTime,
-                            end_datetime: endDateTime,
+                            start_datetime: startDateTime1,
+                            end_datetime: endDateTime1,
                             discount:zero,
                             additional_fee:zero,
                             total_amount_due:sumCost,
                             status_code:zero,
-                            utilities:zero,
+                            utilities:utilities1,
                         }), // Uncomment this line if you need to send data in the request body
                     })
-                    .then(response => {
-                        console.log(response.json())
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         console.log(data)
-              
-                        window.alert("You've successfully booked!")
-                        window.location.href = "https://app.icspaces.online/homepage"
-                        return true
+                        console.log(data.reservation_id)
+                        setReservationID(data.reservation_id)
+                        // window.alert("You've booked successfully")
+                        // window.location.href = "https://app.icspaces.online/homepage"
+                        setsubmitFail(false)
                     })
                     .catch(err => {
+                        console.log("Failed to add")
                         console.log(err)
                         setsubmitFail(true);
-                        return false
                     }
                     )
                 }
+                return submitFail
             }else{
-                console.log("Nothing")
+                console.log("Do Nothing")
+                setsubmitFail(true)
                 window.location.href = "https://app.icspaces.online/roompage/"+room_id
-                return false
+                return submitFail
             }
- 
+
         })
+   
+        
 
         
 
     }
 
-    const uploadDocument = async () => {
-        // app.post('/upload-reservation-document', upload.single('document'), multerVerify, uploadReservationDocument) // type: payment or letter
+    useEffect(() => {
+        console.log("Submit Fail ", submitFail)
+            if(submitFail==false){
+               
+                console.log("File Uploading")
+                
+                if(proofofPayment){
+                    console.log("Proof of Payment Uploading")
 
-            console.log('submitting')
-            fetch('https://api.icspaces.online/upload-reservation-document', {
-                method: 'POST', // or 'PUT'
-                headers: {
-                'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    room_id: room_id,
-                }), // Uncomment this line if you need to send data in the request body
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                window.alert("You've successfully uploaded!")
-            })
-            .catch(err => {
-                console.log(err)
-                setsubmitFail(true);
+                    const FormPay=new FormData()
+                    if(proofofPayment&& reservationID){
+                        console.log('Append')
+                        FormPay.append('document',proofofPayment)
+                        FormPay.append('reservation_id',reservationID)
+                        FormPay.append('type','payment')
+                    }
+
+                    fetch('https://api.icspaces.online/upload-reservation-document', {
+                        method: 'POST', // or 'PUT'
+                        body: FormPay// Uncomment this line if you need to send data in the request body
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                
+
+                    })
+                    .catch(error => console.error('Error:', error)
+                    )
+
+                }
+
+                if(letterDean){
+                    console.log("Dean Letter Uploading")
+                    const FormDean=new FormData()
+                    if(letterDean && reservationID){
+                        console.log('Append')
+                        FormDean.append('document',letterDean)
+                        FormDean.append('reservation_id',reservationID)
+                        FormDean.append('type','letter')
+                    }
+
+
+                    fetch('https://api.icspaces.online/upload-reservation-document', {
+                        method: 'POST', // or 'PUT'
+                        body: FormDean
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+
+                    })
+                    .catch(error => console.error('Error:', error)
+                    )
+                }
+
+                window.alert("Reservation Success!")
+                window.location.href = "https://app.icspaces.online/homepage"
+
+            }else{
+                console.log("Not Uploading Files")
+
+            
             }
-            )
-    }
+
+     }, [submitFail])
 
 
 
@@ -520,7 +596,7 @@ const RoomReservationForm = () => {
                   
                         }
             
-
+{/* 
                         <Typography >Contact*</Typography>
                         <TextField size='small'
                             error={contactFormat} 
@@ -532,7 +608,7 @@ const RoomReservationForm = () => {
                             
                             onKeyDown={preventMinus}
                             InputProps={{ inputProps: { min: 0 } }}
-                        />
+                        /> */}
 
                         <Card sx={{ backgroundColor:'#D9D9D9', borderRadius:'15px', padding:3}} >
                                 <Box  >
@@ -566,7 +642,7 @@ const RoomReservationForm = () => {
  
                   
                                         {/* <TextField type={"file"} inputProps={{accept:"application/pdf"}}/> */}
-                                        <Typography variant='h6'>OSA activity permit</Typography>
+                                        <Typography variant='h6'>Proof of Payment</Typography>
                                  
                                         <Stack  direction='row' spacing={3} height={30} >
 
@@ -585,7 +661,7 @@ const RoomReservationForm = () => {
                                             <Typography noWrap>{permitName}</Typography>  
                                              
                                         </Stack>
-                                        <FormControlLabel control={<Checkbox defaultChecked />} sx={{marginTop:-3}}label="Check if Permit is N/A" /> 
+                                        {/* <FormControlLabel control={<Checkbox defaultChecked />} sx={{marginTop:-3}}label="Check if Permit is N/A" />  */}
                                     </Stack>
                             
                                 </Box>
@@ -596,18 +672,32 @@ const RoomReservationForm = () => {
                   
                     </Grid>
                    {/* Event information and Submit */}
+       
+                        
                   <Grid item xs={12} md={4} sx={{backgroundColor:'#E9E9E9',}} textAlign='left' padding={2}>
                     <Stack padding={3} spacing={1}   >
                                 <Typography>You are reserving</Typography>
                                 <Typography variant='h4'>{roomName}</Typography>
-                                <Box 
-                                sx={{
-                                    minHeight:'30vh',
-                                    backgroundColor: 'white', backgroundImage: `url(${HomeBG})`,
-                                    backgroundRepeat: "no-repeat",
-                                    backgroundSize: 'cover',
-                                    borderRadius:'15px'
-                                }}/>
+                                {roomImages[room_id.toString()] ? (
+                                    <Box component="img"
+                                    src={roomImages[room_id.toString()]}
+                                    alt={`Room Image`}
+                                    sx={{
+                                        maxHeight: 400,
+                                        borderRadius: 4,
+                                        width: 'auto',
+                                    }}
+                                />
+                                ) : (
+                                    <Box 
+                                    sx={{
+                                        minHeight:'30vh',
+                                        backgroundColor: 'white', backgroundImage: `url(${HomeBG})`,
+                                        backgroundRepeat: "no-repeat",
+                                        backgroundSize: 'cover',
+                                        borderRadius:'15px'
+                                    }}/>
+                                )}
                                 <Stack direction='row' spacing={2}>
                                 
                                     <Typography variant='subtitle2'>Date: &nbsp; </Typography>

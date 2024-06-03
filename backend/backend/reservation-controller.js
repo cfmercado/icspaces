@@ -1,6 +1,6 @@
 import pool from './db.js';
-import {addReservationStatusChangeNotification, addUserStatusChangeNotification,
-    addReservationCommentNotification} from "./notifications-controller.js"
+import {addReservationStatusChangeNotification, addUserStatusChangeNotification, addReservationCommentNotification, addReservationNotification} from "./notifications-controller.js"
+import { getLocalTime } from './utils/getlocaltime.js';
 
 // gets all the reservations using user_id
 // input: "user_id"
@@ -99,6 +99,93 @@ const getAllReservationsbyRoom = async (req, res) => {
         await conn.rollback();
         res.send({errmsg: "Failed to get all reservations by Room ID",success: false });
         
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+const getAllReservationsbyRoomAndStatus = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+        const { room_id, status_code, start_date, end_date } = req.body;
+
+        console.log('Input parameters:', room_id, status_code, start_date, end_date);
+
+        let query = `SELECT * FROM reservation WHERE 1=1`;
+        let values = [];
+
+        if (room_id !== -1) {
+            query += " AND room_id = ?";
+            values.push(room_id);
+        }
+
+        if (status_code !== undefined) {
+            query += " AND status_code = ?";
+            values.push(status_code);
+        }
+
+        if (start_date !== undefined && end_date !== undefined) {
+            query += ` AND (
+                (start_datetime >= ? AND start_datetime < DATE_ADD(?, INTERVAL 1 DAY)) OR 
+                (end_datetime > ? AND end_datetime <= DATE_ADD(?, INTERVAL 1 DAY)) OR 
+                (start_datetime <= ? AND end_datetime >= DATE_ADD(?, INTERVAL 1 DAY))
+            )`;
+            values.push(start_date, end_date, start_date, end_date, start_date, end_date);
+        }
+
+        const rows = await conn.query(query, values);
+        console.log(rows)
+        await conn.commit();
+        res.send(rows);
+    } catch (err) {
+        if (conn) await conn.rollback();
+        res.send({ errmsg: `Failed to get all reservations by Room ID and status code: ${err}`, success: false });
+    } finally {
+        if (conn) conn.release();
+    }
+};
+const getRevenuebyRoomAndStatus = async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+        const { room_id, status_code, start_date, end_date } = req.body;
+        let query = `
+            SELECT room_id, SUM(total_amount_due) AS revenue
+            FROM reservation
+            WHERE 1=1
+        `;
+        let values = [];
+
+        if (room_id !== undefined) {
+            query += " AND room_id = ?";
+            values.push(room_id);
+        }
+
+        if (status_code !== undefined) {
+            query += " AND status_code = ?";
+            values.push(status_code);
+        }
+
+        if (start_date !== undefined && end_date !== undefined) {
+            query += ` AND (
+                (start_datetime >= ? AND start_datetime < DATE_ADD(?, INTERVAL 1 DAY)) OR 
+                (end_datetime > ? AND end_datetime <= DATE_ADD(?, INTERVAL 1 DAY)) OR 
+                (start_datetime <= ? AND end_datetime >= DATE_ADD(?, INTERVAL 1 DAY))
+            )`;
+            values.push(start_date, end_date, start_date, end_date, start_date, end_date);
+        }
+         
+        query += " GROUP BY room_id";
+
+        const rows = await conn.query(query, values);
+        await conn.commit();
+        res.send(rows);
+    } catch (err) {
+        if (conn) await conn.rollback();
+        res.send({ errmsg: "Failed to get all reservations by Room ID and status code", success: false });
     } finally {
         if (conn) conn.release();
     }
@@ -303,7 +390,7 @@ const addReservation = async (req, res) => {
             activity_name,
             activity_desc, 
             room_id, 
-            user_id, 
+            user_id,
             date_created,
             start_datetime,
             end_datetime,
@@ -335,6 +422,9 @@ const addReservation = async (req, res) => {
         const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,?,?)`;
         const notifValues = [result.insertId, user_id, status_code, date_created];
         await conn.query(notifQuery, notifValues);
+
+        await addReservationNotification(res_id, conn)
+
         await conn.commit();
         res.send({ message: "Successfully added reservation.", reservation_id: res_id });
     } catch (err) {
@@ -386,13 +476,17 @@ const addComment = async (req, res) => {
         await conn.beginTransaction();
         // user_id is the id of the admin that commented. the actual user id should be retrieved from reservation
         const { reservation_id, user_id, comment_text, status_code } = req.body
-        var query = `INSERT INTO comment(reservation_id, user_id, comment_text) VALUES(?,?,?)`
-        const values = [reservation_id, user_id, comment_text]
+
+        const date_created = new Date()
+        const formattedDate = getLocalTime()
+
+        var query = `INSERT INTO comment(reservation_id, user_id, comment_text, date_created) VALUES(?,?,?,?)`
+        const values = [reservation_id, user_id, comment_text, formattedDate]
         await conn.query(query, values);
 
         // Insert into reservation_notification table
-        var notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,?)`
-        const notifValues = [reservation_id, user_id, status_code]
+        var notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,?,?)`
+        const notifValues = [reservation_id, user_id, status_code, formattedDate]
         await conn.query(notifQuery, notifValues);
 
         await addReservationCommentNotification(user_id, reservation_id, conn)
@@ -424,9 +518,12 @@ const setAsApproved = async (req, res) => {
         //execute query
         await conn.query(query, values);
 
+        const date_created = new Date()
+        const formattedDate = getLocalTime()
+
         // Insert into reservation_notification table
-        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,1)`;
-        const notifValues = [reservation_id, user_id];
+        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,1,?)`;
+        const notifValues = [reservation_id, user_id, formattedDate];
 
         await addReservationStatusChangeNotification(user_id, reservation_id, conn);
 
@@ -453,13 +550,16 @@ const setAsPaid = async (req, res) => {
         conn = await pool.getConnection();
         await conn.beginTransaction();
          // user_id is the id of the admin who changed the status of the reservation
-        const { reservation_id, user_id } = req.body
+        const { reservation_id, user_id} = req.body
         const query = "UPDATE reservation SET status_code = 2 WHERE reservation_id = ?";
         const values = [reservation_id];
         await conn.query(query, values);
 
-        const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES (?, ?, 2)";
-        const insertValues = [reservation_id, user_id];
+        const date_created = new Date()
+        const formattedDate = getLocalTime()
+
+        const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES (?, ?, 2, ?)";
+        const insertValues = [reservation_id, user_id, formattedDate];
         await conn.query(insertNotificationQuery, insertValues);
 
         await addReservationStatusChangeNotification(user_id, reservation_id, conn);
@@ -490,8 +590,11 @@ const setAsDisapproved = async (req, res) => {
         const values = [reservation_id];
         await conn.query(query, values);
 
-        const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES (?, ?, 3)";
-        const insertValues = [reservation_id, user_id];
+        const date_created = new Date()
+        const formattedDate = getLocalTime()
+
+        const insertNotificationQuery = "INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES (?, ?, 3, ?)";
+        const insertValues = [reservation_id, user_id, formattedDate];
         await conn.query(insertNotificationQuery, insertValues);
 
         await addReservationStatusChangeNotification(user_id, reservation_id, conn);
@@ -524,9 +627,12 @@ const setAsCancelled = async (req, res) => {
         //execute query
         await conn.query(query, values);
 
+        const date_created = new Date()
+        const formattedDate = getLocalTime()
+
         // Insert into reservation_notification table
-        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code) VALUES(?,?,4)`;
-        const notifValues = [reservation_id, user_id];
+        const notifQuery = `INSERT INTO reservation_notification(reservation_id, actor_id, status_code, date_created) VALUES(?,?,4,?)`;
+        const notifValues = [reservation_id, user_id, formattedDate];
         await conn.query(notifQuery, notifValues);
 
         await addReservationStatusChangeNotification(user_id, reservation_id, conn);
@@ -534,6 +640,7 @@ const setAsCancelled = async (req, res) => {
         await conn.commit();
         res.send({ message: "Successfully edited status to cancelled." });
     } catch (err) {
+        console.log(err);
         await conn.rollback();
         res.send({errmsg: "Failed to set reservation as cancelled", success: false });
         
@@ -932,13 +1039,13 @@ const getRevenueReport = async(req, res) => {
 }
 
 export { 
-    getReservationIdByEventName, getAdminCommentByID,
+    getReservationIdByEventName, getAdminCommentByID, getRevenuebyRoomAndStatus,
     getTotalRequest, getPendingRequest, getTotalAccounts, getNewAccounts, 
     getPending, getPaid, getAllReservationsByUser, getReservation, getReservationByName, 
     getReservationByStatus, getReservationByRoom, addReservation, setAsApproved, setAsCancelled, 
     setAsDisapproved, setAsPaid, addComment, getAllReservations, getTotalRoomReservations,
     getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom, getAvailableRoomTime,
-    getAllReservationsWithDummyData, getReservationTimeline, editReservation, getRevenueReport
+    getAllReservationsWithDummyData, getReservationTimeline, editReservation, getRevenueReport, getAllReservationsbyRoomAndStatus
 }
 
 

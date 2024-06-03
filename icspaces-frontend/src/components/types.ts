@@ -57,6 +57,8 @@ export interface ReservationDataForModal {
   
   // note
   note_from_admin: string;        // resolving
+
+  utilities: string;
 };
 
 export interface usersAdmin{

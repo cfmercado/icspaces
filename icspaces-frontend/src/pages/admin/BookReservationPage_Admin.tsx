@@ -62,21 +62,34 @@ const styles = {
   },
 };
 
-const BookReservationPage_Admin = () => {
-  const { room_id } = useParams<{ room_id: string }>();
+const styles_capacity = {
+  cell: {
+    color: "white",
+    backgroundColor: "#183048",
+    border: "none",
+    padding: "1px 15px",
+    fontWeight: "bold",
+    marginBottom: '20px',
+  },
+};
 
+
+const BookReservationPage_Admin = () => {
   // State to keep track of the current image index
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [roomImages, setRoomImages] = useState<{ [key: string]: string }>({});
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
-  // Handler to go to the next image
-  const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % roomImages.length);
-  };
+    // Handler to go to the next image
+    const nextImage = () => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % Object.keys(roomImages).length);
+    };
+  
 
   // Handler to go to the previous image
   const prevImage = () => {
     setCurrentImageIndex(
-      (prevIndex) => (prevIndex - 1 + roomImages.length) % roomImages.length
+      (prevIndex) => (prevIndex - 1 + Object.keys(roomImages).length) % Object.keys(roomImages).length
     );
   };
 
@@ -90,33 +103,13 @@ const BookReservationPage_Admin = () => {
 
   const handleDateSelect = (selectedDate: Dayjs) => {
     // Do something with the selected date
+    setSelectedDate(selectedDate);
     console.log("Selected Date:", selectedDate);
   };
 
   const [reservations, setReservations] = useState<ReservationsInfo | null>();
 
-  useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        const response = await fetch(
-          "https://api.icspaces.online/get-available-room-time",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ room_id: room_id, date: selectedDate.format("dddd DD MMM YYYY")}),
-          }
-        );
-        const data = await response.json();
-        setReservations(data);
-        console.log(reservations);
-      } catch (error) {
-        console.error("Failed to fetch reservations:", error);
-      }
-    };
-    fetchReservations();
-  }, []);
+  
 
   interface Room {
     additional_fee_per_hour: string;
@@ -137,7 +130,6 @@ const BookReservationPage_Admin = () => {
     item_name: string;
     item_qty: number;
     room_id: number;
-    // add properties here based on the structure of utility objects
   }
 
   interface RoomInfo {
@@ -154,6 +146,8 @@ const BookReservationPage_Admin = () => {
 
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [room, setRoom] = useState<RoomInfo | null>();
+  // Convert selectedRoomId to string
+  const roomIdStr = String(selectedRoomId);
 
   useEffect(() => {
     if (selectedRoomId !== null) {
@@ -172,34 +166,86 @@ const BookReservationPage_Admin = () => {
     }
   }, [selectedRoomId]);
 
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+  
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch(
+          "https://api.icspaces.online/get-available-room-time",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ room_id: selectedRoomId, date: selectedDate.format("YYYY-MM-DD")}),
+          }
+        );
+        const data = await response.json();
+        setReservations(data);
+        console.log(reservations);
+      } catch (error) {
+        console.error("Failed to fetch reservations:", error);
+      }
+    };
+    fetchReservations();
+  }, [selectedRoomId, selectedDate]);
 
   useEffect(() => {
-    fetch("https://api.icspaces.online/get-room-info", {
-      method: "POST", // or 'PUT'
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ room_id: room_id }), // Uncomment this line if you need to send data in the request body
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setRoom(data);
-        console.log(data);
-      });
-  }, [selectedDate]);
+    const getPhotos = async () => {
+      if (selectedRoomId === null) {
+        console.error("selectedRoomId is null, cannot fetch room images");
+        return;
+      }
+
+      try {
+        const response = await fetch("https://api.icspaces.online/get-room-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ room_id: selectedRoomId }), // Ensure the key matches your backend expectation
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch room images");
+        }
+
+        const imagesData = await response.json();
+
+        if (imagesData && imagesData.images && imagesData.images.length > 0) {
+          const latestImage = imagesData.images[0].url;
+
+
+
+          setRoomImages((prevImages) => ({
+            ...prevImages,
+            [roomIdStr]: latestImage,
+          }));
+
+          console.log("Setting images successful");
+        }
+      } catch (error) {
+        console.error("Failed to fetch rooms and utilities:", error);
+      }
+    };
+
+    getPhotos();
+  }, [selectedRoomId]);
+
 
   return (
     <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start", // Aligns content to the top
-        alignItems: "center", // Centers content horizontally
-        height: "100vh", // Maintains full viewport height
-        overflowY: "auto", // Allows scrolling
-        position: "relative", // Allows positioning of children
-      }}
+    sx={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "flex-start", // Aligns content to the top
+      alignItems: "center", // Centers content horizontally
+      height: "100vh", // Maintains full viewport height
+      width: "200vh",
+      overflowX: "hidden", // Prevents horizontal scrolling
+      overflowY: "auto", // Allows scrolling
+      position: "relative", // Allows positioning of children
+    }}
     >
       <Box
         sx={{
@@ -223,61 +269,66 @@ const BookReservationPage_Admin = () => {
       >
         <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} roomID={selectedRoomId}/>
       </Box>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        sx={{ position: "absolute", top: 80, left: 20 }}
-        variant="contained"
-        onClick={() =>
-          (window.location.href = "https://app.icspaces.online/viewroomspage")
-        }
-      >
-        Back to ICS Rooms
-      </Button>
 
-      <Box
-        component="img"
-        src={roomImages[currentImageIndex]}
-        alt={`Room Image ${currentImageIndex + 1}`}
+
+
+
+      <Box sx={{ 
+        position: 'relative', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        width: '70%', 
+        marginRight: 4, 
+        marginTop: 15,
+      }}>
+        
+        <RoomDropdown
         sx={{
-          maxHeight: 400,
-          borderRadius: 4,
-          position: "absolute",
-          top: "200px",
-          left: "250px",
+          position: 'absolute',
+          top: 0,  // Align to the top of the Box
+          right: 20,  // Align to the right of the Box
         }}
-      />
-      <Button
-        sx={{ position: "absolute", top: "320px", left: "200px" }}
-        onClick={prevImage}
-        disabled={currentImageIndex === 0}
-      >
-        <ArrowBackIosIcon />
-      </Button>
-      <Button
-        sx={{ position: "absolute", top: "320px", left: "1250px" }}
-        onClick={nextImage}
-        disabled={currentImageIndex === roomImages.length - 1}
-      >
-        <ArrowForwardIosIcon />
-      </Button>
-
-      <RoomDropdown
-        sx={{ position: "absolute", top: "120px", right: "300px" }}
         onRoomChange={setSelectedRoomId}
       />
-      <Card
-      sx={{
-        width: 300,
-        height: 370,
-        position: "absolute",
-        top: "400px",
-        right: "120px",
-        transform: "translate(-50%, -50%)",
-        p: 2,
-        backgroundColor: "#183048",
-        borderRadius: 4,
-      }}
-    >
+
+      <Button 
+          sx={(theme) => ({
+            position: "absolute", 
+            left: `calc(-${theme.spacing(6)})`, 
+            zIndex: 10,
+            color: 'primary.main'
+          })} 
+          onClick={prevImage} 
+          disabled={currentImageIndex === 0}
+        >
+          <ArrowBackIosIcon />
+        </Button>
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'start', gap: 2, p: 2, marginTop: 10, }}>
+          {roomImages[roomIdStr] ? (
+            <Box component="img"
+              src={roomImages[roomIdStr]}
+              alt={`Room Image`}
+              sx={{
+                maxHeight: 400,
+                borderRadius: 4,
+                width: 'auto',
+              }}
+            />
+          ) : (
+            <Typography variant="h6" color="textSecondary">No images available</Typography>
+          )}
+
+
+
+    <Card sx={{
+            width: 350,
+            height: 400,
+            backgroundColor: "#183048",
+            borderRadius: 4,
+            marginLeft: 50,
+          }}>
       <CardContent>
         {selectedRoomId && (
           <>
@@ -390,6 +441,20 @@ const BookReservationPage_Admin = () => {
         )}
       </CardContent>
     </Card>
+    </Box>
+    <Button 
+          sx={(theme) => ({
+            position: "absolute", 
+            right: `calc(-${theme.spacing(6)})`, 
+            zIndex: 10,
+            color: 'primary.main'
+          })} 
+          onClick={nextImage} 
+          disabled={currentImageIndex === Object.keys(roomImages).length - 1}
+        >
+          <ArrowForwardIosIcon />
+        </Button>
+    </Box>
     </Box>
   );
 };

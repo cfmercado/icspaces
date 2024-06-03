@@ -1,6 +1,4 @@
-import { Divider, Grid, Stack, Typography, Button } from "@mui/material";
-import roomImage from "../assets/room_images/ICS_2.jpg";
-import roomImage2 from "../assets/room_images/ICS_3.jpg";
+import { Divider, Grid, Stack, Typography, Button, Box } from "@mui/material";
 import React, { ChangeEvent, } from 'react';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { useEffect, useState } from "react";
@@ -71,11 +69,11 @@ const RoomPhotos  : React.FC<RoomPhotosProps> = ({
                 }
                 return response.json();
               })
-              .then((data) => {console.log(data);})
+              .then((data) => {console.log(data); window.location.reload();})
           } catch (error) {
             console.error("Error deleting photo:", error);
           }
-          window.location.reload();
+          
         }
       };
 
@@ -102,73 +100,102 @@ const RoomPhotos  : React.FC<RoomPhotosProps> = ({
                   window.location.reload();
                 })
                 .catch((error) => console.error("Error:", error));
-            }catch (error) {                
+            }catch (error) {
                 console.error("Error adding room image:", error);
             }
         }
         getPhotos();
     },[image]);
 
-    return(
-        <Stack direction='column' spacing={1} sx={{overflow:'auto'}}>
-            <Divider />
-            <Typography
-                variant='h4'
-                fontWeight='bold'
-                sx={{textAlign:'start'}}
-            > Current Photos</Typography>
-
-            <Grid container spacing={1}>
-                {allImages.map((item, index) => (
-                    <Grid item xs={3} key={index} height= "80%" width='80%'> 
-                        <Button variant="contained" size="small"
-                        onClick={() => deletePhoto(allImages[index].id)} 
-                        sx={{
-                            position:'absolute', 
-                            borderRadius: '50%',
-                            minWidth: 0,
-                            padding: 0,
-                            backgroundColor: '#CCCCCC',
-                            color: 'black',
-                            '&:hover': {
-                                backgroundColor: 'lightgrey',
-                              }
-                            }}>
-                            <CloseIcon/>
-                        </Button>
-                        <img src={allImages[index].url} style={{borderRadius: '16px', position:'static'}} height='100%' width='100%' />
-                    </Grid>
-                ))}
-                <Grid item xs={3}>
-                    <input
-                    accept="image/*"
-                    id="image-upload"
-                    type="file"
-                    onChange={handleImageChange}
-                    style={{ display: "none" }}
-                    />
-                    <label htmlFor="image-upload">
-                    <Button
-                        component="span"
-                        variant="contained"
-                        startIcon={<AddCircleOutlineIcon />}
-                        sx={{width: '100%',
-                        height: '138px',
-                        backgroundColor: '#e0e0e0',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: '16px',
-                        border: '1px solid #ccc','&:hover': {
-                            backgroundColor: 'lightgrey',
-                          }}}
-                    >
-                    </Button>
-                    </label>
-                </Grid>
+    return (
+      <Stack direction="column" spacing={1} sx={{ overflow: 'auto' }}>
+        <Divider />
+        <Typography variant="h4" fontWeight="bold" sx={{ textAlign: 'start' }}>
+          Current Photos
+        </Typography>
+        <Box sx={{ overflowX: 'auto' }}>
+          <Grid container spacing={1} sx={{ flexWrap: 'wrap' }}>
+            {allImages.map((item, index) => (
+              <Grid
+                item
+                key={index}
+                xs={12}
+                sm={6}
+                md={3}
+                sx={{
+                  position: 'relative',
+                  width: { xs: '150px', sm: '190px', md: '20px' },
+                  height: { xs: '70px', sm: '110px', md: '160px' },
+                }}
+              >
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => deletePhoto(allImages[index].id)}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    borderRadius: '50%',
+                    minWidth: 0,
+                    padding: 0,
+                    backgroundColor: '#CCCCCC',
+                    color: 'black',
+                    '&:hover': {
+                      backgroundColor: 'lightgrey',
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </Button>
+                <img
+                  src={allImages[index].url}
+                  style={{
+                    borderRadius: '16px',
+                    position: 'static',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  alt={`Photo ${index + 1}`}
+                />
+              </Grid>
+            ))}
+            <Grid item xs={12} sm={6} md={3}>
+              <input
+                accept="image/*"
+                id="image-upload"
+                type="file"
+                onChange={handleImageChange}
+                style={{ display: 'none' }}
+              />
+              <label htmlFor="image-upload">
+                <Button
+                  component="span"
+                  variant="contained"
+                  startIcon={<AddCircleOutlineIcon />}
+                  sx={{
+                    width: { xs: '150px', sm: '190px', md: '250px' },
+                    height: { xs: '70px', sm: '110px', md: '150px' },
+                    backgroundColor: '#e0e0e0',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: '16px',
+                    border: '1px solid #ccc',
+                    '&:hover': {
+                      backgroundColor: 'lightgrey',
+                    },
+                  }}
+                >
+                  Add Photo
+                </Button>
+              </label>
             </Grid>
-        </Stack>
-    );
+          </Grid>
+        </Box>
+      </Stack>
+    );    
 }
 
 export default RoomPhotos;

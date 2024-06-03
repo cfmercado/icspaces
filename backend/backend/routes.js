@@ -2,13 +2,13 @@ import { generateURL, checkIfLoggedIn, callbackHandler, getProfileData, logout, 
 
 
 import { searchHandler, getAllRooms, getAllRoomsAndUtilities, insertRoom, setRoomClassSchedule, setEditedRoom, addUtility, deleteUtility, getRoomInfo, searchRoomById, getAllRoomFilters, getRoomName, processUtilities, addNewRoom, getAllRoomsAndUtilitiesComplete, deleteRoom, getAllArchivedRoomsAndUtilities } from "./room-controller.js"
-import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent } from "./user-controller.js"
+import { getAllStudents, getAllUsers, changeUserType, updateStudentDetails, updateFacultyDetails, getAllFaculty, getUserfromReservation, getUserInformation, getEmail, getStudentDetails, getFacultyDetails, setFacultyToAdmin, getLastLoggedInDate, setUsersToStudent, setNewUserStatus } from "./user-controller.js"
 import { 
     getReservationIdByEventName, getAdminCommentByID,getNewAccounts, getTotalRequest, getPendingRequest, getTotalAccounts, getPending, getPaid, getReservationByRoom, 
     getAllReservationsByUser, getReservation, getReservationByName, getReservationByStatus, addReservation, setAsApproved, setAsCancelled,  setAsDisapproved, 
     setAsPaid, addComment, getAllReservations, getTotalRoomReservations, getReservationSortedOldest, getReservationSortedNewest, getAllReservationsbyRoom, getAvailableRoomTime,
-    getAllReservationsWithDummyData,
-    getReservationTimeline, editReservation, getRevenueReport
+    getAllReservationsWithDummyData, getAllReservationsbyRoomAndStatus,
+    getReservationTimeline, editReservation, getRevenueReport, getRevenuebyRoomAndStatus
 } from "./reservation-controller.js"
 import {addGuestReservation,trackGuestReservation, setGuestAsApproved, setGuestAsPaid, setGuestAsDisapproved, setGuestAsCancelled} from "./guest-controller.js"
 import { getRoomImage, uploadRoomImage, deleteRoomImage, uploadReservationDocument, getReservationDocument, deleteReservationDocument} from "./file-controller.js"
@@ -16,7 +16,7 @@ import { getRoomImage, uploadRoomImage, deleteRoomImage, uploadReservationDocume
 //utilities
 import { sendEmail } from "./utils/email-sender.js"
 import { upload, multerVerify } from "./utils/multer-util.js"
-import { addReservationStatusChangeNotification, addUserStatusChangeNotification, addReservationCommentNotification, getNotificationsForUser } from "./notifications-controller.js"
+import { getSystemLogs, addReservationStatusChangeNotification, addUserStatusChangeNotification, addReservationCommentNotification, getNotificationsForUser } from "./notifications-controller.js"
 
 
 const setUpRoutes = (app) => {
@@ -46,6 +46,7 @@ const setUpRoutes = (app) => {
     app.post('/set-faculty-to-admin',setFacultyToAdmin)
     app.post('/get-last-login-date', getLastLoggedInDate)
     app.post('/set-users-to-student', setUsersToStudent)
+    app.post('/set-new-user-status', setNewUserStatus)
 
     //rooms
     app.post('/get-room-info', getRoomInfo)
@@ -82,6 +83,8 @@ const setUpRoutes = (app) => {
     app.post('/get-all-reservations-sort-oldest', getReservationSortedOldest)
     app.post('/get-all-reservations-sort-latest', getReservationSortedNewest)
     app.post('/get-all-reservations-by-room', getAllReservationsbyRoom)
+    app.post('/get-all-reservations-by-room-and-status', getAllReservationsbyRoomAndStatus)
+    app.post('/get-revenue-by-room-and-status', getRevenuebyRoomAndStatus)
     app.post('/get-available-room-time', getAvailableRoomTime)
     app.post('/get-reservation-id-by-name', getReservationIdByEventName)
     app.post('/get-admin-comment-by-id', getAdminCommentByID)
@@ -123,6 +126,7 @@ const setUpRoutes = (app) => {
     app.post('/add-user-status-change-notification', addUserStatusChangeNotification)
     app.post('/add-reservation-comment-notification', addReservationCommentNotification)
     app.post('/get-notifications-for-user', getNotificationsForUser)
+    app.post('/get-system-logs', getSystemLogs)
 }
 
 export default setUpRoutes;

@@ -45,7 +45,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
     }
     const handleReserve = () => {
         return <Button variant="contained"
-        disabled={selectedTime[1] === undefined} 
+        disabled={selectedTime[1] === undefined || roomID === null} 
         sx={{
             textTransform: "none",
             backgroundColor: '#FFB532',
@@ -147,7 +147,6 @@ const HourButtons : React.FC<HourButtonsProps> = ({
         overflow: "auto",
       };
 
-    
     const textStyle ={
         textAlign: "start",
         color: '#2D5378',
@@ -270,7 +269,7 @@ const HourButtons : React.FC<HourButtonsProps> = ({
                     </Stack>
                 </Stack>
             </Stack>
-            { selectedTime[1] === undefined ? handleReserve() :  
+            { (selectedTime[1] === undefined || roomID === null) ? handleReserve() :  
             <Link to="/roomreservation" state={valuesToSend}>
             <Button variant="contained"
             sx={{

@@ -4,6 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 import dotenv from "dotenv"
 dotenv.config()
 import pool from "./db.js"
+import { getLocalTime } from './utils/getlocaltime.js';
 
 import { signJwt, verifyJwt } from "./utils/jwt-utils.js"
 
@@ -94,17 +95,21 @@ const callbackHandler = async (req,res,next) => {
             
             const rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
 
+            const date_created = new Date()
+            // const formattedDate = date_created.toISOString().slice(0, 19).replace('T', ' ');
+            const formattedDate = getLocalTime()
+
             //Upsert user
             // Scenario 1: FAIL - User doesn't exist
             if (rows.length === 0) {
                 // Insert the email, first name, last name, and user type into the user table
-                await conn.query("INSERT INTO user (email, fname, lname, usertype, profilePicUrl) VALUES (?, ?, ?, ?, ?)", [email, firstName, lastName, 0, profilepic]);
+                await conn.query("INSERT INTO user (email, fname, lname, usertype, profilePicUrl, last_login) VALUES (?, ?, ?, ?, ?, ?)", [email, firstName, lastName, 0, profilepic, formattedDate]);
 
                 // Insert the email into the student table
                 await conn.query("INSERT INTO student (email) VALUES (?)", [email]);
 
             }else{ // UPDATE user 
-                await conn.query("UPDATE user SET fname = ?, lname = ?, profilePicUrl = ?, last_login = NOW() WHERE email =?", [firstName, lastName, profilepic,email]);
+                await conn.query("UPDATE user SET fname = ?, lname = ?, profilePicUrl = ?, last_login = ? WHERE email =?", [firstName, lastName, profilepic,formattedDate, email]);
             }
 
             const new_rows = await conn.query("SELECT * FROM user WHERE email = ?", [email]);
@@ -159,18 +164,18 @@ const getProfileData = async (req, res) => {
                 resolve();
             });
         });
-        console.log("Retrived Session Data:",{ 
-            success: true, 
-            data: {
-            email: req.session.email,
-            displayname: req.session.displayname,
-            firstName: req.session.fname,
-            lastName: req.session.lname,
-            profilepic: req.session.profilepic,
-            usertype: req.session.usertype,
-            isFirstLogin: req.session.isFirstLogin
-            }
-        })
+        // console.log("Retrived Session Data:",{ 
+        //     success: true, 
+        //     data: {
+        //     email: req.session.email,
+        //     displayname: req.session.displayname,
+        //     firstName: req.session.fname,
+        //     lastName: req.session.lname,
+        //     profilepic: req.session.profilepic,
+        //     usertype: req.session.usertype,
+        //     isFirstLogin: req.session.isFirstLogin
+        //     }
+        // })
         res.send({ 
             success: true, 
             data: {

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { RoomFilterProvider } from "../components/RoomFilterContext";
 import { CircularProgress } from "@mui/material";
+import RoomFilters from "../components/RoomFilters";
+import ViewRoomsPage from "../pages/guest/ViewRooms_GuestPage";
 
 interface PrivateRouteProps {
   component: React.ComponentType<any>;
@@ -39,6 +41,8 @@ const userTypeRoutes: { [key: number]: string[] } = {
     "/bookroom_admin",
     "/roomreservation",
     "/addroom_admin",
+    "/userlogspage_admin",
+    "/revenuereport_admin",
   ],
   3: [
     "/homepage_admin",
@@ -52,6 +56,8 @@ const userTypeRoutes: { [key: number]: string[] } = {
     "/bookroom_admin",
     "/roomreservation",
     "/addroom_admin",
+    "/userlogspage_admin",
+    "/revenuereport_admin",
   ],
 
   // Add more user types and routes as needed
@@ -221,7 +227,9 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
       <Component />
     </RoomFilterProvider>
   ) : notLoggedInRoutes.includes(location.pathname) ? (
-    <Component />
+    <RoomFilterProvider>
+      <Component />
+    </RoomFilterProvider>
   ) : null;
 };
 

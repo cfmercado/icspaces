@@ -145,6 +145,8 @@ const NavBar = () => {
           { label: "Add Room", link: "/addroom_admin" },
           { label: "Schedules", link: "/schedulepage" },
           { label: "Accounts", link: "/accountspage_admin" },
+          { label: "User Logs", link: "/userlogspage_admin" },
+          { label: "Revenue", link: "/revenuereport_admin" },
         ]
     : [
         { label: "View Rooms Guest", link: "/viewrooms_guest" },

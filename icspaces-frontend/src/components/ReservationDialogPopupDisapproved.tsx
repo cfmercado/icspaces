@@ -122,8 +122,6 @@ import {
                     {/* Notification Title*/}
                     <Typography className="unselectable" sx={{fontSize: '1.1vw', padding:'0px', paddingTop:'25px', lineHeight: '1.5', display: 'block', color:SCHEME_FONT_GRAY_COLOR, textAlign:'center'}}>
                     The reservation will be disapproved. This action can't be undone.</Typography>
-                    <Typography className="unselectable" sx={{fontSize: '1.1vw', padding:'0px', paddingTop:'5px', lineHeight: '1.5', display: 'block', color:SCHEME_FONT_GRAY_COLOR, textAlign:'center', paddingBottom:'24px'}}>
-                    This action can't be undone.</Typography>
                 </Paper>
 
                 {/* Text box area */}

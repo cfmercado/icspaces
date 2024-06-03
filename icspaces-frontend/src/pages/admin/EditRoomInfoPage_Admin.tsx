@@ -91,6 +91,7 @@ const EditRoomInfoPage_Admin = () => {
   const initialPrices = items.map((item) => item.fee);
   const { room_id } = useParams<{ room_id: string }>(); // Get the room ID from the URL
   console.log("Room ID:", room_id);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Set initial state using useState
   const [quantities, setQuantities] = useState(initialQuantities);
@@ -179,6 +180,30 @@ const EditRoomInfoPage_Admin = () => {
     setOrientation(isVertical ? "vertical" : "horizontal");
   }, [isVertical]);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("https://api.icspaces.online/get-profile", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.success) {
+          setUserEmail(data.data.email);
+        } else {
+          console.error("Error: ", data.message || "Unknown error occurred");
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []); // Empty dependency array ensures this runs once on mount
+
   //function to save to database
 
   const saveEdit = async () => {
@@ -210,6 +235,7 @@ const EditRoomInfoPage_Admin = () => {
       additional_fee_per_hour: parseFloat(overtimeFee), // Convert overtimeFee to float
       room_id: room_id, // Adjust the room ID as needed
       utilities: items,
+      admin_id: userEmail,
     };
 
     try {
@@ -256,6 +282,7 @@ const EditRoomInfoPage_Admin = () => {
       console.log("Image Type: ", typeof image);
       console.log("Room Details");
       console.log("Room details saved successfully.");
+      console.log("Room Details:", roomDetails);
       setSnackbarMessage("Room details saved successfully.");
       setSnackbarOpen(true);
     } catch (error) {
@@ -264,53 +291,6 @@ const EditRoomInfoPage_Admin = () => {
     }
   };
 
-  // Assuming you're using fetch API or axios for making HTTP requests in your frontend
-
-  // // using fetch API
-  // const getRoomInformation = async () => {
-  //   try {
-  //     const response = await fetch('https://api.icspaces.online/get-room-info', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json', // Specify content type as JSON
-  //       },
-  //       body: JSON.stringify({room_id: room_id}), // Adjust the room_id as needed
-  //     });
-
-  //     if (!response.ok) {
-  //       setSnackbarMessage("Failed to fetch room details.");
-  //       setSnackbarOpen(true);
-  //       throw new Error('Failed to fetch room data');
-  //     }
-
-  //     const roomData = await response.json();
-  //     console.log('Room data:', roomData);
-  //     const roomInfo = roomData.room;
-  //     setRoom(roomInfo); // Update the room state with the fetched data
-  //     if(roomInfo && roomData.utility) {
-  //       setItems(roomData.utility); // Update the equipments list with the fetched data
-  //       setOrignalItems(roomData.utility);
-  //       // Initialize quantities list based on initial items
-  //       const initialQuantities = roomData.utility.map((item: Utility) => item.item_qty);
-  //       setQuantities(initialQuantities);
-
-  //       // Initialize prices list based on initial items
-  //       const initialPrices = roomData.utility.map((item: Utility) => item.fee);
-  //       setPrices(initialPrices);
-
-  //       console.log('Room utility:', roomData.utility);
-  //       setSelectedCapacity(roomInfo.room_capacity);
-  //       setSelectedLocation(roomInfo.floor_number);
-  //       setSelectedRoomType(roomInfo.room_type);
-  //     }
-  //     // Process the room data further as needed
-  //   } catch (error) {
-  //     setSnackbarMessage("Failed to fetch room details.");
-  //     setSnackbarOpen(true);
-  //     console.error('Error fetching room data:', error);
-  //     // Handle errors gracefully
-  //   }
-  // };
 
   const getRoomInformation = async () => {
     try {

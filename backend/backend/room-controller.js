@@ -1,4 +1,5 @@
 import pool from './db.js';
+import {addDeleteRoomNotification, addDeleteUtilityNotification} from "./notifications-controller.js";
 
 
 
@@ -267,12 +268,14 @@ const insertRoom = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await pool.beginTransaction();
-        const { room_id, room_name, room_capacity, fee, room_type } = req.body
+        const { room_id, room_name, room_capacity, fee, room_type, admin_id } = req.body
         
         var query = `INSERT INTO room(room_name, room_capacity, fee, room_type) VALUES(?,?,?,?)`;
         const values = [room_name, room_capacity, fee, room_type];
         
         var result = await conn.query(query, values);
+
+        await addDeleteRoomNotification(admin_id, room_name, "add", conn);
 
         await conn.commit();
         res.send(result);
@@ -347,7 +350,7 @@ const addUtility = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await pool.beginTransaction();
-        const { room_id, item_name, item_qty, fee } = req.body
+        const { room_id, item_name, item_qty, fee, admin_id } = req.body
 
         // Check if the item already exists in the room
         const checkQuery = `SELECT * FROM utility WHERE room_id = ? AND item_name = ?`;
@@ -363,6 +366,9 @@ const addUtility = async (req, res) => {
             const insertQuery = `INSERT INTO utility(room_id, item_name, item_qty, fee) VALUES(?,?,?,?)`;
             const insertValues = [room_id, item_name, item_qty, fee];
             await conn.query(insertQuery, insertValues);
+
+            
+            await addDeleteUtilityNotification(admin_id, item_name,room_id, "add", conn);
             await conn.commit();
             res.send({ message: "Successfully added utility." });
         }
@@ -381,22 +387,30 @@ const deleteUtility = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
-        const { room_id, item_name } = req.body
+        const { room_id, item_name, admin_id } = req.body
 
         // Check if the utility exists
-        const result = await conn.query(`SELECT * FROM utility WHERE room_id = ? AND item_name = ?`, [room_id, item_name]);
+        const result = await conn.query(`SELECT * FROM utility WHERE room_id = ? AND item_name = ? AND isDeleted = false`, [room_id, item_name]);
         const rows = result[0];
         if (!rows || rows.length === 0) {
             await conn.commit();
-            res.status(404).send({ message: "Utility not found." });
+            res.status(404).send({ message: "Utility not found or already deleted." });
             return;
         }
 
-        // Delete the utility
-        const query = `DELETE FROM utility WHERE room_id = ? AND item_name = ?`;
+        // Mark the utility as deleted
+        const query = `UPDATE utility SET isDeleted = true WHERE room_id = ? AND item_name = ?`;
         const values = [ room_id, item_name ];
         
         await conn.query(query, values);
+
+        const q0 = "SELECT room_name FROM room WHERE room_id = ?";
+        const qval0 = [room_id];
+        const qres0 = await conn.query(q0, qval0);
+        const room_name = qres0[0]["room_name"];
+        await addDeleteUtilityNotification(admin_id, item_name, room_id, "delete", conn);
+        await conn.commit();
+
         await conn.commit();
         res.send({ message: "Successfully deleted utility." });
     } catch (err) {
@@ -467,7 +481,7 @@ const processUtilities = async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const { room_name, room_id, utilities, room_capacity, fee, room_type, floor_number, additional_fee_per_hour } = req.body
+        const { room_name, room_id, utilities, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, admin_id } = req.body
 
         await conn.beginTransaction();
 
@@ -492,24 +506,26 @@ const processUtilities = async (req, res) => {
                 const updateQuery = `UPDATE utility SET item_qty = ?, fee = ? WHERE room_id = ? AND item_name = ?`;
                 const updateValues = [item_qty, fee, room_id, item_name];
                 await conn.query(updateQuery, updateValues);
+                await addDeleteUtilityNotification(admin_id, item_name, room_id, "update", conn);
             } else {
                 // Add the utility if it does not exist
                 const insertQuery = `INSERT INTO utility(room_id, item_name, item_qty, fee) VALUES(?,?,?,?)`;
                 const insertValues = [room_id, item_name, item_qty, fee];
                 await conn.query(insertQuery, insertValues);
+                await addDeleteUtilityNotification(admin_id, item_name, room_id, "add", conn);
             }
         }
 
-        // Delete utilities that exist in the database but not in the request
-
+        // Mark utilities as deleted that exist in the database but not in the request
         for (let i = 0; i < existingUtilities.length; i++) {
             const { item_name } = existingUtilities[i];
 
             if (!utilities.find(utility => utility.item_name === item_name)) {
-                const deleteQuery = `DELETE FROM utility WHERE room_id = ? AND item_name = ?`;
+                const deleteQuery = `UPDATE utility SET isDeleted = true WHERE room_id = ? AND item_name = ?`;
                 const deleteValues = [room_id, item_name];
 
                 await conn.query(deleteQuery, deleteValues);
+                await addDeleteUtilityNotification(admin_id, item_name, room_id, "delete", conn);
             }
         }
         
@@ -528,7 +544,7 @@ const addNewRoom = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
-        const { room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, utilities } = req.body
+        const { room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour, utilities, admin_id } = req.body
 
         // Check if the room already exists in the database
         const existingRoomQuery = `SELECT * FROM room WHERE room_name = ?`;
@@ -543,6 +559,9 @@ const addNewRoom = async (req, res) => {
             // Insert the new room into the room table
             const insertRoomQuery = `INSERT INTO room(room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour) VALUES(?,?,?,?,?,?)`;
             const insertRoomValues = [room_name, room_capacity, fee, room_type, floor_number, additional_fee_per_hour];
+            
+            await addDeleteRoomNotification(admin_id, room_name, "add", conn);
+            
             await conn.query(insertRoomQuery, insertRoomValues);
 
             // Get the ID of the inserted room
@@ -574,7 +593,7 @@ const addNewRoom = async (req, res) => {
         res.send({ room_id: Number(returnedRoomId) ,message: "Successfully added room and processed utilities."});
 
     } catch (err) {
-        await conn.rollback();
+        await conn.rollback(); 
         res.send({errmsg: `Failed to add room and process utilities: ${err}`, success: false });
     } finally {
         if (conn) conn.release();
@@ -611,7 +630,7 @@ const deleteRoom = async (req, res) => {
     try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
-        const { room_id } = req.body
+        const { room_id, admin_id } = req.body
 
         if (!room_id || !Number.isInteger(parseFloat(room_id))) {
             throw new Error("Invalid room_id");
@@ -620,10 +639,18 @@ const deleteRoom = async (req, res) => {
         const query =  `UPDATE room SET isDeleted = TRUE WHERE room_id = ?`;
         const values = [room_id];
         await conn.query(query, values);
+
+        const q0 = "SELECT room_name FROM room WHERE room_id = ?";
+        const qval0 = [room_id];
+        const qres0 = await conn.query(q0, qval0);
+        const room_name = qres0[0]["room_name"];
+        await addDeleteRoomNotification(admin_id, room_name, "delete", conn);
         await conn.commit();
+
         res.send({ message: "Successfully deleted room." });
     } catch (err) {
         await conn.rollback();
+        console.log(err);
         res.send({errmsg: "Failed to set edited information of a room", success: false });
     } finally {
         if (conn) conn.release();

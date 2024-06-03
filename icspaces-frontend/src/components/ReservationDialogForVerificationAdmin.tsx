@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogTitle,
@@ -7,7 +8,8 @@ import {
   Typography,
   Grid, Paper, Divider,
   IconButton, Box,
-  TextField
+  TextField,
+  Input
 } from "@mui/material";
 import { Reservation, ReservationDataForModal} from "./types";
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,6 +31,7 @@ const FOR_VERIFICATION_FONT_COLOR = '#e9a010';
 const CIRCLE_COLOR = '#6995ad';
 
 
+
 interface ReservationDialogProps {
   open: boolean;
   onClose: () => void;
@@ -40,7 +43,131 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
   onClose,
   reservation,
 }) => {
-  
+  //************************************* ATTENTION *************************************//
+  const [documentUploadStatus,setDocumentUploadStatus]=useState<boolean | null>(null)
+  useEffect(() => {
+   
+    // Fetch reservation file from database
+    fetch("https://api.icspaces.online/get-reservation-document", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reservation_id: reservation?.reservation_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data1) => {
+
+        // for permit
+        if (data1.payment === "" || data1.payment == null) {
+          setHasPermit(false);
+        } else {
+          console.log('meow1')
+          setHasPermit(true);
+        }
+
+        // for letter
+        if (data1.letter === "" || data1.letter == null) {
+          setHasLetter(false);
+        } else {
+          console.log('meow2')
+          setHasLetter(true);
+        }
+        setDocumentUploadStatus(false)
+      }
+    )
+  },[documentUploadStatus])
+//*************************** THANK YOU FOR YOUR ATTENTION **************************//
+
+
+  const [hasPermit, setHasPermit] = useState<boolean>(false);
+  const [hasLetter, setHasLetter] = useState<boolean>(false);
+
+  //************************************* ATTENTION *************************************//
+ 
+  const zero=0;
+
+
+function OnInputClick(event:any){
+    event.target.value = ''
+    console.log("Event1 "+event)
+};
+
+
+const handleLetterUploadButton = async (event:any) => {
+
+      if (event.target.value===''){
+        return
+      }
+      console.log("Name "+event.target.files[0].name)
+      const letter=event.target.files[0]
+      console.log("Files "+letter)
+
+      if(letter){
+        console.log("Letter Uploading")
+
+        const FormLetter=new FormData()
+        if(letter && reservation){
+            FormLetter.append('document',letter)
+            FormLetter.append('reservation_id',reservation?.reservation_id)
+            FormLetter.append('type','letter')
+        }
+
+        fetch('https://api.icspaces.online/upload-reservation-document', {
+            method: 'POST', // or 'PUT'
+            body: FormLetter// Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.success){
+            setDocumentUploadStatus(true)
+          }
+        
+        })
+        .catch(error => console.error('Error:', error)
+        )
+      }
+
+
+  }
+
+  const handlePermitUploadButton = (event:any) => {
+      
+      if (event.target.value===''){
+        return
+      }
+      console.log("Name "+event.target.files[0].name)
+      const payment=event.target.files[0]
+      console.log("Files "+payment)
+
+
+      if(payment){
+        console.log("Proof of Payment Uploading")
+
+        const FormPay=new FormData()
+        if(payment&& reservation){
+            console.log('Append')
+            FormPay.append('document',payment)
+            FormPay.append('reservation_id',reservation?.reservation_id)
+            FormPay.append('type','payment')
+        }
+        fetch('https://api.icspaces.online/upload-reservation-document', {
+            method: 'POST', // or 'PUT'
+            body: FormPay// Uncomment this line if you need to send data in the request body
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.success){
+            setDocumentUploadStatus(true)
+          }
+        })
+        .catch(error => console.error('Error:', error)
+        )
+      }
+
+  }
+//*************************** THANK YOU FOR YOUR ATTENTION **************************//
+
   // Handler for the "Approve" button click
   const handleCalendarButton = () => {
     window.location.href = "https://app.icspaces.online/schedulepage";
@@ -59,11 +186,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
     })
       .then((response) => response.json())
       .then((data1) => {
-        if (data1.permit == "" || data1.permit == null) {
-          alert("There is no permit uploaded at this time!");
-        } else {
-          window.location.href = data1.permit;
-        }
+          window.location.href = data1.payment.url;
       }
     )
   };
@@ -81,11 +204,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
     })
       .then((response) => response.json())
       .then((data1) => {
-        if (data1.letter == "" || data1.letter == null) {
-          alert("There is no letter uploaded at this time!");
-        } else {
-          window.location.href = data1.permit;
-        }
+        window.location.href = data1.letter.url;
       }
     )
   };
@@ -103,6 +222,8 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
   const [roomName, setRoomName] = useState<string | null>(null);
   const [note, setNote] = useState<string>(''); // State to store the value of the TextField
 
+
+  
   // Function to handle changes in the TextField value
   const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNote(event.target.value); // Update the state with the new value
@@ -126,7 +247,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
   
   
   return (
-    <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', transform: 'scale(0.73)', maxHeight: '110vw' }}}>
+    <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', transform: 'scale(1)', maxHeight: '110vw' }}}>
       
       {/* X button */}
       <IconButton aria-label="close" onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8, color: 'grey' }}>
@@ -267,23 +388,60 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
 
               {/* View Letter and View Permit area */}
               <Grid item xs= {10} sx={{ paddingTop:'25px'}}>
-
-                {/* View Letter Button*/}
-                <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+              {/* Letter Button Handler*/}
+              {hasLetter ?                           
+                <Button variant="contained" style={{ backgroundColor: "#183048", color: "#ffffff", borderRadius: '7px', width: '100%', 
                   fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
                   onClick={handleLetterButton}>
                     View Letter
+                </Button> :        
+                
+                //************************************* ATTENTION *************************************//
+                <Button component="label" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+                fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                 >
+                    Upload Letter
+
+                    <Input type="file" inputProps={{accept:"application/pdf"}} sx={{border:0,clip: 'rect(0 0 0 0)',
+                        clipPath: 'inset(50%)',height: 1, overflow: 'hidden', position: 'absolute',
+                        bottom: 0,left: 0, whiteSpace: 'nowrap',width: 1,
+                        }} disableUnderline
+                        onChange={handleLetterUploadButton}
+                        onClick={OnInputClick}
+             
+                    />
                 </Button>
+                 //*************************** THANK YOU FOR YOUR ATTENTION **************************//
+              }
 
-                {/* A simple spacer */}
-                <Typography className="unselectable" sx={{lineHeight:'10px'}}>{'\u00A0'}</Typography>
+              {/* A simple spacer */}
+              <Typography className="unselectable" sx={{lineHeight:'10px'}}>{'\u00A0'}</Typography>
 
-                {/* View permit */}
-                <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                      fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
-                      onClick={handlePermitButton}>
-                        View Permit
-                    </Button>
+              {/* Permit Button Handler */}
+              {hasPermit ?                           
+              <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+              fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                  onClick={handlePermitButton}>
+                    View Permit
+                </Button> :        
+
+                //************************************* ATTENTION *************************************//
+                <Button component="label" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+                fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                 >
+                    Upload Payment
+
+                    <Input type="file" inputProps={{accept:"application/pdf"}} sx={{border:0,clip: 'rect(0 0 0 0)',
+                        clipPath: 'inset(50%)',height: 1, overflow: 'hidden', position: 'absolute',
+                        bottom: 0,left: 0, whiteSpace: 'nowrap',width: 1,
+                        }} disableUnderline
+                        onChange={handlePermitUploadButton}
+                        onClick={OnInputClick}
+                    />
+                </Button>
+                 //*************************** THANK YOU FOR YOUR ATTENTION **************************//
+
+              }
               </Grid>   
 
               
@@ -310,6 +468,13 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
                 </Typography>
               </Grid>
 
+              {/* Utilities section */}
+              <Grid item xs= {20} sx={{ height: '100%', paddingBottom:'2px', paddingTop:'9px'}}>
+              <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'10px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingTop:'0px'}}>
+                  {reservation.utilities == "" ? "No additional utilities were included.": `${reservation.utilities.includes(',') ? `Utilities include the following: ${reservation.utilities}`: `${"aeiou".includes(reservation.utilities[0].toLowerCase()) ? "An":"A"} ${reservation.utilities} was included in the utilities.`}`}
+                </Typography>
+              </Grid>
+
               {/* Restrict area for where event description text is displayed */}
               <Box border={1} paddingTop={1.2} paddingBottom={0.2} style={{ width: '100%', border:'none'}}>
                 <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingBottom: '0px', paddingTop: '0px'}}>
@@ -322,15 +487,15 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
                 value={note} onChange={handleNoteChange}/> */}
 
               {/* Disapproved button */}
-              <Grid item xs={20} sx={{paddingTop:'40px'}}>
+              <Grid item xs={20} sx={{paddingTop:'20px'}}>
                 <Button variant="contained" style={{ backgroundColor: '#d9d9d9', color: '#878787', borderRadius: '25px', width: '100%', 
                   fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleDisapprove}>
                     Disapprove
                 </Button>
-              </Grid>  
+              </Grid>
 
               {/* Approved button */}
-              <Grid item xs={20} sx={{paddingTop:'40px'}}>
+              <Grid item xs={20} sx={{paddingTop:'20px'}}>
                 <Button variant="contained" style={{ backgroundColor: '#ffb532', color: '#183048', borderRadius: '25px', width: '100%', 
                   fontSize:'0.83vw', height:'46px', boxShadow: 'none', paddingTop: '5px'}} onClick={handleApprove}>
                     Approve
@@ -365,6 +530,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
                   approved_date:            reservation.approved_date,
                   cancellation_date:        reservation.cancellation_date,
                   note_from_admin:          note,
+                  utilities:                reservation.utilities
               }} />
             )}
 
@@ -394,6 +560,7 @@ const ReservationDialogForVerificationAdmin: React.FC<ReservationDialogProps> = 
                   approved_date:            reservation.approved_date,
                   cancellation_date:        reservation.cancellation_date,
                   note_from_admin:          note,
+                  utilities:                reservation.utilities
                 }
               } />
             )}

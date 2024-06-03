@@ -7,6 +7,7 @@ import { getObjectSignedUrl, uploadFile, deleteFile } from "./utils/google-stora
 import sharp from 'sharp'
 import { v4 as uuidv4 } from 'uuid'
 import { nanoid } from 'nanoid'
+import { getLocalTime } from './utils/getlocaltime.js';
 
 const uploadRoomImage = async (req, res) => {
     let conn
@@ -28,8 +29,11 @@ const uploadRoomImage = async (req, res) => {
         await conn.beginTransaction()
         //save to SQL database
         if (response.success) {
-            const insertQuery = "INSERT INTO room_file(room_id, file_path) VALUES (?,?)"
-            await conn.query(insertQuery,[room_id, imageName])
+            const date_created = new Date()
+            const formattedDate = getLocalTime()
+
+            const insertQuery = "INSERT INTO room_file(room_id, file_path, date_created) VALUES (?,?,?)"
+            await conn.query(insertQuery,[room_id, imageName, formattedDate])
             await conn.commit()
             res.send({success:true, id: imageName, msg:"Successfully added"})
         }else{
@@ -131,9 +135,12 @@ const uploadReservationDocument = async (req, res) => {
                 // If a payment proof is already present, return an error message
                 res.send({ success: false, msg: "Proof of payment already exists for this reservation. Delete existing document first" });
             } else {
+                const date_created = new Date()
+                const formattedDate = getLocalTime()
+
                 // Insert new payment proof document
-                const insertQuery = "INSERT INTO file(reservation_id, file_path, file_type) VALUES (?,?,?)";
-                await conn.query(insertQuery, [reservation_id, fileName, 0]);
+                const insertQuery = "INSERT INTO file(reservation_id, file_path, file_type, date_created) VALUES (?,?,?,?)";
+                await conn.query(insertQuery, [reservation_id, fileName, 0, formattedDate]);
                 await conn.commit();
                 res.send({ success: true, msg: "Successfully added: proof of payment document" });
             }
@@ -145,9 +152,12 @@ const uploadReservationDocument = async (req, res) => {
                 // If already present, return an error message
                 res.send({ success: false, msg: "Activity Letter already exists for this reservation. Delete existing document first" });
             } else {
+                const date_created = new Date()
+                const formattedDate = getLocalTime()
+
                 // Insert new payment proof document
-                const insertQuery = "INSERT INTO file(reservation_id, file_path, file_type) VALUES (?,?,?)";
-                await conn.query(insertQuery, [reservation_id, fileName, 1]);
+                const insertQuery = "INSERT INTO file(reservation_id, file_path, file_type, date_created) VALUES (?,?,?,?)";
+                await conn.query(insertQuery, [reservation_id, fileName, 1, formattedDate]);
                 await conn.commit();
                 res.send({ success: true, msg: "Successfully added: activity letter document" });
             }

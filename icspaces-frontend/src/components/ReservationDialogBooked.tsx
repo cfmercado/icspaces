@@ -6,7 +6,8 @@ import {
   Button,
   Typography,
   Grid, Paper, Divider,
-  IconButton, Box
+  IconButton, Box,
+  Input
 } from "@mui/material";
 import { Reservation, ReservationDataForModal } from "./types";
 import React, { useState, useEffect, useRef } from 'react';
@@ -36,9 +37,163 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
   reservation,
 }) => {
   
+  // // Fetch name values
+  // fetch("https://api.icspaces.online/get-user-information", {
+  //   method: "POST", // or 'PUT'
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  //   body: JSON.stringify({ email: user_id }), // Uncomment this line if you need to send data in the request body
+  // })
+  //   .then((response) => response.json())
+  const [isStudent, setIsStudent] = useState<boolean>(false);
+  const [hasPermit, setHasPermit] = useState<boolean>(false);
+  const [hasLetter, setHasLetter] = useState<boolean>(false);
+
+   //************************************* ATTENTION *************************************//
+ 
+ const zero=0;
+
+
+ function OnInputClick(event:any){
+     event.target.value = ''
+     console.log("Event1 "+event)
+ };
+ 
+ 
+ const handleLetterUploadButton = async (event:any) => {
+ 
+       if (event.target.value===''){
+         return
+       }
+       console.log("Name "+event.target.files[0].name)
+       const letter=event.target.files[0]
+       console.log("Files "+letter)
+ 
+       if(letter){
+         console.log("Letter Uploading")
+ 
+         const FormLetter=new FormData()
+         if(letter && reservation){
+             FormLetter.append('document',letter)
+             FormLetter.append('reservation_id',reservation?.reservation_id)
+             FormLetter.append('type','letter')
+         }
+ 
+         fetch('https://api.icspaces.online/upload-reservation-document', {
+             method: 'POST', // or 'PUT'
+             body: FormLetter// Uncomment this line if you need to send data in the request body
+         })
+         .then(response => response.json())
+         .then(data => {
+           if(data.success){
+             setDocumentUploadStatus(true)
+           }
+         
+         })
+         .catch(error => console.error('Error:', error)
+         )
+       }
+ 
+ 
+   }
+ 
+   const handlePermitUploadButton = (event:any) => {
+       
+       if (event.target.value===''){
+         return
+       }
+       console.log("Name "+event.target.files[0].name)
+       const payment=event.target.files[0]
+       console.log("Files "+payment)
+ 
+ 
+       if(payment){
+         console.log("Proof of Payment Uploading")
+ 
+         const FormPay=new FormData()
+         if(payment&& reservation){
+             console.log('Append')
+             FormPay.append('document',payment)
+             FormPay.append('reservation_id',reservation?.reservation_id)
+             FormPay.append('type','payment')
+         }
+ 
+         fetch('https://api.icspaces.online/upload-reservation-document', {
+             method: 'POST', // or 'PUT'
+             body: FormPay// Uncomment this line if you need to send data in the request body
+         })
+         .then(response => response.json())
+         .then(data => {
+           if(data.success){
+             setDocumentUploadStatus(true)
+           }
+         })
+         .catch(error => console.error('Error:', error)
+         )
+       }
+ 
+   }
+ //*************************** THANK YOU FOR YOUR ATTENTION **************************//
+
+  const [documentUploadStatus,setDocumentUploadStatus]=useState<boolean | null>(null)
+  useEffect(() => {
+    try {
+      // Fetch name values
+      fetch("https://api.icspaces.online/get-user-information", {
+        method: "POST", // or 'PUT'
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: reservation?.user_id }), // Uncomment this line if you need to send data in the request body
+      })
+        .then((response) => response.json())
+        .then((nameData) => {
+          console.log(`Got name info below using email ${reservation?.user_id}:`);
+          console.log(nameData.usertype);
+          setIsStudent(`${nameData.usertype}` == `0`);
+        });
+    } catch (error) {
+      
+    };
+   //************************************* ATTENTION *************************************//
+    // Fetch reservation file from database
+    fetch("https://api.icspaces.online/get-reservation-document", {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reservation_id: reservation?.reservation_id }), // Uncomment this line if you need to send data in the request body
+    })
+      .then((response) => response.json())
+      .then((data1) => {
+        console.log('TESTING 1')
+        console.log("payment ",data1.payment)
+        console.log("letter ",data1.letter)
+        // for permit
+        if (data1.payment === "" || data1.payment == null) {
+          setHasPermit(false);
+        } else {
+          console.log('meow1')
+          setHasPermit(true);
+        }
+
+        // for letter
+        if (data1.letter === "" || data1.letter == null) {
+          setHasLetter(false);
+        } else {
+          console.log('meow2')
+          setHasLetter(true);
+        }
+        setDocumentUploadStatus(false)
+      }
+    )
+  },[documentUploadStatus])
+//*************************** THANK YOU FOR YOUR ATTENTION **************************//
+
   // Handler for the "Approve" button click
   const handleCalendarButton = () => {
-    window.location.href = "https://app.icspaces.online/schedulepage";
+    // window.location.href = "https://app.icspaces.online/schedulepage";
   };
 
   // Handler for the "Approve" button click
@@ -54,10 +209,10 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
     })
       .then((response) => response.json())
       .then((data1) => {
-        if (data1.permit == "" || data1.permit == null) {
+        if (data1.payment == "" || data1.payment == null) {
           alert("There is no permit uploaded at this time!");
         } else {
-          window.location.href = data1.permit;
+          window.location.href = data1.payment.url;
         }
       }
     )
@@ -79,14 +234,14 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
         if (data1.letter == "" || data1.letter == null) {
           alert("There is no letter uploaded at this time!");
         } else {
-          window.location.href = data1.permit;
+          window.location.href = data1.letter.url;
         }
       }
     )
   };
 
   return (
-    <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', overflow: 'auto', transform: 'scale(0.8)'}}}>
+    <Dialog open={open} onClose={onClose} classes={{ paper: 'dialog-paper' }} sx={{'& .dialog-paper': {borderRadius: '25px', padding: '20px', overflow: 'auto', transform: 'scale(1)'}}}>
         <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </IconButton>
@@ -186,14 +341,13 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
                   </Typography>
                 </Grid>
 
-                {/* View Calendar Button */}
-                <Grid item xs={20}>
-                  <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%',
-                    fontSize:'0.65vw', textTransform: 'none', height:'36px', boxShadow: 'none', paddingTop: '5px'}}
-                    onClick={handleCalendarButton}>
-                      View Calendar
-                  </Button>
-                </Grid>
+                {!isStudent && (
+                    <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '25%', 
+                      fontSize:'0.65vw', textTransform: 'none', height:'36px', boxShadow: 'none', paddingTop: '5px'}}
+                      onClick={handleCalendarButton}>
+                        View Calendar
+                    </Button>
+                  )}
               </Grid>
             </Grid>
 
@@ -240,22 +394,57 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
             {/* View Letter and View Permit area */}
             <Grid item xs= {10} sx={{ paddingTop:'25px'}}>
 
-              {/* View Letter Button*/}
-              <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
-                onClick={handleLetterButton}>
-                  View Letter
-              </Button>
+              {/* Letter Button Handler*/}
+              {hasLetter ?                           
+                <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+                  fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                  onClick={handleLetterButton}>
+                    View Letter
+                </Button> :              
+             //************************************* ATTENTION *************************************//
+             <Button component="label" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+             fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+              >
+                 Upload Letter
+
+                 <Input type="file" inputProps={{accept:"application/pdf"}} sx={{border:0,clip: 'rect(0 0 0 0)',
+                     clipPath: 'inset(50%)',height: 1, overflow: 'hidden', position: 'absolute',
+                     bottom: 0,left: 0, whiteSpace: 'nowrap',width: 1,
+                     }} disableUnderline
+                     onChange={handleLetterUploadButton}
+                     onClick={OnInputClick}
+          
+                 />
+             </Button>
+              //*************************** THANK YOU FOR YOUR ATTENTION **************************//
+              }
 
               {/* A simple spacer */}
               <Typography className="unselectable" sx={{lineHeight:'10px'}}>{'\u00A0'}</Typography>
 
-              {/* View permit */}
+              {/* Permit Button Handler */}
+              {hasPermit ?                           
               <Button variant="contained" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
-                    fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
-                    onClick={handlePermitButton}>
-                      View Permit
-                  </Button>
+              fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                  onClick={handlePermitButton}>
+                    View Permit
+                </Button> :
+              //************************************* ATTENTION *************************************//
+              <Button component="label" style={{ backgroundColor: BUTTON_COLOR_GRAY, color: SCHEME_FONT_DARKER_GRAY_COLOR, borderRadius: '7px', width: '100%', 
+              fontSize:'0.65vw', textTransform: 'none', height:'32px', boxShadow: 'none', paddingTop: '5px'}}
+                >
+                  Upload Payment
+
+                  <Input type="file" inputProps={{accept:"application/pdf"}} sx={{border:0,clip: 'rect(0 0 0 0)',
+                      clipPath: 'inset(50%)',height: 1, overflow: 'hidden', position: 'absolute',
+                      bottom: 0,left: 0, whiteSpace: 'nowrap',width: 1,
+                      }} disableUnderline
+                      onChange={handlePermitUploadButton}
+                      onClick={OnInputClick}
+                  />
+              </Button>
+                //*************************** THANK YOU FOR YOUR ATTENTION **************************//
+              }
             </Grid>   
 
             {/* Spacer line */}
@@ -270,15 +459,28 @@ const ReservationDialogBooked: React.FC<ReservationDialogProps> = ({
                   Booked
                 </Typography>
               </Paper>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                Requested on {reservation.reservation_date}
+              </Typography>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                Approved on {reservation.approved_date}
+              </Typography>
+              <Typography className="unselectable" sx={{textAlign: 'center', fontSize: '0.6vw', padding:'0px', paddingTop:'2px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DARKER_GRAY_COLOR}}>
+                Paid on {reservation.payment_date}
+              </Typography>
+            </Grid>
+
+            {/* Utilities section */}
+            <Grid item xs= {20} sx={{ height: '100%', paddingBottom:'2px', paddingTop:'9px'}}>
+            <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.9vw', padding:'10px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR, paddingTop:'0px'}}>
+                {reservation.utilities == "" ? "No additional utilities were included.": `${reservation.utilities.includes(',') ? `Utilities include the following: ${reservation.utilities}`: `${"aeiou".includes(reservation.utilities[0].toLowerCase()) ? "An":"A"} ${reservation.utilities} was included in the utilities.`}`}
+              </Typography>
             </Grid>
 
             {/* Restrict area for where event description text is displayed */}
             <Box border={1} paddingTop={3} style={{ width: '100%', border:'none'}}>
-              <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.8vw', padding:'0px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR}}>
-                The reservation holder has successfully made the payment.
-              </Typography>
-              <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.8vw', padding:'0px', paddingTop:'5px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR}}>
-                The event has been successfully booked.
+              <Typography className="unselectable" sx={{textAlign: 'left', fontSize: '0.8vw', paddingBottom:'10px', lineHeight: '1.3', display: 'block', color:SCHEME_FONT_DEFAULT_COLOR}}>
+                The reservation holder has successfully paid and booked the reservation.
               </Typography>
             </Box>
             </Grid>

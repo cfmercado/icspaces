@@ -66,8 +66,8 @@ const MuiAdminBox = () => {
             try {
                 const response = await fetch(url, options);
                 const data = await response.json();
-                // console.log(data);
-                setPaidAmount(data["count"]);
+                console.log("the pending request count is:" ,data);
+                setPendingRequestCount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -87,7 +87,7 @@ const MuiAdminBox = () => {
                 const response = await fetch(url, options);
                 const data = await response.json();
                 // console.log(data);
-                setPendingRequestCount(data["count"]);
+                setPaidAmount(data["count"]);
             } catch (error) {
                 console.error('Error fetching total request count:', error);
             }
@@ -325,17 +325,17 @@ const MuiAdminBox = () => {
                             </Stack> 
                         </Stack> */}
 
-                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: '30px' }} spacing={3}>
+                        <Stack direction='row' alignItems='center' sx={{ height: '130%', marginLeft: ['-50px', '-35px', '-20px'] }} spacing={3}>
                             <div>
-                                <Typography variant="h4">{paidAmount}</Typography> 
-                                <Typography variant="body2"> Paid </Typography>
+                                <Typography variant="h4">₱{pendingAmount}</Typography> 
+                                <Typography variant="body2"> Not Paid </Typography>
                             </div> 
                             <div>
                                 <Divider orientation="vertical" textAlign='center' flexItem sx={{ width: 1.5, height: 80, backgroundColor: '#183048' }} />
                             </div>
                             <div> 
-                                <Typography variant="h4">{pendingAmount}</Typography> 
-                                <Typography variant="body2"> Pending </Typography>
+                                <Typography variant="h4">₱{paidAmount}</Typography> 
+                                <Typography variant="body2"> Paid Amount </Typography>
                             </div> 
                         </Stack>
 

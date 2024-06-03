@@ -98,10 +98,19 @@ const RoomFilters = () => {
   };
 
   const handleCapacityChange = (capacity: string) => {
-    setSelectedCapacities((prev: string[]) =>
-        prev.includes(capacity) ? prev.filter(c => c !== capacity) : [...prev, capacity]
-    );
-};
+    setSelectedCapacities((prev: string[]) => {
+      const range = capacity.split('-').map(Number); // Convert "1-30" to [1, 30]
+      return prev.some(c => {
+        const currentRange = c.split('-').map(Number);
+        return range[0] === currentRange[0] && range[1] === currentRange[1];
+      })
+        ? prev.filter(c => {
+            const currentRange = c.split('-').map(Number);
+            return range[0] !== currentRange[0] || range[1] !== currentRange[1];
+          })
+        : [...prev, capacity];
+    });
+  };
 
   const handleUtilitySearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUtilitySearch(event.target.value);
@@ -161,7 +170,7 @@ const RoomFilters = () => {
           <Filters items={["Lecture Hall", "Conference Room", "Computer Lab"]} onChange={handleRoomTypeChange} />
           <Divider />
           <Typography variant="h6">Capacity</Typography>
-          <Filters items={["100", "50", "30"]} onChange={handleCapacityChange} />
+          <Filters items={["1-30", "31-50", "51-100"]} onChange={handleCapacityChange} />
           <Divider />
           <Typography variant="h6">Cost:</Typography>
           <Filters items={["Below 1000", "1001 - 3000", "3000 Above"]} onChange={handleFeeRangeChange} />
@@ -189,7 +198,7 @@ const RoomFilters = () => {
       <Divider />
       <Stack marginTop="1rem" textAlign="start" color="primary">
         <Typography variant="h6">Capacity</Typography>
-        <Filters items={["100", "50", "30"]} onChange={handleCapacityChange} />
+        <Filters items={["1-30", "31-50", "51-100"]} onChange={handleCapacityChange} />
         <Divider />
         <Box mt={2}>
         <Typography variant="h6">Cost:</Typography>
