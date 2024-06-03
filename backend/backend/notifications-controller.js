@@ -275,7 +275,11 @@ const addReservationStatusChangeNotification = async (admin_id, reservation_id, 
     }
 
     var action = "Reservation Status Change"
-    var body = `Admin ${admin_name} has changed the status of ${fixName(user_name)} reservation for activity ${act_name} into ${status_code}`
+    if (status_code == "Cancelled") {
+        var body = `${fixName(user_name)}'s reservation for activity ${act_name} has changed its status into ${status_code}`
+    } else {
+        var body = `Admin ${admin_name} has changed the status of ${fixName(user_name)} reservation for activity ${act_name} into ${status_code}`
+    }
 
     //console.log(body);
     const date_created = new Date()
