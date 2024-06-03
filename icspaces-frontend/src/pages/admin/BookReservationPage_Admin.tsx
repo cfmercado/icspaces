@@ -33,6 +33,7 @@ import HourButtons from "../../components/HourButtons";
 import DropDown_Admin from "../../components/DropDown_Admin";
 import RoomDropdown from "../../components/RoomDropdown";
 import dayjs, { Dayjs } from "dayjs";
+import BackButton from "../../components/BackButton";
 
 const cell = {
   color: "white",
@@ -261,6 +262,15 @@ const BookReservationPage_Admin = () => {
       <Box
         sx={{
           position: "absolute",
+          top: { xs: 20, md: 80 },
+          left: { xs: 10, md: 40 },
+        }}
+      >
+        <BackButton />
+      </Box>
+      <Box
+        sx={{
+          position: "absolute",
           top: 650, // Adjust these values as needed
           left: 620,
           width: 1700, // Specify width and height if necessary
@@ -269,9 +279,6 @@ const BookReservationPage_Admin = () => {
       >
         <HourButtons availableTimes={reservations?.availableTimes} dateTime={selectedDate} roomID={selectedRoomId}/>
       </Box>
-
-
-
 
       <Box sx={{ 
         position: 'relative', 
@@ -292,20 +299,7 @@ const BookReservationPage_Admin = () => {
         onRoomChange={setSelectedRoomId}
       />
 
-      <Button 
-          sx={(theme) => ({
-            position: "absolute", 
-            left: `calc(-${theme.spacing(6)})`, 
-            zIndex: 10,
-            color: 'primary.main'
-          })} 
-          onClick={prevImage} 
-          disabled={currentImageIndex === 0}
-        >
-          <ArrowBackIosIcon />
-        </Button>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'start', gap: 2, p: 2, marginTop: 10, }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center',  marginTop: 10, marginRight: '300px'}}>
           {roomImages[roomIdStr] ? (
             <Box component="img"
               src={roomImages[roomIdStr]}
@@ -314,20 +308,20 @@ const BookReservationPage_Admin = () => {
                 maxHeight: 400,
                 borderRadius: 4,
                 width: 'auto',
+                position: 'absolute'
               }}
             />
           ) : (
             <Typography variant="h6" color="textSecondary">No images available</Typography>
           )}
 
-
-
     <Card sx={{
             width: 350,
             height: 400,
             backgroundColor: "#183048",
             borderRadius: 4,
-            marginLeft: 50,
+            marginLeft: 90,
+            position: 'absolute'
           }}>
       <CardContent>
         {selectedRoomId && (
@@ -442,18 +436,7 @@ const BookReservationPage_Admin = () => {
       </CardContent>
     </Card>
     </Box>
-    <Button 
-          sx={(theme) => ({
-            position: "absolute", 
-            right: `calc(-${theme.spacing(6)})`, 
-            zIndex: 10,
-            color: 'primary.main'
-          })} 
-          onClick={nextImage} 
-          disabled={currentImageIndex === Object.keys(roomImages).length - 1}
-        >
-          <ArrowForwardIosIcon />
-        </Button>
+
     </Box>
     </Box>
   );
